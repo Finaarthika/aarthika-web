@@ -129,31 +129,26 @@ const LiveMetalRates = () => {
   // --- RateCard Component ---
   const RateCard = ({ metal, rate, direction, bgColor, icon }) => {
     const displayValue = formatRate(rate);
-    // Softer green/red colors using Tailwind opacity
-    const colorClass = direction === 'up' ? 'text-green-400' : direction === 'down' ? 'text-red-400' : 'text-white'; // Adjusted intensity
-    const arrowIcon = direction === 'up' ? 'fa-caret-up' : direction === 'down' ? 'fa-caret-down' : '';
+    const colorClass = direction === 'up' ? 'text-green-400' : direction === 'down' ? 'text-red-400' : 'text-white';
+    const arrow = direction === 'up' ? '↑' : direction === 'down' ? '↓' : '';
 
     return (
-      <div className={`relative overflow-hidden rounded-xl p-6 md:p-8 shadow-md hover:shadow-lg transition-all duration-300 ease-in-out ${bgColor}`}>
-        <div className="absolute top-3 right-3 text-white/10 text-5xl md:text-6xl opacity-80">
+      <div className={`relative overflow-hidden rounded-xl p-6 shadow-lg ${bgColor} text-white transform hover:scale-105 transition-transform duration-300 ease-in-out`}>
+        <div className="absolute -top-4 -right-4 text-white/10 text-6xl">
           <i className={`fas ${icon}`}></i>
         </div>
-        <h3 className="text-base md:text-lg font-medium text-white/90 mb-2 capitalize tracking-wide">{metal} Rate</h3>
-        <div className="h-12 md:h-16 flex items-center">
-          {loading ? (
-            <div className="w-3/4 h-8 md:h-10 bg-white/30 rounded-md animate-pulse"></div>
-          ) : (
-            <div className={`flex items-baseline transition-colors duration-300 ${colorClass}`}>
-              <p className="text-3xl md:text-4xl font-bold tracking-tight" title={String(rate)}>
-                {displayValue}
-              </p>
-              {arrowIcon && (
-                <i className={`fas ${arrowIcon} text-xl md:text-2xl ml-2 transform ${direction === 'up' ? '-translate-y-px' : 'translate-y-px'}`}></i>
-              )}
-            </div>
-          )}
-        </div>
-        <p className="text-xs text-white/80 mt-2 font-light">Per gram (24k)</p>
+        <h3 className="text-lg font-semibold mb-1 capitalize">{metal} Rate</h3>
+        {loading ? (
+          <div className="h-10 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+          </div>
+        ) : (
+          <p className={`text-3xl md:text-4xl font-bold truncate transition-colors duration-300 ${colorClass}`} title={String(rate)}> 
+            {displayValue}
+            <span className="text-lg ml-1">{arrow}</span>
+          </p>
+        )}
+        <p className="text-xs opacity-80 mt-2">Per gram (24k)</p>
       </div>
     );
   };
@@ -162,14 +157,8 @@ const LiveMetalRates = () => {
   return (
     <section className="py-16 md:py-24 bg-gradient-to-b from-gray-50 to-white">
       <div className="premium-container">
-        <div className="text-center mb-12 md:mb-16">
+        <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-3">Live Metal Rates</h2>
-          <p className="text-sm md:text-base text-gray-500 max-w-2xl mx-auto">
-            {error ? 
-              <span className="text-red-600 font-medium">Error: {error}</span> : 
-              "Rates based on public sheet data, updated every 15 mins. Fluctuation is simulated for visual effect."
-            }
-          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-3xl mx-auto">
@@ -177,14 +166,14 @@ const LiveMetalRates = () => {
             metal="Gold"
             rate={displayRates.goldRate}
             direction={rateDirections.gold}
-            bgColor="bg-gradient-to-br from-yellow-500 to-amber-600"
+            bgColor="bg-gradient-to-br from-yellow-400 to-amber-600"
             icon="fa-coins"
           />
           <RateCard
             metal="Silver"
             rate={displayRates.silverRate}
             direction={rateDirections.silver}
-            bgColor="bg-gradient-to-br from-gray-500 to-gray-700"
+            bgColor="bg-gradient-to-br from-gray-400 to-gray-600"
             icon="fa-ring"
           />
         </div>
