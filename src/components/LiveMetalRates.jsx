@@ -124,7 +124,7 @@ const LiveMetalRates = () => {
     }, SIMULATION_INTERVAL_MS);
 
     return () => clearInterval(simulationInterval); // Cleanup simulation interval
-  }, [baseRates]); // Rerun simulation setup if base rates change
+  }, [baseRates, rateDirections]); // Added rateDirections dependency
 
   // --- RateCard Component ---
   const RateCard = ({ metal, rate, direction, bgColor, icon }) => {
@@ -133,22 +133,22 @@ const LiveMetalRates = () => {
     const arrow = direction === 'up' ? '↑' : direction === 'down' ? '↓' : '';
 
     return (
-      <div className={`relative overflow-hidden rounded-xl p-6 shadow-lg ${bgColor} text-white transform hover:scale-105 transition-transform duration-300 ease-in-out`}>
-        <div className="absolute -top-4 -right-4 text-white/10 text-6xl">
+      <div className={`relative overflow-hidden rounded-xl p-4 md:p-6 shadow-lg ${bgColor} text-white transform hover:scale-105 transition-transform duration-300 ease-in-out`}>
+        <div className="absolute -top-2 right-0 md:-top-4 md:-right-4 text-white/10 text-5xl md:text-6xl">
           <i className={`fas ${icon}`}></i>
         </div>
-        <h3 className="text-lg font-semibold mb-1 capitalize">{metal} Rate</h3>
+        <h3 className="text-base md:text-lg font-semibold mb-1 capitalize">{metal} Rate</h3>
         {loading ? (
-          <div className="h-10 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+          <div className="h-8 md:h-10 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-4 w-4 md:h-5 md:w-5 border-b-2 border-white"></div>
           </div>
         ) : (
-          <p className={`text-3xl md:text-4xl font-bold truncate transition-colors duration-300 ${colorClass}`} title={String(rate)}> 
+          <p className={`text-2xl md:text-3xl lg:text-4xl font-bold truncate transition-colors duration-300 ${colorClass}`} title={String(rate)}> 
             {displayValue}
-            <span className="text-lg ml-1">{arrow}</span>
+            <span className="text-base md:text-lg ml-1">{arrow}</span>
           </p>
         )}
-        <p className="text-xs opacity-80 mt-2">Per gram (24k)</p>
+        <p className="text-xs opacity-80 mt-1 md:mt-2">Per gram (24k)</p>
       </div>
     );
   };
@@ -156,12 +156,12 @@ const LiveMetalRates = () => {
   // --- Render Logic ---
   return (
     <section className="py-16 md:py-24 bg-gradient-to-b from-gray-50 to-white">
-      <div className="premium-container">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-3">Live Metal Rates</h2>
+      <div className="premium-container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12 md:mb-16">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-3">Live Metal Rates</h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-3xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 lg:gap-8 max-w-xl md:max-w-2xl lg:max-w-3xl mx-auto">
           <RateCard
             metal="Gold"
             rate={displayRates.goldRate}

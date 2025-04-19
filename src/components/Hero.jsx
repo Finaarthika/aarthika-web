@@ -1,64 +1,53 @@
 import React from 'react';
+import { Link as ScrollLink } from 'react-scroll';
+import heroImage from '../assets/6.jpg'; // Replace with your actual hero image path
 import AnimatedLogoCustom from './AnimatedLogoCustom';
 
 const Hero = () => {
   return (
-    <section id="home" className="bg-gradient-to-r from-aarthikaDark to-aarthikaBlue py-20 md:py-28 text-white w-full relative overflow-hidden">
-      {/* Warm overlay filter - Increased intensity */}
-      <div className="absolute inset-0 bg-gradient-to-b from-amber-900/10 to-transparent mix-blend-overlay"></div>
-      
-      {/* Abstract shapes for background */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-aarthikaBlue/10 rounded-full -mt-20 -mr-20 blur-xl"></div>
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-aarthikaBlue/10 rounded-full -mb-40 -ml-40 blur-xl"></div>
-      
-      <div className="premium-container relative z-10">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6 md:space-y-8">
-            <span className="inline-block px-4 py-1.5 bg-aarthikaBlue/20 backdrop-blur-sm rounded-full text-sm font-medium">
-              Revolutionizing Rural Finance
-            </span>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-              Empowering Rural Finance with Trust and Technology
-            </h1>
-            <p className="text-lg md:text-xl text-gray-200 font-light leading-relaxed">
-              We provide accessible financial solutions tailored to the needs of rural communities, backed by innovative technology and trusted relationships.
-            </p>
-            <div className="pt-4 flex space-x-4">
-              <a href="#services" className="btn btn-primary bg-white text-aarthikaBlue hover:bg-gray-100">
-                Explore Our Services
-              </a>
-              <a href="#about" className="btn border-white text-white hover:bg-white/10">
-                Learn More
-              </a>
-            </div>
-          </div>
-          <div className="flex justify-center relative">
-            <div className="relative z-10">
-              <div className="logo-sphere">
-                <AnimatedLogoCustom width={280} height={280} />
-              </div>
-            </div>
-          </div>
-        </div>
-      
-        <div className="mt-20 md:mt-28">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 text-center">
-            <div className="bg-aarthikaBlue/20 p-5 md:p-6 rounded-lg backdrop-blur-sm border border-aarthikaBlue/30 hover:border-aarthikaBlue/50 transition-all duration-300">
-              <h3 className="font-bold text-2xl md:text-3xl mb-1">11+</h3>
-              <p className="text-gray-200 font-light">Years Experience</p>
-            </div>
-            <div className="bg-aarthikaBlue/20 p-5 md:p-6 rounded-lg backdrop-blur-sm border border-aarthikaBlue/30 hover:border-aarthikaBlue/50 transition-all duration-300">
-              <h3 className="font-bold text-2xl md:text-3xl mb-1">10,000+</h3>
-              <p className="text-gray-200 font-light">Satisfied Clients</p>
-            </div>
-            <div className="bg-aarthikaBlue/20 p-5 md:p-6 rounded-lg backdrop-blur-sm border border-aarthikaBlue/30 hover:border-aarthikaBlue/50 transition-all duration-300">
-              <h3 className="font-bold text-2xl md:text-3xl mb-1">₹40Cr+</h3>
-              <p className="text-gray-200 font-light">Loans Facilitated</p>
-            </div>
-            <div className="bg-aarthikaBlue/20 p-5 md:p-6 rounded-lg backdrop-blur-sm border border-aarthikaBlue/30 hover:border-aarthikaBlue/50 transition-all duration-300">
-              <h3 className="font-bold text-2xl md:text-3xl mb-1">15+</h3>
-              <p className="text-gray-200 font-light">Partnerships</p>
-            </div>
+    <section id="home" className="relative bg-gradient-to-br from-aarthikaDark via-aarthikaDark to-aarthikaBlue/80 text-white min-h-screen flex items-center overflow-hidden pt-20 md:pt-24">
+      {/* Background Image Overlay */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-10 z-0"
+        style={{ backgroundImage: `url(${heroImage})` }}
+      ></div>
+
+       {/* Abstract Shapes */}
+      <div className="absolute top-1/4 left-10 w-64 h-64 bg-aarthikaBlue/20 rounded-full blur-3xl opacity-40 animate-pulse-slow"></div>
+      <div className="absolute bottom-1/4 right-10 w-72 h-72 bg-white/10 rounded-full blur-3xl opacity-30 animate-pulse-slow animation-delay-2000"></div>
+
+
+      {/* Content */}
+      <div className="premium-container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="text-center">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-6 leading-tight">
+            <span className="block">Empowering Rural India</span>
+            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-aarthikaBlue mt-2">Financial Solutions</span>
+          </h1>
+          <p className="text-lg sm:text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto mb-10 font-light leading-relaxed">
+            Bridging the gap with accessible gold and silver loans, built on trust and transparency for a brighter financial future.
+          </p>
+          <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6">
+            <ScrollLink 
+              to="services" 
+              spy={true} 
+              smooth={true} 
+              offset={-70} 
+              duration={500}
+              className="btn btn-primary text-base sm:text-lg px-8 py-3 w-full sm:w-auto"
+            >
+              Explore Services
+            </ScrollLink>
+            <ScrollLink 
+              to="about" 
+              spy={true} 
+              smooth={true} 
+              offset={-70} 
+              duration={500}
+              className="btn btn-secondary text-base sm:text-lg px-8 py-3 w-full sm:w-auto"
+            >
+              Learn More
+            </ScrollLink>
           </div>
         </div>
       </div>

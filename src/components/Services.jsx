@@ -1,85 +1,68 @@
 import React from 'react';
 
-const ServiceCard = ({ title, description, icon, index }) => {
-  const delay = index * 100;
-  
-  return (
-    <div 
-      className={`premium-card p-8 hover-lift border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center text-center animate-fade-in`} 
-      style={{ animationDelay: `${delay}ms` }}
-    >
-      <div className="text-aarthikaBlue text-4xl mb-5 w-16 h-16 rounded-full bg-aarthikaBlue/10 flex items-center justify-center">
-        {icon}
-      </div>
-      <h3 className="text-xl font-semibold mb-4 text-gray-800">{title}</h3>
-      <p className="text-gray-600 text-base leading-relaxed flex-grow mb-4">{description}</p>
-      <div className="mt-auto pt-4">
-        <a href="#contact" className="text-aarthikaBlue font-medium flex items-center justify-center hover:underline">
-          Contact Us
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-          </svg>
-        </a>
-      </div>
+const ServiceCard = ({ icon, title, description }) => (
+  <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-100 h-full flex flex-col">
+    <div className="mb-4">
+      <i className={`${icon} text-3xl text-aarthikaBlue`}></i>
     </div>
-  );
-};
+    <h3 className="text-xl font-semibold text-gray-800 mb-2">{title}</h3>
+    <p className="text-gray-600 text-base leading-relaxed flex-grow">{description}</p>
+  </div>
+);
 
 const Services = () => {
-  const services = [
+  const servicesData = [
     {
-      title: "Gold-Backed Loans",
-      description: "Get quick and secure loans by pledging your gold. We offer competitive interest rates with transparent valuation and same-day disbursal — no hidden charges.",
-      icon: <i className="fas fa-coins"></i>
+      icon: 'fas fa-coins', // Font Awesome class
+      title: 'Gold Loans',
+      description: 'Unlock the value of your gold ornaments with our quick, transparent, and secure loan process. Competitive rates and flexible repayment options.'
     },
     {
-      title: "Silver-Backed Loans",
-      description: "We provide short-term loans against silver ornaments with fair pricing and full security. Ideal for urgent personal or business needs in rural communities.",
-      icon: <i className="fas fa-medal"></i>
+      icon: 'fas fa-ring', // Font Awesome class for silver (example)
+      title: 'Silver Loans',
+      description: 'Leverage your silver articles and jewelry for immediate financial needs. Fair valuation and straightforward terms.'
     },
     {
-      title: "Jewellery Sales – Gold & Silver",
-      description: "Explore a curated collection of newly crafted gold and silver jewellery. Elegant designs for daily use and occasions — made affordable for rural families.",
-      icon: <i className="fas fa-gem"></i>
+      icon: 'fas fa-shield-alt', // Font Awesome class
+      title: 'Secure Storage',
+      description: 'Your pledged assets are kept safe in state-of-the-art vaults with comprehensive insurance coverage for complete peace of mind.'
     },
     {
-      title: "Old Gold & Silver Buying",
-      description: "We also buy old gold and silver ornaments. Transparent weight testing, fair market pricing, and instant cash payout — no middlemen, no confusion.",
-      icon: <i className="fas fa-balance-scale"></i>
-    }
+      icon: 'fas fa-calculator', // Font Awesome class
+      title: 'Transparent Valuation',
+      description: 'We use certified methods and modern technology for accurate and fair assessment of your precious metals.'
+    },
+     {
+      icon: 'fas fa-hand-holding-usd', // Font Awesome class
+      title: 'Flexible Repayment',
+      description: 'Choose from various repayment schedules designed to fit your financial situation, including interest-only options.'
+    },
+     {
+      icon: 'fas fa-headset', // Font Awesome class
+      title: 'Dedicated Support',
+      description: 'Our local team is always available to assist you with any queries or support throughout your loan tenure.'
+    },
   ];
 
   return (
-    <section id="services" className="py-20 md:py-28 bg-gray-50">
-      <div className="premium-container">
-        <div className="flex flex-col items-center mb-16">
-          <span className="text-sm text-aarthikaBlue font-medium tracking-wider uppercase mb-2">What We Offer</span>
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-center text-gray-800">Our Services</h2>
-          <div className="w-24 h-1 bg-gradient-to-r from-aarthikaDark to-aarthikaBlue rounded-full"></div>
-          <p className="text-center text-gray-600 max-w-2xl mt-6">
-            We provide tailored financial solutions that meet the unique needs of rural communities.
-          </p>
+    <section id="services" className="py-16 md:py-24 bg-gradient-to-b from-white to-gray-50">
+      <div className="premium-container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12 md:mb-16">
+           <span className="text-sm font-medium text-aarthikaBlue tracking-wider uppercase mb-2 block">Our Services</span>
+           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800">What We Offer</h2>
+           <div className="mt-4 w-24 h-1 bg-gradient-to-r from-aarthikaDark to-aarthikaBlue rounded-full mx-auto opacity-80"></div>
         </div>
-        
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-          {services.map((service, index) => (
-            <ServiceCard
-              key={index}
-              index={index}
-              title={service.title}
-              description={service.description}
-              icon={service.icon}
-            />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {servicesData.map((service, index) => (
+            <div key={index} className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                <ServiceCard 
+                    icon={service.icon}
+                    title={service.title}
+                    description={service.description}
+                />
+            </div>
           ))}
-        </div>
-        
-        <div className="mt-16 md:mt-20 text-center">
-          <a 
-            href="#contact" 
-            className="btn btn-primary shadow-lg px-10 py-3 text-base"
-          >
-            Enquire About Our Services
-          </a>
         </div>
       </div>
     </section>
