@@ -1,0 +1,146 @@
+/* Animated Logo Styles */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&display=swap');
+
+.animated-logo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  width: 160px;
+  height: 160px;
+  position: relative;
+}
+
+/* Single letter animation styles */
+.logo-wrapper {
+  position: relative;
+  height: 80px;
+  width: 80px;
+  margin-bottom: 20px;
+  opacity: 0;
+  animation: fadeIn 0.5s ease-out 0.2s forwards,
+             zoomIn 0.5s ease-out 0.2s forwards;
+}
+
+.logo-letter {
+  font-family: 'Poppins', sans-serif;
+  font-size: 75px;
+  font-weight: 500;
+  position: absolute;
+  top: -10px;
+  left: 8px;
+  color: #000;
+  transform-origin: center;
+  animation: revealLetter 1.5s ease-out forwards;
+}
+
+.accent {
+  position: absolute;
+  height: 4px;
+  background-color: #000;
+  transform: skewX(-20deg);
+  opacity: 0;
+}
+
+.accent-left {
+  width: 14px;
+  top: 0;
+  left: 6px;
+  animation: slideIn 0.3s ease-out 0.8s forwards;
+}
+
+.accent-right {
+  width: 14px;
+  top: 0;
+  right: 16px;
+  animation: slideIn 0.3s ease-out 1s forwards;
+}
+
+.logo-dot {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background-color: #000;
+  border-radius: 50%;
+  top: 0;
+  right: 8px;
+  opacity: 0;
+  animation: fadeIn 0.2s ease-out 1.2s forwards;
+}
+
+/* Full logo animation */
+.full-logo {
+  font-family: 'Poppins', sans-serif;
+  font-size: 24px;
+  color: #000;
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: slideUp 0.5s ease-out 1.5s forwards;
+}
+
+.logo-text {
+  font-weight: 400;
+  letter-spacing: 0.5px;
+}
+
+.logo-registered {
+  font-size: 8px;
+  vertical-align: super;
+  margin-left: 1px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    transform: scale(0.8);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes revealLetter {
+  0% {
+    clip-path: polygon(0 100%, 100% 100%, 100% 100%, 0 100%);
+  }
+  20% {
+    clip-path: polygon(0 80%, 100% 80%, 100% 100%, 0 100%);
+  }
+  100% {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-20px) skewX(-20deg);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) skewX(-20deg);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+} 

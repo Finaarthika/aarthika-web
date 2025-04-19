@@ -1,0 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #333;
+  letter-spacing: -0.015em;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Poppins', sans-serif;
+  letter-spacing: -0.025em;
+}
+
+@layer components {
+  .container {
+    @apply px-0 mx-auto w-full max-w-full;
+}
+
+  .btn {
+    @apply py-2.5 px-8 font-medium rounded-lg transition-all duration-300 border border-transparent;
+  }
+  
+  .btn-primary {
+    @apply bg-aarthikaBlue text-white hover:bg-opacity-90 hover:shadow-lg shadow-md shadow-aarthikaBlue/20;
+  }
+  
+  .section-title {
+    @apply text-3xl md:text-4xl font-bold mb-10 text-center text-gray-800;
+  }
+
+  .premium-card {
+    @apply bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300;
+}
+
+  .premium-section {
+    @apply py-16 md:py-24;
+}
+
+  .premium-container {
+    @apply px-4 md:px-12 lg:px-24 max-w-screen-2xl mx-auto;
+}
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-aarthikaDark to-aarthikaBlue;
+  }
+
+  .input-premium {
+    @apply w-full p-3 rounded-lg border border-gray-300 focus:border-aarthikaBlue focus:ring-2 focus:ring-aarthikaBlue/20 focus:outline-none transition-all duration-300;
+}
+
+  /* Navbar Text Logo Image Filter */
+  .navbar-text-logo-img {
+    filter: brightness(0) invert(1);
+    -webkit-filter: brightness(0) invert(1);
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -webkit-optimize-contrast;
+    transform: scale(1);
+    backface-visibility: hidden;
+    transform-origin: center center;
+  }
+}
