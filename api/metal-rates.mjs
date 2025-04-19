@@ -1,5 +1,5 @@
-const { GoogleAuth } = require('google-auth-library');
-const { google } = require('googleapis');
+import { GoogleAuth } from 'google-auth-library';
+import { google } from 'googleapis';
 
 const SHEET_ID = '1YpeV4GpJeedrYGHQgonuSL-Rf4kuQiwpPysdZL9B-vk';
 const SHEET_NAME = 'METAL RATE'; // Ensure this matches your actual tab name
@@ -17,17 +17,14 @@ const CACHE_DURATION_MS = 60 * 1000; // 60 seconds
 async function getSheetData() {
   console.log("Attempting to fetch sheet data...");
   // --- Authentication ---
-  // IMPORTANT: Set these environment variables in your Vercel project settings
-  const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\n/g, '\n'); // Handle escaped newlines
+  const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\n/g, '\n');
   const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
 
-  // Log environment variable status (avoid logging the key itself in production)
   console.log(`GOOGLE_CLIENT_EMAIL loaded: ${!!clientEmail}`);
   console.log(`GOOGLE_PRIVATE_KEY loaded: ${!!privateKey}`);
 
   if (!privateKey || !clientEmail) {
     console.error("Missing GOOGLE_PRIVATE_KEY or GOOGLE_CLIENT_EMAIL environment variables.");
-    // Throw a specific error to be caught later
     throw new Error("Server configuration error: Missing Google credentials environment variables.");
   }
 
@@ -64,22 +61,21 @@ async function getSheetData() {
       throw new Error("Invalid data format received from Google Sheet.");
     }
 
-    // Assuming A2 is gold, B2 is silver
-    const goldRate = values[0][0] || "N/A"; // Default to N/A if cell is empty
+    const goldRate = values[0][0] || "N/A";
     const silverRate = values[0][1] || "N/A";
     console.log(`Fetched rates - Gold: ${goldRate}, Silver: ${silverRate}`);
 
     return { goldRate, silverRate };
 
   } catch (apiError) {
-    // Log the specific error from the Sheets API call
     console.error('Google Sheets API Error:', apiError.message);
-    console.error('API Error Details:', apiError.response?.data?.error || apiError); // Log more details if available
+    console.error('API Error Details:', apiError.response?.data?.error || apiError);
     throw new Error(`Failed to fetch data from Google Sheets API: ${apiError.message}`);
   }
 }
 
-module.exports = async (req, res) => {
+// Use export default for Vercel Serverless Functions in ESM
+export default async (req, res) => {
   const now = Date.now();
 
   // Allow CORS for local development (optional, remove if not needed)
@@ -93,7 +89,6 @@ module.exports = async (req, res) => {
   // --- Caching Logic ---
   if (cache.data && !cache.data.error && now - cache.timestamp < CACHE_DURATION_MS) {
     console.log("Returning cached data.");
-    // Ensure response is always JSON
     res.setHeader('Content-Type', 'application/json');
     res.status(200).json(cache.data);
     return;
@@ -103,24 +98,19 @@ module.exports = async (req, res) => {
   console.log("Cache expired or empty, fetching fresh data...");
   try {
     const data = await getSheetData();
-    // Update cache
     cache = {
       data: data,
       timestamp: now,
     };
     console.log("Successfully fetched fresh data, updating cache.");
-    // Ensure response is always JSON
     res.setHeader('Content-Type', 'application/json');
     res.status(200).json(data);
   } catch (error) {
-    // This catches errors from getSheetData (auth, API call, config)
     console.error("Error processing request in serverless function:", error.message);
-    // Always return a JSON response
     res.setHeader('Content-Type', 'application/json');
-    // Use a 500 status code for server errors
     res.status(500).json({ 
       error: error.message || "An internal server error occurred.",
-      goldRate: cache.data?.goldRate || "Error", // Send stale data if available
+      goldRate: cache.data?.goldRate || "Error",
       silverRate: cache.data?.silverRate || "Error"
     });
   }
