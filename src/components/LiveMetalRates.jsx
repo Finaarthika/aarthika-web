@@ -221,7 +221,7 @@ const LiveMetalRates = () => {
 
   // --- Render Logic (Revised Layout for Alignment) ---
   return (
-    <section id="rates-calculator" className="py-20 md:py-28 bg-gradient-to-b from-gray-50 to-white">
+    <section id="live-rates" className="py-20 md:py-28 bg-gradient-to-b from-gray-50 to-white">
       <div className="premium-container mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Title */}
