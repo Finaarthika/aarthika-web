@@ -85,10 +85,10 @@ const WhyWeBuiltAarthika = () => {
             We're now integrating Repayment Risk AI, building Aarthika Insights, and slowly expanding to more villages.
           </p>
           <p className="text-lg text-gray-700 leading-relaxed font-semibold">
-            Our goal is simple: to combine the tech of a startup with the trust of a baniya.
+            Our goal is simple: to combine the tech of a startup while preserving the human trust that drives grassroots finance.
           </p>
           <p className="text-lg text-gray-700 mt-2 leading-relaxed">
-            Because rural India deserves not just capital — but class.
+          Because rural India doesn’t just need capital — it deserves dignity, innovation, and a future worth dreaming of.
           </p>
         </div>
       </div>
