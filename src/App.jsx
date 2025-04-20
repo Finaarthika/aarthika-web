@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigationType } from 'react-router-dom'
+import { scroller } from 'react-scroll'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import LiveMetalRates from './components/LiveMetalRates'
@@ -20,7 +21,10 @@ import WhyInterestRates from './pages/blog/WhyInterestRates'
 import TrustAndTime from './pages/blog/TrustAndTime'
 import './App.css'
 
-// Restore ScrollToTop that ignores POP actions
+const NAV_OFFSET = -80;
+const SCROLL_DURATION = 1000;
+
+// Keep ScrollToTop that ignores POP
 function ScrollToTop() {
   const { pathname } = useLocation();
   const navigationType = useNavigationType();
@@ -34,13 +38,30 @@ function ScrollToTop() {
   return null;
 }
 
-// Restore original MainLayout (remove location hook and useEffect)
+// Add effect back into MainLayout
 function MainLayout({ toggleJoinForm }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
+  const navigationType = useNavigationType();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+
+  // Effect to force scroll to insights on POP navigation to homepage
+  useEffect(() => {
+    if (navigationType === 'POP' && location.pathname === '/') {
+       // Add a small delay to ensure the browser's attempt is done
+      const scrollTimer = setTimeout(() => {
+        scroller.scrollTo('insights', {
+          duration: SCROLL_DURATION,
+          smooth: true,
+          offset: NAV_OFFSET,
+        });
+      }, 50); // Short delay
+       return () => clearTimeout(scrollTimer);
+    }
+  }, [location, navigationType]); // Run when location or type changes
 
   return (
     <div className="min-h-screen w-full flex flex-col bg-white">
