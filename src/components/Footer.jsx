@@ -148,6 +148,24 @@ const Footer = ({ toggleJoinForm }) => {
                  </button>
                </div>
             </div>
+
+            {/* Follow Us Section */}
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold mb-4 text-white border-l-2 border-aarthikaBlue pl-3">Follow Us</h3>
+              <div className="flex space-x-4 pl-3">
+                {/* WhatsApp Channel Link */}
+                 <a 
+                   href="https://whatsapp.com/channel/0029VbA24IpB4hdPtYs0jC1p" 
+                   target="_blank" 
+                   rel="noopener noreferrer" 
+                   className="flex items-center text-gray-300 hover:text-white transition-colors group"
+                 >
+                   <i className="fab fa-whatsapp text-xl mr-2 text-green-500 group-hover:scale-110 transition-transform"></i>
+                   <span>Aarthika on WhatsApp</span>
+                 </a>
+                 {/* Add other social links here later if needed */}
+              </div>
+            </div>
           </div>
         </div>
           
