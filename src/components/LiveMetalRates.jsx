@@ -7,6 +7,9 @@ const SIMULATION_INTERVAL_MS = 750; // 3/4 second for fluctuation simulation
 const MAX_FLUCTUATION_PERCENT = 0.85; // Max deviation from base rate (+/- %)
 const TICK_FLUCTUATION_PERCENT = 0.15; // Max random change per tick (+/- %), adjust for smoothness
 
+// --- Loan Calculator Constants (Defined INSIDE the component now) ---
+// Moved consts like LOAN_TO_VALUE, GOLD_PURITY_FACTORS etc. inside component scope
+
 // --- Helper Functions ---
 const getRandomMultiplier = () => {
   const percentChange = (Math.random() * 2 - 1) * TICK_FLUCTUATION_PERCENT / 100;
@@ -15,21 +18,51 @@ const getRandomMultiplier = () => {
 
 const formatRate = (rate) => {
   if (typeof rate !== 'number' || isNaN(rate)) return 'N/A';
+  // Changed formatting back to toFixed(2) as localeString was causing issues in display
   return rate.toFixed(2);
 };
 
 const LiveMetalRates = () => {
+
+  // --- Loan Calculator Constants (Moved INSIDE component scope) ---
+  const LOAN_TO_VALUE = 0.75; 
+  const GOLD_PURITY_FACTORS = {
+    '24K': 1,       
+    '22K': 22 / 24, 
+    '18K': 18 / 24, 
+    '14K': 14 / 24, 
+  };
+  const SILVER_PURITY_FACTORS = {
+    '999': 0.999, 
+    '925': 0.925, 
+    '85%': 0.85,
+    '80%': 0.80,
+    '75%': 0.75,
+    '70%': 0.70,
+    '65%': 0.65,
+  };
+  const DEFAULT_GOLD_PURITY = '18K';
+  const DEFAULT_SILVER_PURITY = '70%';
+
+  // --- State for Live Rates ---
   const [baseRates, setBaseRates] = useState({ goldRate: null, silverRate: null });
   const [displayRates, setDisplayRates] = useState({ goldRate: null, silverRate: null });
   const [rateDirections, setRateDirections] = useState({ gold: 'same', silver: 'same' });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loadingRates, setLoadingRates] = useState(true);
+  const [ratesError, setRatesError] = useState(null);
   const prevDisplayRatesRef = useRef(displayRates);
+
+  // --- State for Calculator ---
+  const [metalType, setMetalType] = useState('gold');
+  const [weight, setWeight] = useState('');
+  const [purity, setPurity] = useState(DEFAULT_GOLD_PURITY); 
+  const [loanAmount, setLoanAmount] = useState(0);
+  // Note: currentRate calculation moved below state declarations
 
   // --- Fetching Logic ---
   const fetchBaseRates = useCallback(async (isInitialLoad = false) => {
-    if (isInitialLoad) setLoading(true);
-    setError(null);
+    if (isInitialLoad) setLoadingRates(true);
+    setRatesError(null);
     console.log("Fetching base metal rates...");
     try {
       const response = await fetch('/api/metal-rates');
@@ -49,19 +82,22 @@ const LiveMetalRates = () => {
 
       // Reset display rates if they are null or base rates change significantly (optional)
       setDisplayRates(current => ({
-        goldRate: current.goldRate === null || newBaseRates.goldRate !== baseRates.goldRate ? newBaseRates.goldRate : current.goldRate,
-        silverRate: current.silverRate === null || newBaseRates.silverRate !== baseRates.silverRate ? newBaseRates.silverRate : current.silverRate,
+        goldRate: current.goldRate === null || isInitialLoad ? newBaseRates.goldRate : current.goldRate,
+        silverRate: current.silverRate === null || isInitialLoad ? newBaseRates.silverRate : current.silverRate,
       }));
-      prevDisplayRatesRef.current = newBaseRates;
+      if (isInitialLoad) {
+          prevDisplayRatesRef.current = newBaseRates;
+      }
       setRateDirections({ gold: 'same', silver: 'same' });
 
     } catch (e) {
       console.error("Error fetching base metal rates:", e);
-      setError(e.message || "Failed to load rates.");
+      setRatesError(e.message || "Failed to load rates.");
+      setDisplayRates({ goldRate: null, silverRate: null });
     } finally {
-      if (isInitialLoad) setLoading(false);
+      if (isInitialLoad) setLoadingRates(false);
     }
-  }, [baseRates.goldRate, baseRates.silverRate]); // Re-run if base rates change
+  }, []);
 
   // Initial fetch and interval for base rates
   useEffect(() => {
@@ -72,6 +108,7 @@ const LiveMetalRates = () => {
 
   // --- Simulation Logic ---
   useEffect(() => {
+    if (loadingRates) return;
     const simulationInterval = setInterval(() => {
       if (baseRates.goldRate === null && baseRates.silverRate === null) return;
 
@@ -109,8 +146,44 @@ const LiveMetalRates = () => {
     }, SIMULATION_INTERVAL_MS);
 
     return () => clearInterval(simulationInterval);
-  }, [baseRates, rateDirections]); // Re-run if base rates change
+  }, [baseRates, rateDirections, loadingRates]); // Re-run if base rates change
 
+  useEffect(() => {
+    if (metalType === 'gold') {
+      setPurity(DEFAULT_GOLD_PURITY); 
+    } else {
+      setPurity(DEFAULT_SILVER_PURITY); 
+    }
+    setWeight(''); 
+    setLoanAmount(0); 
+  }, [metalType]); // Keep metalType dependency
+
+  useEffect(() => {
+    const numericWeight = parseFloat(weight);
+    if (!numericWeight || numericWeight <= 0 || baseRates.goldRate === null || baseRates.silverRate === null) {
+      setLoanAmount(0);
+      return;
+    }
+    let baseRate = 0;
+    let purityFactor = 0;
+    if (metalType === 'gold') {
+      baseRate = baseRates.goldRate;
+      purityFactor = GOLD_PURITY_FACTORS[purity] || 0;
+    } else {
+      baseRate = baseRates.silverRate;
+      purityFactor = SILVER_PURITY_FACTORS[purity] || 0;
+    }
+    const valuePerGram = baseRate * purityFactor;
+    const totalValue = numericWeight * valuePerGram;
+    const calculatedLoan = totalValue * LOAN_TO_VALUE;
+    setLoanAmount(calculatedLoan);
+  }, [metalType, weight, purity, baseRates, GOLD_PURITY_FACTORS, SILVER_PURITY_FACTORS, LOAN_TO_VALUE]); // Added constants to dependency array as they are now inside scope
+
+  // --- Derived State (Moved inside component scope) ---
+  const purityOptions = metalType === 'gold' 
+    ? Object.keys(GOLD_PURITY_FACTORS) 
+    : Object.keys(SILVER_PURITY_FACTORS);
+  
   const currentCalcRate = metalType === 'gold' ? baseRates.goldRate : baseRates.silverRate;
 
   // --- RateCard Component (Styling adjusted slightly for consistency) ---
