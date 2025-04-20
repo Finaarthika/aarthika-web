@@ -141,7 +141,7 @@ const Footer = ({ toggleJoinForm }) => {
               <h3 className="text-lg font-semibold mb-4 text-white border-l-2 border-aarthikaBlue pl-3">Work With Us</h3>
                <button 
                  onClick={toggleJoinForm} // Call the function passed from App.jsx
-                 className="btn btn-secondary py-3 text-base"
+                 className="btn btn-secondary py-3 text-base ml-3"
                >
                  Join Aarthika – Become an Associate
                </button>
