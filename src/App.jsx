@@ -15,6 +15,7 @@ import PrivacyPolicy from './components/PrivacyPolicy'
 import TermsOfService from './components/TermsOfService'
 import GoldLoansRuralIndia from './pages/blog/GoldLoansRuralIndia'
 import WhyWeBuiltAarthika from './pages/blog/WhyWeBuiltAarthika'
+import WhyInterestRates from './pages/blog/WhyInterestRates'
 import './App.css'
 
 // Helper component to scroll to top on route change
@@ -64,6 +65,7 @@ function App() {
         <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route path="/blog/gold-loans-rural-india" element={<GoldLoansRuralIndia />} />
         <Route path="/blog/why-we-built-aarthika" element={<WhyWeBuiltAarthika />} />
+        <Route path="/blog/why-interest-rates" element={<WhyInterestRates />} />
       </Routes>
     </Router>
   );
