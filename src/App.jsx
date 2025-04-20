@@ -50,7 +50,8 @@ function MainLayout({ toggleJoinForm }) {
 
   // Effect to force scroll to insights on POP navigation to homepage
   useEffect(() => {
-    if (navigationType === 'POP' && location.pathname === '/') {
+    // Only run if it's a POP navigation AND not the initial load (key !== 'default') AND path is '/'
+    if (navigationType === 'POP' && location.key !== 'default' && location.pathname === '/') {
        // Add a small delay to ensure the browser's attempt is done
       const scrollTimer = setTimeout(() => {
         scroller.scrollTo('insights', {
