@@ -1,74 +1,45 @@
 import React, { useState, useEffect } from 'react';
+import { FaTachometerAlt, FaLock, FaBalanceScale } from 'react-icons/fa'; // Import icons
 
-// Updated rates from Google Sheet (static for calculator)
-const GOLD_RATE_PER_GRAM_24K = 8977; // From cell A2
-const SILVER_RATE_PER_GRAM_PURE = 92;  // From cell B2
-const LOAN_TO_VALUE = 0.75; // 75% LTV
-
-// Purity factors relative to pure metal
 const GOLD_PURITY_FACTORS = {
   '24K': 1,
-  '22K': 22 / 24,
-  '18K': 18 / 24,
+  '22K': 0.916667,
+  '20K': 0.833333,
+  '18K': 0.75,
+  '14K': 0.583333,
+  '10K': 0.416667,
 };
 
 const SILVER_PURITY_FACTORS = {
-  '999': 1,       // Pure Silver
-  '925': 0.925,   // Sterling Silver
+  '999': 0.999,
+  '995': 0.995,
+  '925': 0.925,
 };
+
+const LOAN_TO_VALUE = 0.75;
 
 const LoanCalculator = () => {
   const [metalType, setMetalType] = useState('gold');
   const [weight, setWeight] = useState('');
-  const [purity, setPurity] = useState(metalType === 'gold' ? '22K' : '925');
+  const [purity, setPurity] = useState('24K');
   const [loanAmount, setLoanAmount] = useState(0);
-  const [currentRate, setCurrentRate] = useState(GOLD_RATE_PER_GRAM_24K); // Base rate display
+  const [currentRate, setCurrentRate] = useState(0);
 
-  // Update purity options and default when metal type changes
   useEffect(() => {
-    if (metalType === 'gold') {
-      setPurity('22K');
-      setCurrentRate(GOLD_RATE_PER_GRAM_24K);
-    } else {
-      setPurity('925');
-      setCurrentRate(SILVER_RATE_PER_GRAM_PURE);
-    }
-    setWeight(''); // Reset weight on metal change
-    setLoanAmount(0); // Reset loan amount
+    // Fetch current rate based on metalType
+    // Set currentRate state
   }, [metalType]);
 
-  // Calculation logic
   useEffect(() => {
-    const numericWeight = parseFloat(weight);
-    if (!numericWeight || numericWeight <= 0) {
-      setLoanAmount(0);
-      return;
-    }
+    // Calculate loan amount based on weight, purity, and currentRate
+    // Set loanAmount state
+  }, [weight, purity, currentRate]);
 
-    let baseRate = 0;
-    let purityFactor = 0;
-
-    if (metalType === 'gold') {
-      baseRate = GOLD_RATE_PER_GRAM_24K;
-      purityFactor = GOLD_PURITY_FACTORS[purity] || 0;
-    } else {
-      baseRate = SILVER_RATE_PER_GRAM_PURE;
-      purityFactor = SILVER_PURITY_FACTORS[purity] || 0;
-    }
-    
-    const valuePerGram = baseRate * purityFactor;
-    const totalValue = numericWeight * valuePerGram;
-    const calculatedLoan = totalValue * LOAN_TO_VALUE;
-    
-    setLoanAmount(calculatedLoan);
-
-  }, [metalType, weight, purity]);
-  
-   const purityOptions = metalType === 'gold' ? Object.keys(GOLD_PURITY_FACTORS) : Object.keys(SILVER_PURITY_FACTORS);
+  const purityOptions = metalType === 'gold' ? Object.keys(GOLD_PURITY_FACTORS) : Object.keys(SILVER_PURITY_FACTORS);
 
   return (
     <section id="calculator" className="py-20 md:py-28 bg-white">
-      <div className="premium-container grid md:grid-cols-2 gap-12 md:gap-16 items-center">
+      <div className="premium-container max-w-6xl mx-auto grid md:grid-cols-2 gap-12 md:gap-16 items-start"> 
         
         {/* Left Column: Inputs & Output */}
         <div className="animate-fade-in-delay">
@@ -144,25 +115,40 @@ const LoanCalculator = () => {
           </div>
         </div>
 
-        {/* Right Column: New Abstract Illustration */}
-        <div className="hidden md:flex justify-center items-center animate-fade-in p-8 relative overflow-hidden">
-           <div className="w-full max-w-sm h-80 rounded-lg bg-gradient-to-br from-aarthikaBlue/10 to-aarthikaDark/5 flex items-center justify-center p-4 shadow-inner">
-              {/* Stylized representation: Finance (Rupee) + Growth/Value (Leaf) */}
-              <div className="relative text-center">
-                 {/* Rupee Symbol (Large, semi-transparent) */}
-                 <span className="text-8xl font-bold text-aarthikaBlue opacity-20 select-none">
-                    ₹
-                 </span>
-                 {/* Leaf Icon overlay */}
-                 <svg xmlns="http://www.w3.org/2000/svg" className="h-20 w-20 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-aarthikaBlue opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                   <path strokeLinecap="round" strokeLinejoin="round" d="M14.121 15.536A9.005 9.005 0 1 1 8.464 9.879M14.121 15.536L12 17.657M14.121 15.536A9.005 9.005 0 0 0 14.121 3.464M14.121 15.536C15.121 14.536 16 13.306 16 12C16 10.694 15.121 9.464 14.121 8.464" />
-                 </svg>
+        {/* Right Column: Informative Content */}
+        <div className="hidden md:block animate-fade-in-delay bg-gradient-to-br from-aarthikaBlue/5 to-transparent p-8 lg:p-12 rounded-lg border border-aarthikaBlue/10 mt-4 lg:mt-0 self-stretch">
+          <h3 className="text-2xl font-semibold text-gray-800 mb-5">Transparent & Secure Loans</h3>
+          <p className="text-gray-600 mb-8 leading-relaxed">
+            At Aarthika, we prioritize a clear and trustworthy loan process. We use certified methods for valuation and ensure your valuable assets are stored securely, providing peace of mind.
+          </p>
+          
+          <div className="space-y-5">
+            <div className="flex items-start">
+              <FaTachometerAlt className="text-aarthikaBlue text-xl mr-4 mt-1 flex-shrink-0" />
+              <div>
+                <h4 className="font-medium text-gray-700 mb-1">Quick Disbursal</h4>
+                <p className="text-sm text-gray-500 leading-snug">Loan amounts often disbursed within minutes after approval and verification.</p>
               </div>
-           </div>
+            </div>
+             <div className="flex items-start">
+              <FaBalanceScale className="text-aarthikaBlue text-xl mr-4 mt-1 flex-shrink-0" />
+              <div>
+                <h4 className="font-medium text-gray-700 mb-1">Transparent Valuation</h4>
+                <p className="text-sm text-gray-500 leading-snug">Accurate assessment using certified methods right in front of you.</p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <FaLock className="text-aarthikaBlue text-xl mr-4 mt-1 flex-shrink-0" />
+              <div>
+                <h4 className="font-medium text-gray-700 mb-1">Secure Storage</h4>
+                <p className="text-sm text-gray-500 leading-snug">Your pledged assets are kept safe in state-of-the-art secure vaults.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
   );
 };
 
-export default LoanCalculator; 
+export default LoanCalculator;
