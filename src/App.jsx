@@ -7,6 +7,7 @@ import Services from './components/Services'
 import About from './components/About'
 import Partnerships from './components/Partnerships'
 import Technology from './components/Technology'
+import FAQ from './components/FAQ'
 import Footer from './components/Footer'
 import LogoDemo from './components/LogoDemo'
 import PrivacyPolicy from './components/PrivacyPolicy'
@@ -41,6 +42,7 @@ function MainLayout() {
         <Services />
         <Partnerships />
         <Technology />
+        <FAQ />
       </main>
       <Footer />
     </div>
