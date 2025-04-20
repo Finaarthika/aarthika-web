@@ -12,6 +12,11 @@ const blogPosts = [
     summary: 'A short story on how technology is helping us serve rural India faster and safer. This blog shares how managing everything manually was slowing us down — and how a mobile app transformed gold loan tracking, customer data safety, and staff efficiency.',
     link: '/blog/why-we-built-aarthika',
   },
+  {
+    title: 'Why 3% to 4% Interest?',
+    summary: 'A thoughtful look behind our interest rates. Understand the rural realities, operational costs, and trust factors that shape our fair and transparent pricing model.',
+    link: '/blog/why-interest-rates',
+  },
 ];
 
 const Insights = () => {
