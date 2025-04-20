@@ -96,19 +96,19 @@ const Footer = () => {
           <div className="flex flex-col justify-between">
             <div>
               <div className="flex items-center mb-6">
-                {/* Circular Icon Logo */}
-                <div className="bg-white rounded-full w-8 h-8 md:w-10 md:h-10 mr-3 shadow-md flex-shrink-0 overflow-hidden flex items-center justify-center">
+                {/* Circular Icon Logo - Match Navbar Size */}
+                <div className="bg-white rounded-full w-9 h-9 md:w-10 md:h-10 mr-2 shadow-md flex-shrink-0 overflow-hidden flex items-center justify-center">
                   <img 
                     src={logoIcon} 
                     alt="Aarthika Logo Icon" 
                     className="h-full w-full object-cover rounded-full" 
                   />
                 </div>
-                {/* Full Text Logo */}
+                {/* Full Text Logo - Match Navbar Size */}
                 <img 
-                  src={logoFull} 
+                  src={logoFull} // Use the imported logoFull variable
                   alt="Aarthika Logo" 
-                  className="h-7 md:h-8 w-auto" // Slightly smaller than navbar for context
+                  className="h-9 md:h-10 w-auto" // Apply exact height from Navbar
                 />
               </div>
               <p className="mb-8 text-gray-400 text-base md:text-lg leading-relaxed">
