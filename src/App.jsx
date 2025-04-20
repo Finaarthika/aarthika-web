@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigationType } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import LiveMetalRates from './components/LiveMetalRates'
@@ -23,10 +23,13 @@ import './App.css'
 // Restore original ScrollToTop
 function ScrollToTop() {
   const { pathname } = useLocation();
+  const navigationType = useNavigationType();
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]); 
+    if (navigationType !== 'POP') {
+      window.scrollTo(0, 0);
+    }
+  }, [pathname, navigationType]);
 
   return null;
 }
