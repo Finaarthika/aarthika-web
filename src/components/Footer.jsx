@@ -108,7 +108,7 @@ const Footer = () => {
                 <img 
                   src={logoFull} // Use the imported logoFull variable
                   alt="Aarthika Logo" 
-                  className="h-9 md:h-10 w-auto" // Apply exact height from Navbar
+                  className="h-9 md:h-10 w-auto navbar-text-logo-img" // Add the class from Navbar
                 />
               </div>
               <p className="mb-8 text-gray-400 text-base md:text-lg leading-relaxed">
