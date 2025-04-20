@@ -28,7 +28,7 @@ const GoldLoansRuralIndia = () => {
               1. Bring Your Gold/Silver
             </h2>
             <p className="text-gray-600 leading-relaxed">
-              People from villages like Kamat, Kurela, Majlishpur walk in with small ornaments — usually 2 to 15 grams. No need for bank passbook, income proof, or CIBIL. We only ask one thing: your trust.
+              People from remote agrarian regions of rural North and East India walk in with small gold or silver ornaments — usually between 2 to 15 grams. No bank passbooks, income proof, or credit scores are required. We ask for just one thing: your trust.
             </p>
           </div>
 
