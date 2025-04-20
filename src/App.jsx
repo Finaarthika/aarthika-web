@@ -13,6 +13,7 @@ import Footer from './components/Footer'
 import LogoDemo from './components/LogoDemo'
 import PrivacyPolicy from './components/PrivacyPolicy'
 import TermsOfService from './components/TermsOfService'
+import JoinAarthika from './components/JoinAarthika'
 import GoldLoansRuralIndia from './pages/blog/GoldLoansRuralIndia'
 import WhyWeBuiltAarthika from './pages/blog/WhyWeBuiltAarthika'
 import WhyInterestRates from './pages/blog/WhyInterestRates'
@@ -30,7 +31,7 @@ function ScrollToTop() {
   return null;
 }
 
-function MainLayout() {
+function MainLayout({ toggleJoinForm }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -50,17 +51,23 @@ function MainLayout() {
         <Insights />
         <FAQ />
       </main>
-      <Footer />
+      <Footer toggleJoinForm={toggleJoinForm} />
     </div>
   );
 }
 
 function App() {
+  const [isJoinFormVisible, setIsJoinFormVisible] = useState(false);
+
+  const toggleJoinForm = () => {
+    setIsJoinFormVisible(prev => !prev);
+  };
+
   return (
     <Router>
       <ScrollToTop />
       <Routes>
-        <Route path="/" element={<MainLayout />} />
+        <Route path="/" element={<MainLayout toggleJoinForm={toggleJoinForm} />} />
         <Route path="/logo-demo" element={<LogoDemo />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />
@@ -69,6 +76,7 @@ function App() {
         <Route path="/blog/why-interest-rates" element={<WhyInterestRates />} />
         <Route path="/blog/trust-and-time" element={<TrustAndTime />} />
       </Routes>
+      {isJoinFormVisible && <JoinAarthika onClose={toggleJoinForm} />}
     </Router>
   );
 }

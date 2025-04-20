@@ -4,7 +4,7 @@ import logoFull from '../assets/Aarthika (1).png'; // Import the full logo
 import { EMAIL, PHONE, PHONE_DISPLAY, WHATSAPP_URL, FORMSPREE_ENDPOINT } from '../constants/contactInfo';
 import { Link as RouterLink } from 'react-router-dom'; // Import RouterLink for internal page navigation
 
-const Footer = () => {
+const Footer = ({ toggleJoinForm }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -136,12 +136,15 @@ const Footer = () => {
               </div>
             </div>
               
-            {/* Follow Us (Placeholder) */}
+            {/* Join Aarthika Button */}
             <div className="mt-8">
-              <h3 className="text-lg font-semibold mb-4 text-white border-l-2 border-aarthikaBlue pl-3">Follow Us</h3>
-              <div className="flex space-x-4">
-                <span className="text-sm italic text-gray-400">Coming Soon</span>
-              </div>
+              <h3 className="text-lg font-semibold mb-4 text-white border-l-2 border-aarthikaBlue pl-3">Work With Us</h3>
+               <button 
+                 onClick={toggleJoinForm} // Call the function passed from App.jsx
+                 className="btn btn-secondary w-full py-3 text-base"
+               >
+                 Join Aarthika (Staff)
+               </button>
             </div>
           </div>
         </div>
