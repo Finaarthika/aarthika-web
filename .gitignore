@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Sensitive Files
+assets/service_account.json
+finance-template/
+
+# Build output

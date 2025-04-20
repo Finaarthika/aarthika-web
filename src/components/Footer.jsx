@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import logoIcon from '../assets/4.png'; // Using the icon logo
+import logoFull from '../assets/Aarthika (1).png'; // Import the full logo
 import { EMAIL, PHONE, PHONE_DISPLAY, WHATSAPP_URL, FORMSPREE_ENDPOINT } from '../constants/contactInfo';
 import { Link as RouterLink } from 'react-router-dom'; // Import RouterLink for internal page navigation
 
@@ -95,14 +96,21 @@ const Footer = () => {
           <div className="flex flex-col justify-between">
             <div>
               <div className="flex items-center mb-6">
-                <div className="bg-white rounded-full w-10 h-10 mr-3 shadow-md flex-shrink-0 overflow-hidden flex items-center justify-center">
+                {/* Keep the small icon logo */}
+                {/* <div className="bg-white rounded-full w-10 h-10 mr-3 shadow-md flex-shrink-0 overflow-hidden flex items-center justify-center">
                   <img 
                     src={logoIcon} 
                     alt="Aarthika Logo Icon" 
                     className="h-full w-full object-cover rounded-full" 
                   />
-                </div>
-                <span className="text-2xl font-bold text-white">Aarthika</span>
+                </div> */}
+                {/* Replace text with the full logo image */}
+                <img 
+                  src={logoFull} 
+                  alt="Aarthika Logo" 
+                  className="h-8 md:h-10 w-auto" // Match navbar logo height
+                />
+                {/* <span className="text-2xl font-bold text-white">Aarthika</span> */}
               </div>
               <p className="mb-8 text-gray-400 text-base md:text-lg leading-relaxed">
                 Empowering rural communities with innovative financial solutions backed by trusted assets. We bridge the gap between traditional values and modern finance.
