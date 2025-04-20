@@ -16,12 +16,15 @@ const PresenceMap = () => {
           </p>
         </div>
 
-        {/* Map Image Placeholder */}
-        <div className="max-w-5xl mx-auto bg-white p-4 rounded-lg shadow-md border border-gray-200">
+        {/* Map Image Container - Added min-h and bg */}
+        <div className="max-w-5xl mx-auto bg-white p-4 rounded-lg shadow-md border border-gray-200 min-h-[300px] flex items-center justify-center"> 
            <img 
              src={mapImageUrl} 
              alt="Map showing Aarthika branch locations across Bihar and West Bengal" 
-             className="w-full h-auto rounded"
+             // Added explicit width/height, bg, and text styling for fallback
+             className="w-full h-auto max-h-[500px] rounded bg-gray-100 text-center text-gray-500 italic p-4 object-contain"
+             // Handle image loading error to ensure alt text is visible
+             onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.classList.add('bg-gray-100'); e.target.parentElement.innerHTML = `<p class="text-gray-500 italic">${e.target.alt}</p>`; }}
            />
         </div>
 
