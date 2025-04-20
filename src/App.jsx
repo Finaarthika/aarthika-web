@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
+import { scroller } from 'react-scroll'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import LiveMetalRates from './components/LiveMetalRates'
@@ -20,6 +21,9 @@ import WhyInterestRates from './pages/blog/WhyInterestRates'
 import TrustAndTime from './pages/blog/TrustAndTime'
 import './App.css'
 
+const NAV_OFFSET = -80;
+const SCROLL_DURATION = 1000;
+
 // Helper component to scroll to top on route change
 function ScrollToTop() {
   const location = useLocation(); // Get the full location object
@@ -37,10 +41,24 @@ function ScrollToTop() {
 
 function MainLayout({ toggleJoinForm }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+
+  useEffect(() => {
+    if (location.pathname === '/' && location.hash === '#insights') {
+      const scrollTimer = setTimeout(() => {
+         scroller.scrollTo('insights', {
+            duration: SCROLL_DURATION,
+            smooth: true,
+            offset: NAV_OFFSET, 
+         });
+      }, 100);
+      return () => clearTimeout(scrollTimer);
+    }
+  }, [location]);
 
   return (
     <div className="min-h-screen w-full flex flex-col bg-white">
