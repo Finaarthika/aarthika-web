@@ -50,7 +50,7 @@ const GoldLoansRuralIndia = () => {
               3. Instant Valuation & Loan Amount
             </h2>
             <p className="text-gray-600 leading-relaxed mb-4">
-              We offer up to 75–80% of the value, calculated live using rates from Google Sheets — which you can even see on our website now! We show you the full math, not magic.
+              We offer up to 75–80% of the value, calculated transparently using daily rates shared by our trusted lending partners. These rates are updated based on real market activity, so you always get a fair estimate. We show you the full math, not magic.
             </p>
             <p className="text-gray-600 leading-relaxed font-medium">For example:</p>
             <div className="bg-gray-100 p-4 rounded mt-2 text-gray-700">
@@ -70,7 +70,7 @@ const GoldLoansRuralIndia = () => {
 
           <div>
             <h2 className="text-2xl font-semibold text-aarthikaDark mb-3">
-              5. Interest as Low as 2.5–3%
+              5. Interest as Low as 3–5%
             </h2>
             <p className="text-gray-600 leading-relaxed">
               We charge interest monthly. If you pay early, you pay less. We give discounts on closure, and you can even check your due anytime.
@@ -82,7 +82,7 @@ const GoldLoansRuralIndia = () => {
               6. Loan Closure is as Easy
             </h2>
             <p className="text-gray-600 leading-relaxed">
-              Come back with the amount, we count, we return your item, and give you a final PDF. All data is saved in our Aarthika App — your loan history is clean and proofed.
+              Come back with the amount, we count, we return your item, and give you a final Receipt. All data is saved in our Aarthika App — your loan history is clean and proofed.
             </p>
           </div>
         </div>
@@ -96,7 +96,7 @@ const GoldLoansRuralIndia = () => {
             In rural India, borrowing is usually emotional — "woh bola ki interest 5%, par nikla 10%." Our mission is to make gold lending professional, predictable, and respectful.
           </p>
           <p className="text-lg text-gray-700 leading-relaxed italic">
-            We don't ask "kyun chahiye paisa?" — we just ask "kab tak laaoge?" That's what financial dignity looks like.
+            We don't ask "kyun chahiye paisa?" — we just ask “Aap kab tak lauta payenge, taaki hum aapka saman ready rakkhein?” That's what financial dignity looks like.
           </p>
         </div>
       </div>
