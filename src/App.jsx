@@ -55,7 +55,7 @@ function MainLayout({ toggleJoinForm }) {
             smooth: true,
             offset: NAV_OFFSET, 
          });
-      }, 100);
+      }, 300);
       return () => clearTimeout(scrollTimer);
     }
   }, [location]);
