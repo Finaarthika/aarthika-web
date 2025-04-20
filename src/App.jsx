@@ -9,6 +9,7 @@ import Partnerships from './components/Partnerships'
 import Technology from './components/Technology'
 import Insights from './components/Insights'
 import FAQ from './components/FAQ'
+import PresenceMap from './components/PresenceMap'
 import Footer from './components/Footer'
 import LogoDemo from './components/LogoDemo'
 import PrivacyPolicy from './components/PrivacyPolicy'
@@ -54,6 +55,7 @@ function MainLayout({ toggleJoinForm }) {
         <Technology />
         <Insights />
         <FAQ />
+        <PresenceMap />
       </main>
       <Footer toggleJoinForm={toggleJoinForm} />
     </div>
