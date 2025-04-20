@@ -22,11 +22,15 @@ import './App.css'
 
 // Helper component to scroll to top on route change
 function ScrollToTop() {
-  const { pathname } = useLocation();
+  const location = useLocation(); // Get the full location object
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+    // Only scroll to top if there's no hash in the target location
+    if (!location.hash) {
+      window.scrollTo(0, 0);
+    }
+    // If there is a hash, let the browser handle the scrolling to the element
+  }, [location]); // Depend on the whole location object
 
   return null;
 }

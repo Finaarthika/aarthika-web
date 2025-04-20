@@ -35,16 +35,17 @@ const Insights = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
           {blogPosts.map((post, index) => (
-            <div key={index} className="bg-gray-50 rounded-lg shadow-md p-6 flex flex-col transition-shadow hover:shadow-lg">
-              {/* Optional: Icon or banner placeholder */}
-              {/* <div className="mb-4"> Icon/Banner </div> */}
-              <h3 className="text-xl font-semibold text-aarthikaDark mb-3">{post.title}</h3>
-              <p className="text-gray-600 text-base mb-4 flex-grow">{post.summary}</p>
-              <Link 
-                to={post.link} 
-                className="mt-auto inline-block text-white bg-aarthikaBlue hover:bg-aarthikaDark transition-colors duration-300 font-medium rounded-full px-6 py-2 text-center self-start"
-              >
-                Read More
+            <div key={index} className="bg-gray-50 rounded-lg shadow-md transition-shadow hover:shadow-lg overflow-hidden flex flex-col">
+              <Link to={post.link} className="block p-6 flex flex-col flex-grow group">
+                <h3 className="text-xl font-semibold text-aarthikaDark mb-3 group-hover:text-aarthikaBlue transition-colors">{post.title}</h3>
+                <p className="text-gray-600 text-base mb-4 flex-grow">{post.summary}</p>
+                <div className="mt-auto self-start">
+                  <span 
+                    className="inline-block text-white bg-aarthikaBlue group-hover:bg-aarthikaDark transition-colors duration-300 font-medium rounded-full px-6 py-2 text-center"
+                  >
+                    Read More
+                  </span>
+                </div>
               </Link>
             </div>
           ))}
