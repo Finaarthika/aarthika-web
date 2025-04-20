@@ -17,6 +17,11 @@ const blogPosts = [
     summary: 'A thoughtful look behind our interest rates. Understand the rural realities, operational costs, and trust factors that shape our fair and transparent pricing model.',
     link: '/blog/why-interest-rates',
   },
+  {
+    title: 'Behind Every Loan: The Story of Trust and Time',
+    summary: 'A loan in rural India is more than finance; it's about vulnerability, observation, and the slow build-up of credibility through consistent, small acts of respect and transparency.',
+    link: '/blog/trust-and-time',
+  },
 ];
 
 const Insights = () => {
