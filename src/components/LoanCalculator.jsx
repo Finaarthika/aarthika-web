@@ -144,50 +144,21 @@ const LoanCalculator = () => {
           </div>
         </div>
 
-        {/* Right Column: Updated Illustration */}
-        <div className="hidden md:flex justify-center items-center animate-fade-in p-8">
-           <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full max-w-xs h-auto text-gray-400">
-              {/* Base */}
-              <rect x="30" y="85" width="40" height="5" rx="1" className="fill-current text-gray-400"/>
-              {/* Pillar */}
-              <rect x="48" y="20" width="4" height="65" className="fill-current text-gray-500"/>
-              {/* Beam - slightly tilted */}
-              <rect x="10" y="18" width="80" height="4" rx="1" className="fill-current text-gray-500" transform="rotate(-2 50 20)"/>
-              {/* Left Pan Hanger */}
-              <path d="M 20 21 V 29 Q 20 34 25 34 H 35 Q 40 34 40 29 V 21" className="stroke-current text-gray-400" fill="none" strokeWidth="2" transform="rotate(-2 30 38)"/>
-              {/* Right Pan Hanger */}
-              <path d="M 60 21 V 29 Q 60 34 65 34 H 75 Q 80 34 80 29 V 21" className="stroke-current text-gray-400" fill="none" strokeWidth="2" transform="rotate(-2 70 38)"/>
-              {/* Left Pan */}
-              <ellipse cx="30" cy="38" rx="15" ry="4" className="fill-current text-aarthikaBlue/30" transform="rotate(-2 30 38)"/>
-              {/* Right Pan */}
-              <ellipse cx="70" cy="38" rx="15" ry="4" className="fill-current text-aarthikaDark/30" transform="rotate(-2 70 38)"/>
-              
-              {/* Gold & Silver on Left Pan */}
-              <g transform="translate(22 28) rotate(-2 8 4)">
-                {/* Gold Bars */}
-                <rect x="0" y="0" width="8" height="5" rx="1" className="fill-current text-yellow-400"/>
-                <rect x="1" y="6" width="8" height="5" rx="1" className="fill-current text-yellow-400 opacity-80"/>
-                {/* Silver Coin */}
-                <circle cx="13" cy="5" r="4" className="fill-current text-gray-300"/>
-              </g>
-
-              {/* 500 Rupee Note Bundle on Right Pan */}
-              <g transform="translate(62 27) rotate(-2 8 5)">
-                {/* Base color for notes */}
-                <defs>
-                  <linearGradient id="noteGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" style={{stopColor: '#A0AEC0', stopOpacity: 1}} /> {/* Grayish */} 
-                    <stop offset="100%" style={{stopColor: '#CBD5E0', stopOpacity: 1}} /> {/* Lighter Gray */} 
-                  </linearGradient>
-                </defs>
-                {/* Stack of notes */}
-                <rect x="0" y="4" width="16" height="6" rx="1" className="fill-[url(#noteGrad)]" />
-                <rect x="1" y="2" width="16" height="6" rx="1" className="fill-[url(#noteGrad)] opacity-90" />
-                <rect x="2" y="0" width="16" height="6" rx="1" className="fill-[url(#noteGrad)] opacity-80"/>
-                {/* Band */}
-                <rect x="7" y="-1" width="4" height="8" rx="0.5" className="fill-current text-gray-600 opacity-70" transform="rotate(15 9 3)"/>
-              </g>
-            </svg>
+        {/* Right Column: New Abstract Illustration */}
+        <div className="hidden md:flex justify-center items-center animate-fade-in p-8 relative overflow-hidden">
+           <div className="w-full max-w-sm h-80 rounded-lg bg-gradient-to-br from-aarthikaBlue/10 to-aarthikaDark/5 flex items-center justify-center p-4 shadow-inner">
+              {/* Stylized representation: Finance (Rupee) + Growth/Value (Leaf) */}
+              <div className="relative text-center">
+                 {/* Rupee Symbol (Large, semi-transparent) */}
+                 <span className="text-8xl font-bold text-aarthikaBlue opacity-20 select-none">
+                    ₹
+                 </span>
+                 {/* Leaf Icon overlay */}
+                 <svg xmlns="http://www.w3.org/2000/svg" className="h-20 w-20 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-aarthikaBlue opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                   <path strokeLinecap="round" strokeLinejoin="round" d="M14.121 15.536A9.005 9.005 0 1 1 8.464 9.879M14.121 15.536L12 17.657M14.121 15.536A9.005 9.005 0 0 0 14.121 3.464M14.121 15.536C15.121 14.536 16 13.306 16 12C16 10.694 15.121 9.464 14.121 8.464" />
+                 </svg>
+              </div>
+           </div>
         </div>
       </div>
     </section>
