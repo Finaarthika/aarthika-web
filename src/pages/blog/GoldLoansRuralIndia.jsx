@@ -1,15 +1,16 @@
 import React from 'react';
-import { Link } from 'react-router-dom'; // For potential internal links or back button
+// import { Link } from 'react-router-dom'; // Removed
+import { HashLink } from 'react-router-hash-link'; // Added
 
 const GoldLoansRuralIndia = () => {
   return (
     <div className="bg-white py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
-        {/* Optional Back Button */}
-        <Link to="/#insights" className="text-aarthikaBlue hover:text-aarthikaDark inline-flex items-center mb-8">
+        {/* Use HashLink with smooth prop */}
+        <HashLink smooth to="/#insights" className="text-aarthikaBlue hover:text-aarthikaDark inline-flex items-center mb-8">
           <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
           Back to Insights
-        </Link>
+        </HashLink>
 
         <h1 className="text-3xl md:text-4xl font-bold text-aarthikaDark mb-6">
           How Gold Loans Work in Rural India
@@ -96,7 +97,7 @@ const GoldLoansRuralIndia = () => {
             In rural India, borrowing is usually emotional — "woh bola ki interest 5%, par nikla 10%." Our mission is to make gold lending professional, predictable, and respectful.
           </p>
           <p className="text-lg text-gray-700 leading-relaxed italic">
-            We don't ask "kyun chahiye paisa?" — we just ask “Aap kab tak lauta payenge, taaki hum aapka saman ready rakkhein?” That's what financial dignity looks like.
+            We don't ask "kyun chahiye paisa?" — we just ask "Aap kab tak lauta payenge, taaki hum aapka saman ready rakkhein?" That's what financial dignity looks like.
           </p>
         </div>
       </div>
