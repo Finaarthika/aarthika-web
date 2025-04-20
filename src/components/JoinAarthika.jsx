@@ -10,9 +10,7 @@ const JoinAarthika = ({ onClose }) => {
     location: '',
     preferredLocation: 'Kishanganj',
     smartphoneComfort: '',
-    appUsage: '',
     appManagementTraining: '',
-    communicationSkills: '',
     handlingExperience: '',
     bankingAppUsage: '',
     comfortTalkingRural: '',
@@ -117,16 +115,6 @@ const JoinAarthika = ({ onClose }) => {
                     </select>
                  </div>
                  <div>
-                    <label htmlFor="appUsage" className="block text-sm font-medium text-gray-700 mb-1">Have you used mobile apps before?</label>
-                    <select name="appUsage" id="appUsage" value={formData.appUsage} onChange={handleChange} required className="w-full p-2 border border-gray-300 rounded-md focus:ring-aarthikaBlue focus:border-aarthikaBlue bg-white">
-                       <option value="" disabled>Select...</option>
-                       <option>Yes (WhatsApp, YouTube, etc.)</option>
-                       <option>Occasionally</option>
-                       <option>Rarely</option>
-                       <option>Never</option>
-                    </select>
-                 </div>
-                 <div>
                     <label htmlFor="appManagementTraining" className="block text-sm font-medium text-gray-700 mb-1">If trained for 2 days, can you manage data in Aarthika app?</label>
                     <select name="appManagementTraining" id="appManagementTraining" value={formData.appManagementTraining} onChange={handleChange} required className="w-full p-2 border border-gray-300 rounded-md focus:ring-aarthikaBlue focus:border-aarthikaBlue bg-white">
                        <option value="" disabled>Select...</option>
@@ -134,16 +122,6 @@ const JoinAarthika = ({ onClose }) => {
                        <option>Maybe</option>
                        <option>Not sure</option>
                        <option>No</option>
-                    </select>
-                 </div>
-                 <div>
-                    <label htmlFor="communicationSkills" className="block text-sm font-medium text-gray-700 mb-1">How are your communication skills with rural customers?</label>
-                    <select name="communicationSkills" id="communicationSkills" value={formData.communicationSkills} onChange={handleChange} required className="w-full p-2 border border-gray-300 rounded-md focus:ring-aarthikaBlue focus:border-aarthikaBlue bg-white">
-                       <option value="" disabled>Select...</option>
-                       <option>Excellent</option>
-                       <option>Good</option>
-                       <option>Average</option>
-                       <option>Poor</option>
                     </select>
                  </div>
                  <div>
@@ -186,22 +164,22 @@ const JoinAarthika = ({ onClose }) => {
               </div>
             </fieldset>
 
-            {/* Motivation */}
-            <fieldset className="border border-gray-300 p-4 rounded-md">
-               <legend className="text-lg font-semibold text-aarthikaDark px-2">Motivation</legend>
-               <div className="mt-2">
-                 <label htmlFor="motivation" className="block text-sm font-medium text-gray-700 mb-1">Why do you want to join Aarthika?</label>
-                 <textarea name="motivation" id="motivation" rows="4" value={formData.motivation} onChange={handleChange} required className="w-full p-2 border border-gray-300 rounded-md focus:ring-aarthikaBlue focus:border-aarthikaBlue"></textarea>
-               </div>
-            </fieldset>
-
-            {/* Handling Pressure - New Section */}
+            {/* Handling Pressure - Moved Before Motivation */}
             <fieldset className="border border-gray-300 p-4 rounded-md">
                <legend className="text-lg font-semibold text-aarthikaDark px-2">Handling Pressure</legend>
                <div className="mt-2">
                  <label htmlFor="pressureHandlingResponse" className="block text-sm font-medium text-gray-700 mb-1">If a customer is accusing you or yelling at you, how do you control your anger or respond calmly?</label>
                  <textarea name="pressureHandlingResponse" id="pressureHandlingResponse" rows="4" value={formData.pressureHandlingResponse} onChange={handleChange} required className="w-full p-2 border border-gray-300 rounded-md focus:ring-aarthikaBlue focus:border-aarthikaBlue" placeholder="Your answer helps us know how you handle pressure..."></textarea>
                  <p className="text-xs text-gray-500 mt-1">(Your answer helps us know how you handle pressure in real field work.)</p>
+               </div>
+            </fieldset>
+
+            {/* Motivation - Moved After Handling Pressure */}
+            <fieldset className="border border-gray-300 p-4 rounded-md">
+               <legend className="text-lg font-semibold text-aarthikaDark px-2">Motivation</legend>
+               <div className="mt-2">
+                 <label htmlFor="motivation" className="block text-sm font-medium text-gray-700 mb-1">Why do you want to join Aarthika?</label>
+                 <textarea name="motivation" id="motivation" rows="4" value={formData.motivation} onChange={handleChange} required className="w-full p-2 border border-gray-300 rounded-md focus:ring-aarthikaBlue focus:border-aarthikaBlue"></textarea>
                </div>
             </fieldset>
             
