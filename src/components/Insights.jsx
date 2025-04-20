@@ -19,7 +19,7 @@ const blogPosts = [
   },
   {
     title: 'Behind Every Loan: The Story of Trust and Time',
-    summary: 'A loan in rural India is more than finance; it's about vulnerability, observation, and the slow build-up of credibility through consistent, small acts of respect and transparency.',
+    summary: 'A loan in rural India is more than finance; it\'s about vulnerability, observation, and the slow build-up of credibility through consistent, small acts of respect and transparency.',
     link: '/blog/trust-and-time',
   },
 ];
