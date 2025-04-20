@@ -35,6 +35,16 @@ const MobileNavLink = ({ to, children, onClick }) => (
 );
 
 const Navbar = ({ isMenuOpen, toggleMenu }) => {
+  const navItems = [
+    { to: 'home', label: 'Home' },
+    { to: 'about', label: 'About Us' },
+    { to: 'services', label: 'Services' },
+    { to: 'live-rates', label: 'Rates' },
+    { to: 'partnerships', label: 'Partnerships' },
+    { to: 'technology', label: 'Technology' },
+    { to: 'contact', label: 'Contact' },
+  ];
+
   return (
     <nav className="bg-gradient-to-r from-aarthikaDark to-aarthikaBlue py-4 w-full shadow-lg fixed top-0 left-0 right-0 z-50">
       <div className="container flex justify-between items-center px-4 md:px-12 lg:px-24 max-w-screen-2xl mx-auto">
@@ -58,6 +68,7 @@ const Navbar = ({ isMenuOpen, toggleMenu }) => {
           <NavLink to="home">Home</NavLink>
           <NavLink to="about">About Us</NavLink>
           <NavLink to="services">Services</NavLink>
+          <NavLink to="live-rates">Rates</NavLink>
           <NavLink to="partnerships">Partnerships</NavLink>
           <NavLink to="technology">Technology</NavLink>
           <Link 
@@ -95,6 +106,7 @@ const Navbar = ({ isMenuOpen, toggleMenu }) => {
             <MobileNavLink to="home" onClick={toggleMenu}>Home</MobileNavLink>
             <MobileNavLink to="about" onClick={toggleMenu}>About Us</MobileNavLink>
             <MobileNavLink to="services" onClick={toggleMenu}>Services</MobileNavLink>
+            <MobileNavLink to="live-rates" onClick={toggleMenu}>Rates</MobileNavLink>
             <MobileNavLink to="partnerships" onClick={toggleMenu}>Partnerships</MobileNavLink>
             <MobileNavLink to="technology" onClick={toggleMenu}>Technology</MobileNavLink>
             <MobileNavLink to="contact" onClick={toggleMenu}>Contact Us</MobileNavLink>
