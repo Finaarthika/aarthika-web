@@ -1,36 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-// Import icons used in both rate display and calculator info block
-import { FaTachometerAlt, FaLock, FaBalanceScale, FaCoins, FaRing } from 'react-icons/fa'; 
+import { FaCoins, FaRing, FaTachometerAlt, FaBalanceScale, FaLock } from 'react-icons/fa';
 
 // --- Constants ---
 const FETCH_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes (for base rate refresh)
 const SIMULATION_INTERVAL_MS = 750; // 3/4 second for fluctuation simulation
 const MAX_FLUCTUATION_PERCENT = 0.85; // Max deviation from base rate (+/- %)
 const TICK_FLUCTUATION_PERCENT = 0.15; // Max random change per tick (+/- %), adjust for smoothness
-
-// --- Loan Calculator Constants (Moved from LoanCalculator.jsx) ---
-// Use fetched base rates instead of these static ones where possible
-const LOAN_TO_VALUE = 0.75; // 75% LTV
-
-const GOLD_PURITY_FACTORS = {
-  '24K': 1,       
-  '22K': 22 / 24, 
-  '18K': 18 / 24, 
-  '14K': 14 / 24, 
-};
-
-const SILVER_PURITY_FACTORS = {
-  '999': 0.999, 
-  '925': 0.925, 
-  '85%': 0.85,
-  '80%': 0.80,
-  '75%': 0.75,
-  '70%': 0.70,
-  '65%': 0.65,
-};
-// Default purities for the calculator
-const DEFAULT_GOLD_PURITY = '18K';
-const DEFAULT_SILVER_PURITY = '70%';
 
 // --- Helper Functions ---
 const getRandomMultiplier = () => {
@@ -40,31 +15,24 @@ const getRandomMultiplier = () => {
 
 const formatRate = (rate) => {
   if (typeof rate !== 'number' || isNaN(rate)) return 'N/A';
-  return rate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return rate.toFixed(2);
 };
 
 const LiveMetalRates = () => {
-  // --- State for Live Rates ---
   const [baseRates, setBaseRates] = useState({ goldRate: null, silverRate: null });
   const [displayRates, setDisplayRates] = useState({ goldRate: null, silverRate: null });
   const [rateDirections, setRateDirections] = useState({ gold: 'same', silver: 'same' });
-  const [loadingRates, setLoadingRates] = useState(true);
-  const [ratesError, setRatesError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const prevDisplayRatesRef = useRef(displayRates);
-
-  // --- State for Calculator (Moved from LoanCalculator.jsx) ---
-  const [metalType, setMetalType] = useState('gold');
-  const [weight, setWeight] = useState('');
-  const [purity, setPurity] = useState(DEFAULT_GOLD_PURITY); 
-  const [loanAmount, setLoanAmount] = useState(0);
-  // Note: currentRate for calculator display will use baseRates
 
   // --- Fetching Logic ---
   const fetchBaseRates = useCallback(async (isInitialLoad = false) => {
-    if (isInitialLoad) setLoadingRates(true);
-    setRatesError(null);
+    if (isInitialLoad) setLoading(true);
+    setError(null);
+    console.log("Fetching base metal rates...");
     try {
-      const response = await fetch('/api/metal-rates'); 
+      const response = await fetch('/api/metal-rates');
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || `HTTP error! status: ${response.status}`);
       if (data.error) throw new Error(data.error);
@@ -75,26 +43,25 @@ const LiveMetalRates = () => {
           goldRate: !isNaN(fetchedGoldRate) ? fetchedGoldRate : null,
           silverRate: !isNaN(fetchedSilverRate) ? fetchedSilverRate : null,
       };
+
+      console.log("Base rates fetched:", newBaseRates);
       setBaseRates(newBaseRates);
 
-      // Initialize or update display rates based on fetched data
+      // Reset display rates if they are null or base rates change significantly (optional)
       setDisplayRates(current => ({
-        goldRate: current.goldRate === null || isInitialLoad ? newBaseRates.goldRate : current.goldRate,
-        silverRate: current.silverRate === null || isInitialLoad ? newBaseRates.silverRate : current.silverRate,
+        goldRate: current.goldRate === null || newBaseRates.goldRate !== baseRates.goldRate ? newBaseRates.goldRate : current.goldRate,
+        silverRate: current.silverRate === null || newBaseRates.silverRate !== baseRates.silverRate ? newBaseRates.silverRate : current.silverRate,
       }));
-      if (isInitialLoad) {
-          prevDisplayRatesRef.current = newBaseRates; // Set initial reference for direction
-      }
+      prevDisplayRatesRef.current = newBaseRates;
+      setRateDirections({ gold: 'same', silver: 'same' });
 
     } catch (e) {
       console.error("Error fetching base metal rates:", e);
-      setRatesError(e.message || "Failed to load rates.");
-      // Set display rates to null on error to show N/A
-      setDisplayRates({ goldRate: null, silverRate: null });
+      setError(e.message || "Failed to load rates.");
     } finally {
-      if (isInitialLoad) setLoadingRates(false);
+      if (isInitialLoad) setLoading(false);
     }
-  }, []); // Empty dependency array for fetch logic
+  }, [baseRates.goldRate, baseRates.silverRate]); // Re-run if base rates change
 
   // Initial fetch and interval for base rates
   useEffect(() => {
@@ -103,15 +70,14 @@ const LiveMetalRates = () => {
     return () => clearInterval(fetchInterval);
   }, [fetchBaseRates]);
 
-  // --- Simulation Logic (Unchanged) ---
+  // --- Simulation Logic ---
   useEffect(() => {
-     if (loadingRates) return; // Don't simulate while loading initial rates
     const simulationInterval = setInterval(() => {
       if (baseRates.goldRate === null && baseRates.silverRate === null) return;
 
       setDisplayRates(currentDisplayRates => {
           const newDisplay = { ...currentDisplayRates };
-          const newDirections = { ...rateDirections }; 
+          const newDirections = { ...rateDirections }; // Start with current directions
           const prevRates = prevDisplayRatesRef.current;
 
           // Simulate Gold
@@ -121,6 +87,7 @@ const LiveMetalRates = () => {
               const maxDev = baseRates.goldRate * MAX_FLUCTUATION_PERCENT / 100;
               newRate = Math.max(baseRates.goldRate - maxDev, Math.min(baseRates.goldRate + maxDev, newRate));
               newDisplay.goldRate = newRate;
+              // Compare with previous *display* rate to get tick direction
               newDirections.gold = newRate > (prevRates.goldRate ?? -Infinity) ? 'up' : (newRate < (prevRates.goldRate ?? Infinity) ? 'down' : 'same');
           }
 
@@ -134,7 +101,7 @@ const LiveMetalRates = () => {
               newDirections.silver = newRate > (prevRates.silverRate ?? -Infinity) ? 'up' : (newRate < (prevRates.silverRate ?? Infinity) ? 'down' : 'same');
           }
 
-          prevDisplayRatesRef.current = newDisplay; 
+          prevDisplayRatesRef.current = newDisplay; // Update ref for next tick comparison
           setRateDirections(newDirections);
           return newDisplay;
       });
@@ -142,61 +109,20 @@ const LiveMetalRates = () => {
     }, SIMULATION_INTERVAL_MS);
 
     return () => clearInterval(simulationInterval);
-  }, [baseRates, rateDirections, loadingRates]); // Add loadingRates dependency
+  }, [baseRates, rateDirections]); // Re-run if base rates change
 
-  // --- Calculator Logic (Moved and adapted) ---
-  useEffect(() => {
-    if (metalType === 'gold') {
-      setPurity(DEFAULT_GOLD_PURITY); 
-    } else {
-      setPurity(DEFAULT_SILVER_PURITY); 
-    }
-    setWeight(''); 
-    setLoanAmount(0); 
-  }, [metalType]);
-
-  useEffect(() => {
-    const numericWeight = parseFloat(weight);
-    if (!numericWeight || numericWeight <= 0 || baseRates.goldRate === null || baseRates.silverRate === null) {
-      setLoanAmount(0);
-      return;
-    }
-
-    let baseRate = 0;
-    let purityFactor = 0;
-
-    if (metalType === 'gold') {
-      baseRate = baseRates.goldRate; // Use fetched base rate
-      purityFactor = GOLD_PURITY_FACTORS[purity] || 0;
-    } else {
-      baseRate = baseRates.silverRate; // Use fetched base rate
-      purityFactor = SILVER_PURITY_FACTORS[purity] || 0;
-    }
-    
-    const valuePerGram = baseRate * purityFactor;
-    const totalValue = numericWeight * valuePerGram;
-    const calculatedLoan = totalValue * LOAN_TO_VALUE;
-    
-    setLoanAmount(calculatedLoan);
-
-  }, [metalType, weight, purity, baseRates]); // Add baseRates dependency
-
-  const purityOptions = metalType === 'gold' 
-    ? Object.keys(GOLD_PURITY_FACTORS) 
-    : Object.keys(SILVER_PURITY_FACTORS);
-  
   const currentCalcRate = metalType === 'gold' ? baseRates.goldRate : baseRates.silverRate;
 
-  // --- RateCard Component (Styling adjusted slightly if needed, logic unchanged) ---
+  // --- RateCard Component (Styling adjusted slightly for consistency) ---
   const RateCard = ({ metal, rate, direction, icon, perGramText="Per gram (24k)" }) => {
     const displayValue = formatRate(rate);
-    const colorClass = direction === 'up' ? 'text-green-400' : direction === 'down' ? 'text-red-400' : 'text-white';
+    const colorClass = direction === 'up' ? 'text-green-500' : direction === 'down' ? 'text-red-500' : 'text-white';
     const arrow = direction === 'up' ? '↑' : direction === 'down' ? '↓' : '';
-    const bgColor = metal === 'Gold' ? 'bg-gradient-to-br from-yellow-400 to-amber-600' : 'bg-gradient-to-br from-gray-400 to-gray-600';
+    const bgColor = metal === 'Gold' ? 'bg-gradient-to-br from-yellow-400 to-amber-500' : 'bg-gradient-to-br from-gray-400 to-gray-500';
 
     return (
-      // Added min-h-[150px] for consistent height
-      <div className={`relative overflow-hidden rounded-xl p-6 shadow-lg ${bgColor} text-white transform hover:scale-105 transition-transform duration-300 ease-in-out min-h-[150px] flex flex-col justify-between`}>
+      // Consistent height and padding
+      <div className={`relative overflow-hidden rounded-xl p-6 shadow-md ${bgColor} text-white min-h-[150px] flex flex-col justify-between`}>
         <div>
           <div className="absolute -top-4 -right-4 text-white/10 text-6xl">
             {icon}
@@ -209,42 +135,41 @@ const LiveMetalRates = () => {
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
             </div>
           ) : (
-            <p className={`text-3xl md:text-4xl font-bold truncate transition-colors duration-300 ${colorClass}`} title={String(rate)}>
+            <p className={`text-3xl md:text-4xl font-bold truncate transition-colors duration-300 ${colorClass} leading-tight`} title={String(rate)}>
               ₹{displayValue} 
               <span className="text-lg ml-1">{arrow}</span>
             </p>
           )}
-          <p className="text-xs opacity-80 mt-2">{perGramText}</p>
+          <p className="text-xs opacity-80 mt-1">{perGramText}</p> 
        </div>
       </div>
     );
   };
 
-  // --- Render Logic (Revised Layout) ---
+  // --- Render Logic (Revised Layout for Alignment) ---
   return (
-    // Increased vertical padding slightly
     <section id="rates-calculator" className="py-20 md:py-28 bg-gradient-to-b from-gray-50 to-white">
-      {/* Kept container max-width */} 
-      <div className="premium-container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="premium-container mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Section Title (Unchanged) */}
-        <div className="text-center mb-16 md:mb-20">
+        {/* Section Title */}
+        <div className="text-center mb-16 md:mb-20 max-w-3xl mx-auto">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-3">Live Rates & Loan Calculator</h2>
           <div className="w-24 h-1 bg-gradient-to-r from-aarthikaDark to-aarthikaBlue rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-gray-600 mx-auto">
               Check today's indicative rates and estimate your potential loan amount instantly.
           </p>
           {ratesError && <p className="text-sm text-red-600 font-medium mt-4">Error fetching rates: {ratesError}</p>}
         </div>
 
-        {/* Main Content Grid (Revised to 2 columns on large screens) */}
-        {/* Increased gap */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-16 items-start">
+        {/* Main Content Grid - Applying consistent styling */}
+        {/* Use items-stretch for equal height columns, adjust gap */} 
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-12 items-stretch"> {/* Changed to items-stretch */} 
            
-           {/* Column 1: Calculator Inputs & Output */}
-           <div className="animate-fade-in-delay bg-white p-8 lg:p-10 rounded-xl shadow-lg border border-gray-100 order-2 lg:order-1">
+           {/* Column 1: Calculator - Wrapped in a styled div */} 
+           <div className="animate-fade-in-delay bg-white p-8 lg:p-10 rounded-xl shadow-lg border border-gray-100 flex flex-col h-full">
              <h3 className="text-2xl font-semibold text-gray-800 mb-6">Estimate Your Loan</h3>
-             <div className="space-y-6">
+             <div className="space-y-6 flex-grow flex flex-col">
+                {/* ... Calculator form elements ... */} 
                  {/* Metal Type Selection */}
                  <div>
                    <label className="block text-sm font-medium text-gray-700 mb-2">Metal Type</label>
@@ -264,7 +189,7 @@ const LiveMetalRates = () => {
                    </div>
                  </div>
     
-                 {/* Weight & Purity Inputs (Side-by-side on medium screens) */} 
+                 {/* Weight & Purity Inputs */}
                  <div className="grid sm:grid-cols-2 gap-6">
                      <div>
                        <label htmlFor="weight" className="block text-sm font-medium text-gray-700 mb-1">Weight (grams)</label>
@@ -300,8 +225,8 @@ const LiveMetalRates = () => {
                      </div>
                  </div>
     
-                 {/* Estimated Loan Amount */} 
-                 <div className="bg-gradient-to-r from-aarthikaDark/5 to-aarthikaBlue/5 border border-aarthikaBlue/20 p-6 rounded-lg mt-4 text-center">
+                 {/* Estimated Loan Amount - Use flex-grow to push to bottom */} 
+                 <div className="bg-gradient-to-r from-aarthikaDark/5 to-aarthikaBlue/5 border border-aarthikaBlue/20 p-6 rounded-lg mt-auto text-center">
                      <p className="text-sm text-gray-600 mb-1">Estimated Loan Amount (at {LOAN_TO_VALUE * 100}% LTV)</p>
                      <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-aarthikaDark to-aarthikaBlue">
                      ₹{loanAmount > 0 ? formatRate(loanAmount) : '0.00'}
@@ -313,38 +238,40 @@ const LiveMetalRates = () => {
              </div> 
            </div>
            
-           {/* Column 2: Live Rate Cards & Info Block */}
-           {/* Adjusted order */} 
-           <div className="lg:col-span-1 space-y-8 order-1 lg:order-2">
-              <RateCard
-                metal="Gold"
-                rate={displayRates.goldRate}
-                direction={rateDirections.gold}
-                icon={<FaCoins/>}
-                perGramText="Per gram (24k Approx.)"
-              />
-              <RateCard
-                metal="Silver"
-                rate={displayRates.silverRate}
-                direction={rateDirections.silver}
-                icon={<FaRing/>}
-                perGramText="Per gram (999 Approx.)"
-              />
-               {/* Info Block (Now always here for large screens) */}
-              <div className="animate-fade-in-delay bg-gradient-to-br from-aarthikaBlue/5 to-transparent p-6 lg:p-8 rounded-xl border border-aarthikaBlue/10">
+           {/* Column 2: Rates & Info - Wrapped in a div to allow internal spacing */} 
+           <div className="lg:col-span-1 space-y-8 flex flex-col h-full"> {/* Use flex flex-col */} 
+              {/* Rate Cards take available space */} 
+              <div className="space-y-8">
+                 <RateCard
+                   metal="Gold"
+                   rate={displayRates.goldRate}
+                   direction={rateDirections.gold}
+                   icon={<FaCoins/>}
+                   perGramText="Per gram (24k Approx.)"
+                 />
+                 <RateCard
+                   metal="Silver"
+                   rate={displayRates.silverRate}
+                   direction={rateDirections.silver}
+                   icon={<FaRing/>}
+                   perGramText="Per gram (999 Approx.)"
+                 />
+              </div>
+               {/* Info Block - Apply consistent styling, push to bottom if needed or allow natural flow */}
+              <div className="animate-fade-in-delay bg-white p-6 lg:p-8 rounded-xl border border-gray-100 shadow-lg mt-auto"> {/* Use mt-auto to push down */} 
                 <h3 className="text-xl font-semibold text-gray-800 mb-4">Transparent & Secure</h3>
                 <p className="text-sm text-gray-600 mb-5 leading-relaxed">
                   We use certified valuation methods and ensure secure storage for your assets.
                 </p>
                 <div className="space-y-4 text-sm">
                     <div className="flex items-center text-gray-600">
-                       <FaTachometerAlt className="text-aarthikaBlue mr-3 flex-shrink-0" /> Quick Disbursal
+                       <FaTachometerAlt className="text-aarthikaBlue mr-3 flex-shrink-0 w-4" /> Quick Disbursal
                     </div>
                      <div className="flex items-center text-gray-600">
-                       <FaBalanceScale className="text-aarthikaBlue mr-3 flex-shrink-0" /> Fair Valuation
+                       <FaBalanceScale className="text-aarthikaBlue mr-3 flex-shrink-0 w-4" /> Fair Valuation
                     </div>
                      <div className="flex items-center text-gray-600">
-                       <FaLock className="text-aarthikaBlue mr-3 flex-shrink-0" /> Secure Storage
+                       <FaLock className="text-aarthikaBlue mr-3 flex-shrink-0 w-4" /> Secure Storage
                     </div>
                 </div>
               </div>
@@ -355,4 +282,4 @@ const LiveMetalRates = () => {
   );
 };
 
-export default LiveMetalRates; 
+export default LiveMetalRates;
