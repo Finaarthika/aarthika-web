@@ -7,7 +7,6 @@ import Services from './components/Services'
 import About from './components/About'
 import Partnerships from './components/Partnerships'
 import Technology from './components/Technology'
-import LoanCalculator from './components/LoanCalculator'
 import Footer from './components/Footer'
 import LogoDemo from './components/LogoDemo'
 import PrivacyPolicy from './components/PrivacyPolicy'
@@ -42,7 +41,6 @@ function MainLayout() {
         <Services />
         <Partnerships />
         <Technology />
-        <LoanCalculator />
       </main>
       <Footer />
     </div>
