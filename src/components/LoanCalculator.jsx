@@ -144,29 +144,49 @@ const LoanCalculator = () => {
           </div>
         </div>
 
-        {/* Right Column: Illustration */}
+        {/* Right Column: Updated Illustration */}
         <div className="hidden md:flex justify-center items-center animate-fade-in p-8">
-           {/* Simple Balance Scale SVG */}
-           <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full max-w-xs h-auto text-gray-300">
+           <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full max-w-xs h-auto text-gray-400">
               {/* Base */}
               <rect x="30" y="85" width="40" height="5" rx="1" className="fill-current text-gray-400"/>
               {/* Pillar */}
               <rect x="48" y="20" width="4" height="65" className="fill-current text-gray-500"/>
-              {/* Beam */}
-              <rect x="10" y="18" width="80" height="4" rx="1" className="fill-current text-gray-500"/>
+              {/* Beam - slightly tilted */}
+              <rect x="10" y="18" width="80" height="4" rx="1" className="fill-current text-gray-500" transform="rotate(-2 50 20)"/>
               {/* Left Pan Hanger */}
-              <path d="M 20 22 V 30 Q 20 35 25 35 H 35 Q 40 35 40 30 V 22" className="stroke-current text-gray-400" fill="none" strokeWidth="2"/>
+              <path d="M 20 21 V 29 Q 20 34 25 34 H 35 Q 40 34 40 29 V 21" className="stroke-current text-gray-400" fill="none" strokeWidth="2" transform="rotate(-2 30 38)"/>
               {/* Right Pan Hanger */}
-              <path d="M 60 22 V 30 Q 60 35 65 35 H 75 Q 80 35 80 30 V 22" className="stroke-current text-gray-400" fill="none" strokeWidth="2"/>
+              <path d="M 60 21 V 29 Q 60 34 65 34 H 75 Q 80 34 80 29 V 21" className="stroke-current text-gray-400" fill="none" strokeWidth="2" transform="rotate(-2 70 38)"/>
               {/* Left Pan */}
-              <ellipse cx="30" cy="40" rx="15" ry="4" className="fill-current text-aarthikaBlue/30"/>
+              <ellipse cx="30" cy="38" rx="15" ry="4" className="fill-current text-aarthikaBlue/30" transform="rotate(-2 30 38)"/>
               {/* Right Pan */}
-              <ellipse cx="70" cy="40" rx="15" ry="4" className="fill-current text-aarthikaDark/30"/>
-              {/* Simple Gold representation on left pan */}
-              <rect x="22" y="32" width="16" height="6" rx="1" className="fill-current text-yellow-400 opacity-80"/>
-               {/* Simple Silver/Cash representation on right pan */}
-              <rect x="63" y="34" width="14" height="4" rx="1" className="fill-current text-gray-400 opacity-80"/>
-              <rect x="64" y="30" width="12" height="4" rx="1" className="fill-current text-gray-400 opacity-70"/>
+              <ellipse cx="70" cy="38" rx="15" ry="4" className="fill-current text-aarthikaDark/30" transform="rotate(-2 70 38)"/>
+              
+              {/* Gold & Silver on Left Pan */}
+              <g transform="translate(22 28) rotate(-2 8 4)">
+                {/* Gold Bars */}
+                <rect x="0" y="0" width="8" height="5" rx="1" className="fill-current text-yellow-400"/>
+                <rect x="1" y="6" width="8" height="5" rx="1" className="fill-current text-yellow-400 opacity-80"/>
+                {/* Silver Coin */}
+                <circle cx="13" cy="5" r="4" className="fill-current text-gray-300"/>
+              </g>
+
+              {/* 500 Rupee Note Bundle on Right Pan */}
+              <g transform="translate(62 27) rotate(-2 8 5)">
+                {/* Base color for notes */}
+                <defs>
+                  <linearGradient id="noteGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style={{stopColor: '#A0AEC0', stopOpacity: 1}} /> {/* Grayish */} 
+                    <stop offset="100%" style={{stopColor: '#CBD5E0', stopOpacity: 1}} /> {/* Lighter Gray */} 
+                  </linearGradient>
+                </defs>
+                {/* Stack of notes */}
+                <rect x="0" y="4" width="16" height="6" rx="1" className="fill-[url(#noteGrad)]" />
+                <rect x="1" y="2" width="16" height="6" rx="1" className="fill-[url(#noteGrad)] opacity-90" />
+                <rect x="2" y="0" width="16" height="6" rx="1" className="fill-[url(#noteGrad)] opacity-80"/>
+                {/* Band */}
+                <rect x="7" y="-1" width="4" height="8" rx="0.5" className="fill-current text-gray-600 opacity-70" transform="rotate(15 9 3)"/>
+              </g>
             </svg>
         </div>
       </div>
