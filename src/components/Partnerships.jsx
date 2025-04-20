@@ -79,12 +79,14 @@ const Partnerships = () => {
           <p className="text-center mb-8 text-gray-600 text-base md:text-lg max-w-2xl mx-auto">
             We're always open to forming new strategic partnerships that can help us extend our impact and bring financial solutions to more communities.
           </p>
-          <a 
-            href="#contact" 
-            className="btn btn-primary shadow-lg px-10 py-3 text-base"
-          >
-            Explore Partnership Opportunities
-          </a>
+          <div className="text-center mt-12 md:mt-16">
+            <a
+              href="#contact"
+              className="btn btn-primary inline-block text-lg px-8 py-3"
+            >
+              Partner with us
+            </a>
+          </div>
         </div>
       </div>
     </section>
