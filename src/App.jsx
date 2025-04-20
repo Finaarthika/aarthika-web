@@ -20,7 +20,7 @@ import WhyInterestRates from './pages/blog/WhyInterestRates'
 import TrustAndTime from './pages/blog/TrustAndTime'
 import './App.css'
 
-// Restore original ScrollToTop
+// Restore ScrollToTop that ignores POP actions
 function ScrollToTop() {
   const { pathname } = useLocation();
   const navigationType = useNavigationType();
