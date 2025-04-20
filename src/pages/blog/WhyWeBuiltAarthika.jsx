@@ -15,7 +15,7 @@ const WhyWeBuiltAarthika = () => {
           Why We Built the Aarthika App
         </h1>
         <p className="text-lg text-gray-700 mb-6 leading-relaxed">
-          From 2020 to 2023, I was doing everything myself — checking gold, writing down names, counting cash, taking photos, calculating interest on paper. I knew every customer by face — but the business couldn't grow beyond me.
+          From 2020 to 2023, We were doing everything manually — checking gold, writing down names, counting cash, taking photos, calculating interest on paper. I knew every customer by face — but the business couldn't grow beyond me.
         </p>
         <p className="text-lg text-gray-700 mb-8 leading-relaxed">
           Then one day, after a long day of disbursing ₹5 lakh across 4 villages, I sat down and realized: I am stuck being the technician — not the entrepreneur. That night, Aarthika App was born on paper.
@@ -42,17 +42,17 @@ const WhyWeBuiltAarthika = () => {
             What We Built in the App
           </h2>
           <p className="text-gray-600 leading-relaxed mb-4">
-            Today, the Aarthika app (v1.0) is a working tool across Debiganj, Kishanganj, and Dharampur. It has:
+            Today, the Aarthika app (v1.0) is a working tool across Multiple Regions of rural Bihar and West Bengal. It has:
           </p>
           <ul className="list-disc list-inside text-gray-600 space-y-2 pl-4 leading-relaxed">
             <li>✅ Auto LTV calculator</li>
             <li>✅ Loan & top-up tracking</li>
-            <li>✅ Receipt generation with customer image</li>
+            <li>✅ Receipt generation with customer image and collateral image</li>
             <li>✅ Staff login with performance monitoring</li>
-            <li>✅ Google Sheets integration for backups</li>
+            <li>✅ Separate Data Sheets integration for backups</li>
             <li>✅ Firebase for secure data</li>
             <li>✅ Loan closure and interest discount features</li>
-            <li>✅ Face-based risk (in progress via CredAar)</li>
+            <li>✅ Face-based Credit Risk Assessment(in progress via AarCred)</li>
           </ul>
         </div>
 
@@ -62,13 +62,17 @@ const WhyWeBuiltAarthika = () => {
             What Changed for Me
           </h2>
           <p className="text-gray-600 leading-relaxed mb-4">
-            Now, my staff enters the data. I sit at home and watch on Google Sheets.
+          Today, our team handles customer onboarding and data entry, while operations are tracked in real-time through our internal systems.This has allowed us to focus more on expanding into newer geographies, improving our services, and building stronger relationships with our customers.
           </p>
           <p className="text-gray-600 leading-relaxed mb-4">
-            Customers trust us more — they get receipts, SMS alerts, and even WhatsApp links for support.
+          Now, our borrowers receive on-time receipts, SMS alerts, and WhatsApp support, making the lending experience transparent and trustworthy.
           </p>
           <p className="text-gray-600 leading-relaxed italic bg-gray-100 p-4 rounded">
-            When Deepa Uncle (a major crop trader) saw our printed receipts and automated loan closure reports, he said, "Bhai, tum bank se kam nahi ho."
+          "Earlier, we used to borrow from whoever would lend — there was no receipt, no record, just trust and fear. But with Aarthika, things feel different."
+
+"When we took a loan, we got a printed receipt with full details. When we closed it, we got a proper final bill. We even got messages and support on WhatsApp!"
+
+"Now we feel like we're dealing with a proper financial service, not just a local sahukar. This is how borrowing should be — clear, respectful, and trustworthy."
           </p>
         </div>
 
