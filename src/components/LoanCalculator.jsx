@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
-// Placeholder values - these should ideally come from an API or config
-const GOLD_RATE_PER_GRAM_24K = 5500; // Example INR per gram for 24K Gold
-const SILVER_RATE_PER_GRAM_PURE = 70;  // Example INR per gram for Pure Silver
+// Updated rates from Google Sheet (static for calculator)
+const GOLD_RATE_PER_GRAM_24K = 8977; // From cell A2
+const SILVER_RATE_PER_GRAM_PURE = 92;  // From cell B2
 const LOAN_TO_VALUE = 0.75; // 75% LTV
 
 // Purity factors relative to pure metal
@@ -144,12 +144,30 @@ const LoanCalculator = () => {
           </div>
         </div>
 
-        {/* Right Column: Illustration/Info */}
-        <div className="hidden md:flex justify-center items-center animate-fade-in">
-           {/* Placeholder for illustration - Can add an SVG or image later */}
-           <div className="bg-gray-100 w-full h-80 rounded-lg flex items-center justify-center text-gray-400 italic">
-             Illustration Area
-           </div>
+        {/* Right Column: Illustration */}
+        <div className="hidden md:flex justify-center items-center animate-fade-in p-8">
+           {/* Simple Balance Scale SVG */}
+           <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full max-w-xs h-auto text-gray-300">
+              {/* Base */}
+              <rect x="30" y="85" width="40" height="5" rx="1" className="fill-current text-gray-400"/>
+              {/* Pillar */}
+              <rect x="48" y="20" width="4" height="65" className="fill-current text-gray-500"/>
+              {/* Beam */}
+              <rect x="10" y="18" width="80" height="4" rx="1" className="fill-current text-gray-500"/>
+              {/* Left Pan Hanger */}
+              <path d="M 20 22 V 30 Q 20 35 25 35 H 35 Q 40 35 40 30 V 22" className="stroke-current text-gray-400" fill="none" strokeWidth="2"/>
+              {/* Right Pan Hanger */}
+              <path d="M 60 22 V 30 Q 60 35 65 35 H 75 Q 80 35 80 30 V 22" className="stroke-current text-gray-400" fill="none" strokeWidth="2"/>
+              {/* Left Pan */}
+              <ellipse cx="30" cy="40" rx="15" ry="4" className="fill-current text-aarthikaBlue/30"/>
+              {/* Right Pan */}
+              <ellipse cx="70" cy="40" rx="15" ry="4" className="fill-current text-aarthikaDark/30"/>
+              {/* Simple Gold representation on left pan */}
+              <rect x="22" y="32" width="16" height="6" rx="1" className="fill-current text-yellow-400 opacity-80"/>
+               {/* Simple Silver/Cash representation on right pan */}
+              <rect x="63" y="34" width="14" height="4" rx="1" className="fill-current text-gray-400 opacity-80"/>
+              <rect x="64" y="30" width="12" height="4" rx="1" className="fill-current text-gray-400 opacity-70"/>
+            </svg>
         </div>
       </div>
     </section>
