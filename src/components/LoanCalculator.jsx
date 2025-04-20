@@ -1,41 +1,83 @@
 import React, { useState, useEffect } from 'react';
 import { FaTachometerAlt, FaLock, FaBalanceScale } from 'react-icons/fa'; // Import icons
 
+// Updated rates from Google Sheet (static for calculator) - KEEP THESE
+const GOLD_RATE_PER_GRAM_24K = 8977; 
+const SILVER_RATE_PER_GRAM_PURE = 92;  
+const LOAN_TO_VALUE = 0.75;
+
+// Updated Purity factors
 const GOLD_PURITY_FACTORS = {
-  '24K': 1,
-  '22K': 0.916667,
-  '20K': 0.833333,
-  '18K': 0.75,
-  '14K': 0.583333,
-  '10K': 0.416667,
+  '24K': 1,       // ~99.9%
+  '22K': 22 / 24, // ~91.7%
+  '18K': 18 / 24, // 75.0%
+  '14K': 14 / 24, // ~58.3%
+  // Add lower options if needed
 };
 
 const SILVER_PURITY_FACTORS = {
-  '999': 0.999,
-  '995': 0.995,
-  '925': 0.925,
+  '999': 0.999, // Pure
+  '925': 0.925, // Sterling
+  '85%': 0.85,
+  '80%': 0.80,
+  '75%': 0.75,
+  '70%': 0.70,
+  '65%': 0.65,
 };
-
-const LOAN_TO_VALUE = 0.75;
 
 const LoanCalculator = () => {
   const [metalType, setMetalType] = useState('gold');
   const [weight, setWeight] = useState('');
-  const [purity, setPurity] = useState('24K');
+  // Set initial default purity for gold
+  const [purity, setPurity] = useState('18K'); 
   const [loanAmount, setLoanAmount] = useState(0);
-  const [currentRate, setCurrentRate] = useState(0);
+  // Use correct initial rate for gold
+  const [currentRate, setCurrentRate] = useState(GOLD_RATE_PER_GRAM_24K); 
 
+  // Update purity options and default when metal type changes
   useEffect(() => {
-    // Fetch current rate based on metalType
-    // Set currentRate state
+    if (metalType === 'gold') {
+      setPurity('18K'); // Default Gold Purity
+      setCurrentRate(GOLD_RATE_PER_GRAM_24K);
+    } else {
+      setPurity('70%'); // Default Silver Purity
+      setCurrentRate(SILVER_RATE_PER_GRAM_PURE);
+    }
+    setWeight(''); // Reset weight on metal change
+    setLoanAmount(0); // Reset loan amount
   }, [metalType]);
 
+  // Calculation logic - ADJUSTED TO USE CURRENT RATES
   useEffect(() => {
-    // Calculate loan amount based on weight, purity, and currentRate
-    // Set loanAmount state
-  }, [weight, purity, currentRate]);
+    const numericWeight = parseFloat(weight);
+    if (!numericWeight || numericWeight <= 0) {
+      setLoanAmount(0);
+      return;
+    }
 
-  const purityOptions = metalType === 'gold' ? Object.keys(GOLD_PURITY_FACTORS) : Object.keys(SILVER_PURITY_FACTORS);
+    let baseRate = 0;
+    let purityFactor = 0;
+
+    if (metalType === 'gold') {
+      baseRate = GOLD_RATE_PER_GRAM_24K;
+      purityFactor = GOLD_PURITY_FACTORS[purity] || 0;
+    } else {
+      baseRate = SILVER_RATE_PER_GRAM_PURE;
+      purityFactor = SILVER_PURITY_FACTORS[purity] || 0;
+    }
+    
+    const valuePerGram = baseRate * purityFactor;
+    const totalValue = numericWeight * valuePerGram;
+    const calculatedLoan = totalValue * LOAN_TO_VALUE;
+    
+    setLoanAmount(calculatedLoan);
+
+  }, [metalType, weight, purity]); // Keep dependencies
+  
+  // Determine options based on selected metal type
+  const purityOptions = metalType === 'gold' 
+    ? Object.keys(GOLD_PURITY_FACTORS) 
+    : Object.keys(SILVER_PURITY_FACTORS);
 
   return (
     <section id="calculator" className="py-20 md:py-28 bg-white">
@@ -84,19 +126,23 @@ const LoanCalculator = () => {
               />
             </div>
 
-            {/* Purity Selection */}
+            {/* Purity Selection - Adjusted Display Logic */}
             <div>
               <label htmlFor="purity" className="block text-sm font-medium text-gray-700 mb-1">Purity</label>
               <select
                 id="purity"
                 name="purity"
-                value={purity}
+                value={purity} // Controlled component
                 onChange={(e) => setPurity(e.target.value)}
                 className="w-full p-3 rounded-lg border border-gray-300 bg-white focus:border-aarthikaBlue focus:ring-1 focus:ring-aarthikaBlue outline-none transition duration-150 ease-in-out appearance-none"
               >
                 {purityOptions.map(option => (
                   <option key={option} value={option}>
-                    {metalType === 'gold' ? `${option}` : `${option} (${(SILVER_PURITY_FACTORS[option]*100).toFixed(1)}% Pure)`}
+                    {metalType === 'gold' 
+                       ? `${option}` 
+                       : option.includes('%') 
+                           ? `${option}` 
+                           : `${option} (${(SILVER_PURITY_FACTORS[option]*100).toFixed(1)}% Pure)`}
                   </option>
                 ))}
               </select>
