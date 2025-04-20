@@ -143,7 +143,7 @@ const Footer = ({ toggleJoinForm }) => {
                  onClick={toggleJoinForm} // Call the function passed from App.jsx
                  className="btn btn-secondary w-full py-3 text-base"
                >
-                 Join Aarthika (Staff)
+                 Join Aarthika – Become an Associate
                </button>
             </div>
           </div>
