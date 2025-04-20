@@ -20,8 +20,7 @@ import WhyInterestRates from './pages/blog/WhyInterestRates'
 import TrustAndTime from './pages/blog/TrustAndTime'
 import './App.css'
 
-// Removed ScrollToTop component entirely
-/*
+// Restore original ScrollToTop
 function ScrollToTop() {
   const { pathname } = useLocation();
   const navigationType = useNavigationType();
@@ -34,7 +33,6 @@ function ScrollToTop() {
 
   return null;
 }
-*/
 
 // Restore original MainLayout (remove location hook and useEffect)
 function MainLayout({ toggleJoinForm }) {
@@ -71,8 +69,7 @@ function App() {
 
   return (
     <Router>
-      {/* Removed ScrollToTop component usage */}
-      {/* <ScrollToTop /> */}
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<MainLayout toggleJoinForm={toggleJoinForm} />} />
         <Route path="/logo-demo" element={<LogoDemo />} />
