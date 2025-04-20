@@ -62,7 +62,7 @@ const JoinAarthika = ({ onClose }) => {
       case 'form':
         return (
           <form action="https://formspree.io/f/mblgnlvv" method="POST" className="space-y-6 p-6 md:p-8">
-            <h2 className="text-2xl font-bold text-center text-aarthikaDark mb-6">Staff Application</h2>
+            <h2 className="text-2xl font-bold text-center text-aarthikaDark mb-6">Job Application</h2>
             
             {/* Personal Info */}
             <fieldset className="border border-gray-300 p-4 rounded-md">
