@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaTachometerAlt, FaLock, FaBalanceScale } from 'react-icons/fa'; // Import icons
+import { FaTachometerAlt, FaLock, FaBalanceScale } from 'react-icons'; // Import icons
 
 const GOLD_PURITY_FACTORS = {
   '24K': 1,
