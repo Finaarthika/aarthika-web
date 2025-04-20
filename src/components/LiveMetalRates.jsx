@@ -187,7 +187,7 @@ const LiveMetalRates = () => {
   
   const currentCalcRate = metalType === 'gold' ? baseRates.goldRate : baseRates.silverRate;
 
-  // --- RateCard Component (Unchanged) ---
+  // --- RateCard Component (Styling adjusted slightly if needed, logic unchanged) ---
   const RateCard = ({ metal, rate, direction, icon, perGramText="Per gram (24k)" }) => {
     const displayValue = formatRate(rate);
     const colorClass = direction === 'up' ? 'text-green-400' : direction === 'down' ? 'text-red-400' : 'text-white';
@@ -195,33 +195,40 @@ const LiveMetalRates = () => {
     const bgColor = metal === 'Gold' ? 'bg-gradient-to-br from-yellow-400 to-amber-600' : 'bg-gradient-to-br from-gray-400 to-gray-600';
 
     return (
-      <div className={`relative overflow-hidden rounded-xl p-6 shadow-lg ${bgColor} text-white transform hover:scale-105 transition-transform duration-300 ease-in-out`}>
-        <div className="absolute -top-4 -right-4 text-white/10 text-6xl">
-           {icon}
-        </div>
-        <h3 className="text-lg font-semibold mb-1 capitalize">{metal} Rate</h3>
-        {loadingRates ? (
-          <div className="h-10 flex items-center">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+      // Added min-h-[150px] for consistent height
+      <div className={`relative overflow-hidden rounded-xl p-6 shadow-lg ${bgColor} text-white transform hover:scale-105 transition-transform duration-300 ease-in-out min-h-[150px] flex flex-col justify-between`}>
+        <div>
+          <div className="absolute -top-4 -right-4 text-white/10 text-6xl">
+            {icon}
           </div>
-        ) : (
-          <p className={`text-3xl md:text-4xl font-bold truncate transition-colors duration-300 ${colorClass}`} title={String(rate)}>
-            ₹{displayValue} 
-            <span className="text-lg ml-1">{arrow}</span>
-          </p>
-        )}
-        <p className="text-xs opacity-80 mt-2">{perGramText}</p>
+          <h3 className="text-lg font-semibold mb-1 capitalize">{metal} Rate</h3>
+        </div>
+        <div>
+          {loadingRates ? (
+            <div className="h-10 flex items-center">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+            </div>
+          ) : (
+            <p className={`text-3xl md:text-4xl font-bold truncate transition-colors duration-300 ${colorClass}`} title={String(rate)}>
+              ₹{displayValue} 
+              <span className="text-lg ml-1">{arrow}</span>
+            </p>
+          )}
+          <p className="text-xs opacity-80 mt-2">{perGramText}</p>
+       </div>
       </div>
     );
   };
 
-  // --- Render Logic (Combined Section) ---
+  // --- Render Logic (Revised Layout) ---
   return (
-    <section id="rates-calculator" className="py-16 md:py-24 bg-gradient-to-b from-gray-50 to-white">
-      <div className="premium-container mx-auto px-4 sm:px-6 lg:px-8">
+    // Increased vertical padding slightly
+    <section id="rates-calculator" className="py-20 md:py-28 bg-gradient-to-b from-gray-50 to-white">
+      {/* Kept container max-width */} 
+      <div className="premium-container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Section Title */}
-        <div className="text-center mb-12 md:mb-16">
+        {/* Section Title (Unchanged) */}
+        <div className="text-center mb-16 md:mb-20">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-3">Live Rates & Loan Calculator</h2>
           <div className="w-24 h-1 bg-gradient-to-r from-aarthikaDark to-aarthikaBlue rounded-full mx-auto mb-4"></div>
           <p className="text-gray-600 max-w-2xl mx-auto">
@@ -230,11 +237,85 @@ const LiveMetalRates = () => {
           {ratesError && <p className="text-sm text-red-600 font-medium mt-4">Error fetching rates: {ratesError}</p>}
         </div>
 
-        {/* Main Content Grid (Rates + Calculator) */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12 lg:gap-16 items-start">
+        {/* Main Content Grid (Revised to 2 columns on large screens) */}
+        {/* Increased gap */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-16 items-start">
            
-           {/* Column 1: Live Rate Cards */}
-           <div className="lg:col-span-1 space-y-6">
+           {/* Column 1: Calculator Inputs & Output */}
+           <div className="animate-fade-in-delay bg-white p-8 lg:p-10 rounded-xl shadow-lg border border-gray-100 order-2 lg:order-1">
+             <h3 className="text-2xl font-semibold text-gray-800 mb-6">Estimate Your Loan</h3>
+             <div className="space-y-6">
+                 {/* Metal Type Selection */}
+                 <div>
+                   <label className="block text-sm font-medium text-gray-700 mb-2">Metal Type</label>
+                   <div className="flex space-x-4">
+                     <button 
+                       onClick={() => setMetalType('gold')} 
+                       className={`flex-1 sm:flex-none px-4 py-2 rounded-md text-sm font-medium transition-colors ${metalType === 'gold' ? 'bg-aarthikaBlue text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                     >
+                       Gold
+                     </button>
+                     <button 
+                       onClick={() => setMetalType('silver')}
+                       className={`flex-1 sm:flex-none px-4 py-2 rounded-md text-sm font-medium transition-colors ${metalType === 'silver' ? 'bg-aarthikaBlue text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                     >
+                       Silver
+                     </button>
+                   </div>
+                 </div>
+    
+                 {/* Weight & Purity Inputs (Side-by-side on medium screens) */} 
+                 <div className="grid sm:grid-cols-2 gap-6">
+                     <div>
+                       <label htmlFor="weight" className="block text-sm font-medium text-gray-700 mb-1">Weight (grams)</label>
+                       <input
+                         type="number"
+                         id="weight"
+                         name="weight"
+                         value={weight}
+                         onChange={(e) => setWeight(e.target.value)}
+                         placeholder="e.g., 10"
+                         className="w-full p-3 rounded-lg border border-gray-300 focus:border-aarthikaBlue focus:ring-1 focus:ring-aarthikaBlue outline-none transition duration-150 ease-in-out"
+                       />
+                     </div>
+                     <div>
+                       <label htmlFor="purity" className="block text-sm font-medium text-gray-700 mb-1">Purity</label>
+                       <select
+                         id="purity"
+                         name="purity"
+                         value={purity} 
+                         onChange={(e) => setPurity(e.target.value)}
+                         className="w-full p-3 rounded-lg border border-gray-300 bg-white focus:border-aarthikaBlue focus:ring-1 focus:ring-aarthikaBlue outline-none transition duration-150 ease-in-out appearance-none"
+                       >
+                         {purityOptions.map(option => (
+                           <option key={option} value={option}>
+                             {metalType === 'gold' 
+                               ? `${option}` 
+                               : option.includes('%') 
+                                   ? `${option}` 
+                                   : `${option} (${(SILVER_PURITY_FACTORS[option]*100).toFixed(1)}% Pure)`}
+                           </option>
+                         ))}
+                       </select>
+                     </div>
+                 </div>
+    
+                 {/* Estimated Loan Amount */} 
+                 <div className="bg-gradient-to-r from-aarthikaDark/5 to-aarthikaBlue/5 border border-aarthikaBlue/20 p-6 rounded-lg mt-4 text-center">
+                     <p className="text-sm text-gray-600 mb-1">Estimated Loan Amount (at {LOAN_TO_VALUE * 100}% LTV)</p>
+                     <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-aarthikaDark to-aarthikaBlue">
+                     ₹{loanAmount > 0 ? formatRate(loanAmount) : '0.00'}
+                     </p>
+                     <p className="text-xs text-gray-500 mt-3">
+                     Based on indicative rate of ₹{formatRate(currentCalcRate)}/gm for pure {metalType}. Market rates fluctuate.
+                     </p>
+                 </div>
+             </div> 
+           </div>
+           
+           {/* Column 2: Live Rate Cards & Info Block */}
+           {/* Adjusted order */} 
+           <div className="lg:col-span-1 space-y-8 order-1 lg:order-2">
               <RateCard
                 metal="Gold"
                 rate={displayRates.goldRate}
@@ -249,119 +330,27 @@ const LiveMetalRates = () => {
                 icon={<FaRing/>}
                 perGramText="Per gram (999 Approx.)"
               />
-               {/* Info Block (Moved Here) */}
-              <div className="hidden lg:block animate-fade-in-delay bg-gradient-to-br from-aarthikaBlue/5 to-transparent p-6 rounded-lg border border-aarthikaBlue/10 mt-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">Transparent & Secure</h3>
-                <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+               {/* Info Block (Now always here for large screens) */}
+              <div className="animate-fade-in-delay bg-gradient-to-br from-aarthikaBlue/5 to-transparent p-6 lg:p-8 rounded-xl border border-aarthikaBlue/10">
+                <h3 className="text-xl font-semibold text-gray-800 mb-4">Transparent & Secure</h3>
+                <p className="text-sm text-gray-600 mb-5 leading-relaxed">
                   We use certified valuation methods and ensure secure storage for your assets.
                 </p>
-                <div className="space-y-3 text-sm">
+                <div className="space-y-4 text-sm">
                     <div className="flex items-center text-gray-600">
-                       <FaTachometerAlt className="text-aarthikaBlue mr-2" /> Quick Disbursal
+                       <FaTachometerAlt className="text-aarthikaBlue mr-3 flex-shrink-0" /> Quick Disbursal
                     </div>
                      <div className="flex items-center text-gray-600">
-                       <FaBalanceScale className="text-aarthikaBlue mr-2" /> Fair Valuation
+                       <FaBalanceScale className="text-aarthikaBlue mr-3 flex-shrink-0" /> Fair Valuation
                     </div>
                      <div className="flex items-center text-gray-600">
-                       <FaLock className="text-aarthikaBlue mr-2" /> Secure Storage
+                       <FaLock className="text-aarthikaBlue mr-3 flex-shrink-0" /> Secure Storage
                     </div>
                 </div>
               </div>
            </div>
-
-           {/* Column 2: Calculator Inputs & Output */}
-           <div className="lg:col-span-2 animate-fade-in-delay bg-white p-8 rounded-lg shadow-md border border-gray-100">
-             <h3 className="text-2xl font-semibold text-gray-800 mb-6">Estimate Your Loan</h3>
-             <div className="space-y-6">
-                {/* Metal Type Selection */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Metal Type</label>
-                  <div className="flex space-x-4">
-                    <button 
-                      onClick={() => setMetalType('gold')} 
-                      className={`flex-1 sm:flex-none px-4 py-2 rounded-md text-sm font-medium transition-colors ${metalType === 'gold' ? 'bg-aarthikaBlue text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                    >
-                      Gold
-                    </button>
-                    <button 
-                      onClick={() => setMetalType('silver')}
-                      className={`flex-1 sm:flex-none px-4 py-2 rounded-md text-sm font-medium transition-colors ${metalType === 'silver' ? 'bg-aarthikaBlue text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                    >
-                      Silver
-                    </button>
-                  </div>
-                </div>
-
-                {/* Weight & Purity Inputs (Side-by-side on medium screens) */} 
-                <div className="grid sm:grid-cols-2 gap-6">
-                    <div>
-                      <label htmlFor="weight" className="block text-sm font-medium text-gray-700 mb-1">Weight (grams)</label>
-                      <input
-                        type="number"
-                        id="weight"
-                        name="weight"
-                        value={weight}
-                        onChange={(e) => setWeight(e.target.value)}
-                        placeholder="e.g., 10"
-                        className="w-full p-3 rounded-lg border border-gray-300 focus:border-aarthikaBlue focus:ring-1 focus:ring-aarthikaBlue outline-none transition duration-150 ease-in-out"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="purity" className="block text-sm font-medium text-gray-700 mb-1">Purity</label>
-                      <select
-                        id="purity"
-                        name="purity"
-                        value={purity} 
-                        onChange={(e) => setPurity(e.target.value)}
-                        className="w-full p-3 rounded-lg border border-gray-300 bg-white focus:border-aarthikaBlue focus:ring-1 focus:ring-aarthikaBlue outline-none transition duration-150 ease-in-out appearance-none"
-                      >
-                        {purityOptions.map(option => (
-                          <option key={option} value={option}>
-                            {metalType === 'gold' 
-                              ? `${option}` 
-                              : option.includes('%') 
-                                  ? `${option}` 
-                                  : `${option} (${(SILVER_PURITY_FACTORS[option]*100).toFixed(1)}% Pure)`}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                </div>
-
-                {/* Estimated Loan Amount */} 
-                <div className="bg-gradient-to-r from-aarthikaDark/5 to-aarthikaBlue/5 border border-aarthikaBlue/20 p-6 rounded-lg mt-4 text-center">
-                    <p className="text-sm text-gray-600 mb-1">Estimated Loan Amount (at {LOAN_TO_VALUE * 100}% LTV)</p>
-                    <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-aarthikaDark to-aarthikaBlue">
-                    ₹{loanAmount > 0 ? formatRate(loanAmount) : '0.00'}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-3">
-                    Based on indicative rate of ₹{formatRate(currentCalcRate)}/gm for pure {metalType}. Market rates fluctuate.
-                    </p>
-                </div>
-             </div> { /* End Calculator inputs space-y */}
-           </div> { /* End Calculator Column */}
-           
-           {/* Info Block (Visible on smaller screens) */}
-            <div className="lg:hidden animate-fade-in-delay bg-gradient-to-br from-aarthikaBlue/5 to-transparent p-6 rounded-lg border border-aarthikaBlue/10 mt-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-3">Transparent & Secure</h3>
-              <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                 We use certified valuation methods and ensure secure storage for your assets.
-              </p>
-              <div className="space-y-3 text-sm">
-                 <div className="flex items-center text-gray-600">
-                    <FaTachometerAlt className="text-aarthikaBlue mr-2" /> Quick Disbursal
-                 </div>
-                  <div className="flex items-center text-gray-600">
-                    <FaBalanceScale className="text-aarthikaBlue mr-2" /> Fair Valuation
-                 </div>
-                  <div className="flex items-center text-gray-600">
-                    <FaLock className="text-aarthikaBlue mr-2" /> Secure Storage
-                 </div>
-              </div>
-            </div>
-
-        </div> { /* End Main Content Grid */}
-      </div> { /* End Container */}
+        </div>
+      </div>
     </section>
   );
 };
