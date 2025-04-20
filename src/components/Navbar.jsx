@@ -71,6 +71,7 @@ const Navbar = ({ isMenuOpen, toggleMenu }) => {
           <NavLink to="live-rates">Rates</NavLink>
           <NavLink to="partnerships">Partnerships</NavLink>
           <NavLink to="technology">Technology</NavLink>
+          <NavLink to="insights">Aarthika Insights</NavLink>
           <Link 
             to="contact" 
             spy={true} 
@@ -109,6 +110,7 @@ const Navbar = ({ isMenuOpen, toggleMenu }) => {
             <MobileNavLink to="live-rates" onClick={toggleMenu}>Rates</MobileNavLink>
             <MobileNavLink to="partnerships" onClick={toggleMenu}>Partnerships</MobileNavLink>
             <MobileNavLink to="technology" onClick={toggleMenu}>Technology</MobileNavLink>
+            <MobileNavLink to="insights" onClick={toggleMenu}>Aarthika Insights</MobileNavLink>
             <MobileNavLink to="contact" onClick={toggleMenu}>Contact Us</MobileNavLink>
           </div>
         </div>
