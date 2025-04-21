@@ -63,7 +63,8 @@ const Services = () => {
     {
       title: "Jewellery Sales – Gold & Silver",
       description: "Explore a curated collection of newly crafted gold and silver jewellery. Elegant designs for daily use and occasions — made affordable for rural families.",
-      icon: <i className="fas fa-gem"></i>
+      icon: <i className="fas fa-gem"></i>,
+      linkTo: "/services/jewellery-sales"
     },
     {
       title: "Old Gold & Silver Buying",

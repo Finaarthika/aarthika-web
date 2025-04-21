@@ -22,6 +22,7 @@ import WhyInterestRates from './pages/blog/WhyInterestRates'
 import TrustAndTime from './pages/blog/TrustAndTime'
 import GoldBackedLoans from './pages/GoldBackedLoans'
 import SilverBackedLoans from './pages/SilverBackedLoans'
+import JewellerySales from './pages/JewellerySales'
 import './App.css'
 
 const NAV_OFFSET = -80;
@@ -108,6 +109,7 @@ function App() {
         <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route path="/services/gold-backed-loans" element={<GoldBackedLoans />} />
         <Route path="/services/silver-backed-loans" element={<SilverBackedLoans />} />
+        <Route path="/services/jewellery-sales" element={<JewellerySales />} />
         <Route path="/blog/gold-loans-rural-india" element={<GoldLoansRuralIndia />} />
         <Route path="/blog/why-we-built-aarthika" element={<WhyWeBuiltAarthika />} />
         <Route path="/blog/why-interest-rates" element={<WhyInterestRates />} />
