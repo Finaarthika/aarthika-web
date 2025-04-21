@@ -14,7 +14,7 @@ const ServiceCard = ({ title, description, icon, index }) => {
       <h3 className="text-xl font-semibold mb-4 text-gray-800">{title}</h3>
       <p className="text-gray-600 text-base leading-relaxed flex-grow mb-4">{description}</p>
       <div className="mt-auto pt-4">
-        <a href="#contact" className="text-aarthikaBlue font-medium flex items-center justify-center hover:underline">
+        <a href="tel:+91-6205168541" className="text-aarthikaBlue font-medium flex items-center justify-center hover:underline">
           Contact Us
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -75,7 +75,7 @@ const Services = () => {
         
         <div className="mt-16 md:mt-20 text-center">
           <a 
-            href="#contact" 
+            href="tel:+91-6205168541" 
             className="btn btn-primary shadow-lg px-10 py-3 text-base"
           >
             Enquire About Our Services

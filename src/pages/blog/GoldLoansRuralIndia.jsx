@@ -1,10 +1,18 @@
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 // import { Link } from 'react-router-dom'; // Removed
 import { HashLink } from 'react-router-hash-link'; // Added
 
 const GoldLoansRuralIndia = () => {
   return (
     <div className="bg-white py-16 px-4 sm:px-6 lg:px-8">
+      <Helmet>
+        <title>How Gold Loans Work in Rural India | Aarthika</title>
+        <meta name="description" content="Learn about gold loans in rural Bihar and West Bengal. Aarthika offers transparent gold loan services in Kishanganj, Debiganj, and Dharampur with fair interest rates and simple processes." />
+        <meta name="keywords" content="gold loans, rural Bihar, Kishanganj, West Bengal, Uttar Dinajpur, Debiganj, Dharampur, gold valuation, rural finance" />
+        <link rel="canonical" href="https://aarthika.com/blog/gold-loans-rural-india" />
+      </Helmet>
+      
       <div className="max-w-3xl mx-auto">
         {/* Use HashLink with smooth prop */}
         <HashLink smooth to="/#insights" className="text-aarthikaBlue hover:text-aarthikaDark inline-flex items-center mb-8">

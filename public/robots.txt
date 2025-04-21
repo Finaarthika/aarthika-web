@@ -1,0 +1,16 @@
+# Aarthika Website Robots.txt
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://aarthika.com/sitemap.xml
+
+# Geo-specific priority
+Allow: /blog/gold-loans-rural-india
+Allow: /blog/why-interest-rates
+
+# Disallow any temporary or admin content
+Disallow: /logo-demo
+
+# Encourage crawling of important pages
+Allow: /* 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigationType } from 'react-router-dom'
 import { scroller } from 'react-scroll'
+import { Helmet } from 'react-helmet-async'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import LiveMetalRates from './components/LiveMetalRates'
@@ -66,6 +67,12 @@ function MainLayout({ toggleJoinForm }) {
 
   return (
     <div className="min-h-screen w-full flex flex-col bg-white">
+      <Helmet>
+        <title>Aarthika | Rural Finance Solutions in Kishanganj & Uttar Dinajpur</title>
+        <meta name="description" content="Aarthika provides trusted rural financial services in Kishanganj (Bihar) and Debiganj, Dharampur (Uttar Dinajpur, West Bengal). Low-interest loans and financial inclusion for rural communities." />
+        <meta name="keywords" content="rural finance, microfinance, Kishanganj, Bihar, Debiganj, Dharampur, Uttar Dinajpur, West Bengal, rural banking, village loans, financial inclusion" />
+        <link rel="canonical" href="https://aarthika.com" />
+      </Helmet>
       <Navbar isMenuOpen={isMenuOpen} toggleMenu={toggleMenu} />
       <main className="flex-grow w-full pt-16 md:pt-20">
         <Hero />

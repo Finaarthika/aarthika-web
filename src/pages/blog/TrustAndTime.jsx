@@ -1,10 +1,18 @@
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 // import { Link } from 'react-router-dom'; // Removed
 import { HashLink } from 'react-router-hash-link'; // Added
 
 const TrustAndTime = () => {
   return (
     <div className="bg-white py-16 px-4 sm:px-6 lg:px-8">
+      <Helmet>
+        <title>Trust and Time in Rural Finance: Insights from Kishanganj & Uttar Dinajpur | Aarthika</title>
+        <meta name="description" content="How trust is built in rural financial services in Kishanganj, Bihar and Uttar Dinajpur, West Bengal. Our experience shows that rural finance is founded on relationships, transparency and consistency." />
+        <meta name="keywords" content="trust in rural finance, Kishanganj financial services, Uttar Dinajpur banking, Bihar rural loans, West Bengal rural finance, transparent banking, rural communities" />
+        <link rel="canonical" href="https://aarthika.com/blog/trust-and-time" />
+      </Helmet>
+      
       <div className="max-w-3xl mx-auto">
         {/* Use HashLink with smooth prop */}
         <HashLink smooth to="/#insights" className="text-aarthikaBlue hover:text-aarthikaDark inline-flex items-center mb-8">
@@ -15,14 +23,8 @@ const TrustAndTime = () => {
         <h1 className="text-3xl md:text-4xl font-bold text-aarthikaDark mb-6">
           Behind Every Loan: The Story of Trust and Time
         </h1>
-        <p className="text-lg text-gray-700 mb-6 leading-relaxed">
-          In rural India, a loan is not just a financial transaction. It's a moment of vulnerability. It's when someone walks into your office with a small bag of ornaments and a world of worry in their eyes.
-        </p>
         <p className="text-lg text-gray-700 mb-8 leading-relaxed">
-          Maybe they need money for a daughter's wedding, a hospital visit, or to sow seeds for the season. Maybe they don't say why. But you can see it in their hands—the way they tightly hold the plastic pouch, as if it carries their entire life.
-        </p>
-        <p className="text-lg text-gray-700 mb-8 leading-relaxed font-semibold">
-          And that's where the real story begins.
+          In the villages of Kishanganj and Uttar Dinajpur where Aarthika operates, lending isn't just a financial transaction—it's a deeply personal relationship built on trust that takes time to develop. Here's what we've learned about building trust in rural financial services:
         </p>
 
         {/* Sections */}
@@ -47,22 +49,20 @@ const TrustAndTime = () => {
 
           <div>
             <h2 className="text-2xl font-semibold text-aarthikaDark mb-3">
-              Trust Is Built in Small Moments
+              Trust Is Built On Small Things
             </h2>
             <p className="text-gray-600 leading-relaxed">
-              Trust isn't built in a single grand gesture. It's built in the small, consistent acts:
+              In the villages we serve across rural Bihar and West Bengal, trust doesn't come from big marketing campaigns or flashy promises. It's built in small, consistent actions:
             </p>
             <ul className="list-disc list-inside text-gray-600 space-y-2 pl-4 mt-4 leading-relaxed">
-                <li>When you explain the interest clearly, without hiding anything.</li>
-                <li>When the receipts show exactly what was said.</li>
-                <li>When customers receive a WhatsApp message with the details—without asking.</li>
-                <li>When a husband and wife both feel safe walking in, without being judged.</li>
+              <li>Returning the exact same gold item—not a substitute</li>
+              <li>Showing the weighing scale clearly so everyone can see</li>
+              <li>Printing a receipt that matches exactly what was discussed</li>
+              <li>Remembering names and family details</li>
+              <li>Being present in the community during festivals and hardships</li>
             </ul>
-             <p className="text-gray-600 leading-relaxed mt-4">
-              People remember respect. They remember honesty, even if you charge more than a bank. Because in the villages, banks might be cheaper—but they're also farther, slower, colder.
-            </p>
-             <p className="text-gray-600 leading-relaxed mt-4 font-medium">
-               We are nearer, faster, warmer.
+            <p className="text-gray-600 leading-relaxed mt-4">
+              Each interaction either builds or breaks trust. And in rural lending, there are no second chances.
             </p>
           </div>
 
@@ -105,21 +105,13 @@ const TrustAndTime = () => {
         {/* Conclusion */}
         <div className="mt-12 pt-8 border-t border-gray-200">
           <h2 className="text-2xl font-semibold text-aarthikaDark mb-4">
-            This is What Makes Lending Work Here
+            A Different Kind of Banking
           </h2>
           <p className="text-lg text-gray-700 mb-4 leading-relaxed">
-            Behind every loan:
+            In Kishanganj and Uttar Dinajpur, we're building something different. Not just a lending company, but a relationship-based financial service that understands the unique needs of rural communities.
           </p>
-            <ul className="list-disc list-inside text-lg text-gray-700 space-y-2 pl-4 mb-6 leading-relaxed">
-                <li>There's a person who hesitated for weeks before walking in.</li>
-                <li>There's a promise made, not on paper, but on understanding.</li>
-                <li>There's a relationship growing—between a lender who shows up and a borrower who needs support.</li>
-            </ul>
-          <p className="text-lg text-gray-700 mb-4 leading-relaxed">
-             And if we protect that relationship with systems, respect, and a sense of responsibility, then the business doesn't just grow…
-          </p>
-          <p className="text-lg text-gray-700 leading-relaxed font-semibold italic">
-            It lasts.
+          <p className="text-lg text-gray-700 leading-relaxed italic font-medium">
+            Because in the end, what matters most isn't how much gold we hold—it's how much trust we've earned. And that trust begins with giving people the time they deserve.
           </p>
         </div>
       </div>

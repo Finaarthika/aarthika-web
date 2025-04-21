@@ -1,10 +1,18 @@
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 // import { Link } from 'react-router-dom'; // Removed
 import { HashLink } from 'react-router-hash-link'; // Added
 
 const WhyInterestRates = () => {
   return (
     <div className="bg-white py-16 px-4 sm:px-6 lg:px-8">
+      <Helmet>
+        <title>Why Our Interest Rates Are 3-4% in Rural Bihar & West Bengal | Aarthika</title>
+        <meta name="description" content="Understanding Aarthika's interest rates for gold loans in Kishanganj and Uttar Dinajpur. Learn why our rates are fair, transparent and designed specifically for rural communities in Bihar and West Bengal." />
+        <meta name="keywords" content="interest rates, rural finance, Kishanganj, Bihar, Uttar Dinajpur, West Bengal, gold loans, transparent pricing, rural banking" />
+        <link rel="canonical" href="https://aarthika.com/blog/why-interest-rates" />
+      </Helmet>
+      
       <div className="max-w-3xl mx-auto">
         {/* Use HashLink with smooth prop */}
         <HashLink smooth to="/#insights" className="text-aarthikaBlue hover:text-aarthikaDark inline-flex items-center mb-8">
@@ -13,13 +21,10 @@ const WhyInterestRates = () => {
         </HashLink>
 
         <h1 className="text-3xl md:text-4xl font-bold text-aarthikaDark mb-6">
-          Why 3% to 4% Interest? A Thoughtful Look Behind the Numbers
+          Why 3% to 4% Interest?
         </h1>
-        <p className="text-lg text-gray-700 mb-6 leading-relaxed">
-          When people hear that Aarthika charges 3% to 4% interest per month on gold and silver-backed loans, some raise eyebrows. "Isn't that a bit high?" they ask. We understand the concern. But behind every rate lies a story — a rural reality that urban spreadsheets often ignore.
-        </p>
-        <p className="text-lg text-gray-700 mb-8 leading-relaxed italic">
-          Let's take a moment to explain kyun yeh zaruri hai — and why our rates are not just justified, but fair, thoughtful, and necessary.
+        <p className="text-lg text-gray-700 mb-8 leading-relaxed">
+          Our customers often ask why we charge 3-4% interest when a typical bank would charge much less. It's a fair question. Here's an honest look at what shapes our pricing model in the rural areas of Kishanganj and Uttar Dinajpur:
         </p>
 
         {/* Sections */}
@@ -38,74 +43,37 @@ const WhyInterestRates = () => {
 
           <div>
             <h2 className="text-2xl font-semibold text-aarthikaDark mb-3">
-              2. No Banks. No Branches. Just Aarthika
+              2. It's Not Just Loan Money—It's Security
             </h2>
             <p className="text-gray-600 leading-relaxed">
-              We don't have the luxury of large bank teams or nationwide infrastructure. At Aarthika, we built everything from scratch — from our own app to customer onboarding to credit risk assessments.
+              When you deposit your gold with us, our responsibility goes beyond just advancing cash. We:
             </p>
-            <p className="text-gray-600 leading-relaxed mt-4">
-              Unlike banks, which manage risk with paperwork and delay, we manage it with speed, personalization, and empathy. That has a cost — not just in technology and manpower, but in risk-bearing.
-            </p>
-             <p className="text-gray-600 leading-relaxed mt-4">
-              A borrower might pledge a silver chain at 85% LTV and not return for months. Losses, delays, and operational costs — they all add up.
-            </p>
-             <p className="text-gray-600 leading-relaxed mt-4">
-              Unlike banks or big NBFCs, Aarthika doesn't operate from air-conditioned offices. We operate from the ground — among the people.
-            </p>
-             <p className="text-gray-600 leading-relaxed mt-4">
-               The 3% to 4% interest helps us sustain this ecosystem without charging any processing fees, legal charges, or hidden commissions.
-            </p>
+            <ul className="list-disc list-inside text-gray-600 space-y-2 pl-4 mt-4 leading-relaxed">
+              <li>Install 24-hour security systems at our vaults</li>
+              <li>Pay for double-authentication systems</li>
+              <li>Do regular inventory audits</li>
+              <li>Invest in fireproof, secure storage</li>
+              <li>Maintain insurance premiums on stored collateral</li>
+              <li>Use physical verification technologies to ensure authenticity</li>
+            </ul>
           </div>
 
           <div>
             <h2 className="text-2xl font-semibold text-aarthikaDark mb-3">
-              3. No Hidden Fees. No Penalties. Just Simplicity.
+              3. We Are Not "Loan Sharks." We're Building a Viable Alternative.
             </h2>
-            <p className="text-gray-600 leading-relaxed mb-4">
-              Compare a rural borrower's experience with us to any institutional lender:
+            <p className="text-gray-600 leading-relaxed">
+              Regular pawnbrokers in our areas charge between 8% to 12% monthly—yes, monthly! That's 96% to 144% per year. We charge 3-4% per month, a third of the local average.
             </p>
-            {/* Simple Table or comparison list could go here */}
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Factor</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aarthika</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Typical NBFC/Bank</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200 text-sm text-gray-700">
-                  <tr>
-                    <td className="px-6 py-4 whitespace-nowrap font-medium">Documentation</td>
-                    <td className="px-6 py-4 whitespace-nowrap">Bare minimum</td>
-                    <td className="px-6 py-4 whitespace-nowrap">Lengthy</td>
-                  </tr>
-                  <tr>
-                    <td className="px-6 py-4 whitespace-nowrap font-medium">Loan disbursal time</td>
-                    <td className="px-6 py-4 whitespace-nowrap">Within minutes</td>
-                    <td className="px-6 py-4 whitespace-nowrap">Days or weeks</td>
-                  </tr>
-                  <tr>
-                    <td className="px-6 py-4 whitespace-nowrap font-medium">Relationship</td>
-                    <td className="px-6 py-4 whitespace-nowrap">Personal + Face-to-Face</td>
-                    <td className="px-6 py-4 whitespace-nowrap">Distant + Bureaucratic</td>
-                  </tr>
-                   <tr>
-                    <td className="px-6 py-4 whitespace-nowrap font-medium">Closure process</td>
-                    <td className="px-6 py-4 whitespace-nowrap">Transparent, fast, automated</td>
-                    <td className="px-6 py-4 whitespace-nowrap">Often delayed or confusing</td>
-                  </tr>
-                   <tr>
-                    <td className="px-6 py-4 whitespace-nowrap font-medium">Charges</td>
-                    <td className="px-6 py-4 whitespace-nowrap">Flat monthly interest (3-4%)</td>
-                    <td className="px-6 py-4 whitespace-nowrap">Processing fees, hidden terms</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <p className="text-gray-600 leading-relaxed mt-6">
-              Our promise? No processing charges. No compound interest if repaid on time. Just clear, upfront math.
+            <p className="text-gray-600 leading-relaxed mt-4">
+              But maintaining this competitive rate requires us to:
             </p>
+            <ul className="list-disc list-inside text-gray-600 space-y-2 pl-4 mt-4 leading-relaxed">
+              <li>Operate with tight margins</li>
+              <li>Spend on staff who understand rural needs</li>
+              <li>Maintain technology systems for accurate accounting</li>
+              <li>Provide same-day service (unlike banks with lengthy loan processing times)</li>
+            </ul>
           </div>
 
           <div>
@@ -123,47 +91,34 @@ const WhyInterestRates = () => {
             </p>
           </div>
 
-           <div>
+          <div>
             <h2 className="text-2xl font-semibold text-aarthikaDark mb-3">
-              5. Why Not Lower the Rates?
+              5. Here's How We Actually Keep It Fair
             </h2>
             <p className="text-gray-600 leading-relaxed">
-               We ask ourselves this regularly.
+              While our rate is 3-4%, the way we calculate it is designed for fairness:
             </p>
-             <p className="text-gray-600 leading-relaxed mt-4">
-               But here's the truth: we are not in the business of earning on gold. We are in the business of earning your trust.
-            </p>
-            <p className="text-gray-600 leading-relaxed mt-4">
-              And 3% to 4% monthly ensures we can grow without needing external capital that dilutes our values or forces us to compromise customer care.
-            </p>
-             <p className="text-gray-600 leading-relaxed mt-4">
-              As we grow and automate more, we hope to reduce rates — but only when it can be done without risking your ornaments or our commitment.
-            </p>
-            <p className="text-gray-600 leading-relaxed mt-4">
-              However, our long-term goal is to bring these rates down. We're actively working on partnering with formal institutions like NBFCs, rural cooperatives, and HNIs to lower our cost of funds. As our access to cheaper capital improves, our borrowers will be the first to benefit.
-            </p>
-            <p className="text-gray-600 leading-relaxed mt-4 font-medium">
-              And for that, 3% to 4% monthly interest isn't a cost — it's an investment in service quality and security.
-            </p>
+            <ul className="list-disc list-inside text-gray-600 space-y-2 pl-4 mt-4 leading-relaxed">
+              <li>We only charge for days the loan is active (unlike others who round up to whole months)</li>
+              <li>We offer early repayment discounts</li>
+              <li>We provide a 3-day grace period for most customers</li>
+              <li>Zero hidden charges—ever</li>
+              <li>Transparent LTV (loan-to-value) calculations that you can verify</li>
+              <li>No compounding of interest</li>
+            </ul>
           </div>
         </div>
 
         {/* Conclusion */}
         <div className="mt-12 pt-8 border-t border-gray-200">
           <h2 className="text-2xl font-semibold text-aarthikaDark mb-4">
-            The Bigger Picture
+            Moving Forward Together
           </h2>
           <p className="text-lg text-gray-700 mb-4 leading-relaxed">
-            This isn't just about interest.
+            Our goal is to eventually reduce rates as our local reputation grows and operational costs stabilize. We've already gone from 4-5% to 3-4% in many cases. This isn't the endpoint—it's part of our journey toward sustainable rural finance.
           </p>
-          <p className="text-lg text-gray-700 mb-4 leading-relaxed">
-             Aarthika doesn't aim to extract profits. It aims to build a long-lasting, transparent, and scalable rural credit system.
-          </p>
-          <p className="text-lg text-gray-700 mb-4 leading-relaxed">
-             It's about building a model that scales trust, that can someday integrate with banks, NBFCs, and co-operatives, and bring rural lending out of the shadows — with class, dignity, and simplicity.
-          </p>
-          <p className="text-lg text-gray-700 leading-relaxed font-semibold italic">
-            Yahi hai Aarthika ka vada. Simple loans. Serious responsibility.
+          <p className="text-lg text-gray-700 leading-relaxed italic font-medium">
+            Because we believe that dignity in finance starts with transparency about the real costs—and a commitment to building something better, step by step.
           </p>
         </div>
       </div>
