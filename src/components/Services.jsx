@@ -1,7 +1,11 @@
 import React from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 
-const ServiceCard = ({ title, description, icon, index }) => {
+const ServiceCard = ({ title, description, icon, index, linkTo }) => {
   const delay = index * 100;
+  
+  const href = linkTo || "tel:+91-6205168541";
+  const isInternalLink = href.startsWith('/');
   
   return (
     <div 
@@ -14,12 +18,21 @@ const ServiceCard = ({ title, description, icon, index }) => {
       <h3 className="text-xl font-semibold mb-4 text-gray-800">{title}</h3>
       <p className="text-gray-600 text-base leading-relaxed flex-grow mb-4">{description}</p>
       <div className="mt-auto pt-4">
-        <a href="tel:+91-6205168541" className="text-aarthikaBlue font-medium flex items-center justify-center hover:underline">
-          Contact Us
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-          </svg>
-        </a>
+        {isInternalLink ? (
+          <RouterLink to={href} className="text-aarthikaBlue font-medium flex items-center justify-center hover:underline">
+            Learn More
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </RouterLink>
+        ) : (
+          <a href={href} className="text-aarthikaBlue font-medium flex items-center justify-center hover:underline">
+            Contact Us
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </a>
+        )}
       </div>
     </div>
   );
@@ -30,7 +43,8 @@ const Services = () => {
     {
       title: "Gold-Backed Loans",
       description: "Get quick and secure loans by pledging your gold. We offer competitive interest rates with transparent valuation and same-day disbursal — no hidden charges.",
-      icon: <i className="fas fa-coins"></i>
+      icon: <i className="fas fa-coins"></i>,
+      linkTo: "/services/gold-backed-loans"
     },
     {
       title: "Silver-Backed Loans",
@@ -69,6 +83,7 @@ const Services = () => {
               title={service.title}
               description={service.description}
               icon={service.icon}
+              linkTo={service.linkTo}
             />
           ))}
         </div>

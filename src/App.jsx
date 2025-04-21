@@ -20,6 +20,7 @@ import GoldLoansRuralIndia from './pages/blog/GoldLoansRuralIndia'
 import WhyWeBuiltAarthika from './pages/blog/WhyWeBuiltAarthika'
 import WhyInterestRates from './pages/blog/WhyInterestRates'
 import TrustAndTime from './pages/blog/TrustAndTime'
+import GoldBackedLoans from './pages/GoldBackedLoans'
 import './App.css'
 
 const NAV_OFFSET = -80;
@@ -104,6 +105,7 @@ function App() {
         <Route path="/logo-demo" element={<LogoDemo />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/services/gold-backed-loans" element={<GoldBackedLoans />} />
         <Route path="/blog/gold-loans-rural-india" element={<GoldLoansRuralIndia />} />
         <Route path="/blog/why-we-built-aarthika" element={<WhyWeBuiltAarthika />} />
         <Route path="/blog/why-interest-rates" element={<WhyInterestRates />} />
