@@ -1,7 +1,59 @@
 import React from 'react';
 import AnimatedLogoCustom from './AnimatedLogoCustom';
+import CountUp from 'react-countup';
+import { useInView } from 'react-intersection-observer';
+
+// Stat Card Component
+const StatCard = ({ value, label }) => {
+  let endValue = 0;
+  let suffix = '';
+  let prefix = '';
+
+  // Parse the value string to extract number and suffix/prefix
+  if (typeof value === 'string') {
+    const match = value.match(/([₹]*)(\d+[,\d]*)([+Cr]*\+*)/);
+    if (match) {
+      prefix = match[1] || '';
+      endValue = parseInt(match[2].replace(/,/g, ''), 10);
+      suffix = match[3] || '';
+    } else {
+      // Fallback if regex doesn't match (e.g., plain number)
+      const parsed = parseInt(value.replace(/,/g, ''), 10);
+      if (!isNaN(parsed)) {
+        endValue = parsed;
+      }
+    }
+  } else if (typeof value === 'number') {
+    endValue = value;
+  }
+
+  return (
+    <div className="bg-aarthikaBlue/20 p-5 md:p-6 rounded-lg backdrop-blur-sm border border-aarthikaBlue/30 hover:border-aarthikaBlue/50 transition-all duration-300">
+      <h3 className="font-bold text-2xl md:text-3xl mb-1">
+        <CountUp 
+          start={0} 
+          end={endValue} 
+          duration={2.5} 
+          separator="," 
+          prefix={prefix}
+          suffix={suffix}
+          enableScrollSpy
+          scrollSpyDelay={100}
+        />
+      </h3>
+      <p className="text-gray-200 font-light">{label}</p>
+    </div>
+  );
+};
 
 const Hero = () => {
+  const stats = [
+    { value: '11+', label: 'Years Experience' },
+    { value: '10,000+', label: 'Satisfied Clients' },
+    { value: '₹40Cr+', label: 'Loans Facilitated' },
+    { value: '15+', label: 'Partnerships' },
+  ];
+  
   return (
     <section id="home" className="bg-gradient-to-r from-aarthikaDark to-aarthikaBlue py-20 md:py-28 text-white w-full relative overflow-hidden">
       {/* Warm overlay filter - Increased intensity */}
@@ -43,22 +95,9 @@ const Hero = () => {
       
         <div className="mt-20 md:mt-28">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 text-center">
-            <div className="bg-aarthikaBlue/20 p-5 md:p-6 rounded-lg backdrop-blur-sm border border-aarthikaBlue/30 hover:border-aarthikaBlue/50 transition-all duration-300">
-              <h3 className="font-bold text-2xl md:text-3xl mb-1">11+</h3>
-              <p className="text-gray-200 font-light">Years Experience</p>
-            </div>
-            <div className="bg-aarthikaBlue/20 p-5 md:p-6 rounded-lg backdrop-blur-sm border border-aarthikaBlue/30 hover:border-aarthikaBlue/50 transition-all duration-300">
-              <h3 className="font-bold text-2xl md:text-3xl mb-1">10,000+</h3>
-              <p className="text-gray-200 font-light">Satisfied Clients</p>
-            </div>
-            <div className="bg-aarthikaBlue/20 p-5 md:p-6 rounded-lg backdrop-blur-sm border border-aarthikaBlue/30 hover:border-aarthikaBlue/50 transition-all duration-300">
-              <h3 className="font-bold text-2xl md:text-3xl mb-1">₹40Cr+</h3>
-              <p className="text-gray-200 font-light">Loans Facilitated</p>
-            </div>
-            <div className="bg-aarthikaBlue/20 p-5 md:p-6 rounded-lg backdrop-blur-sm border border-aarthikaBlue/30 hover:border-aarthikaBlue/50 transition-all duration-300">
-              <h3 className="font-bold text-2xl md:text-3xl mb-1">15+</h3>
-              <p className="text-gray-200 font-light">Partnerships</p>
-            </div>
+            {stats.map((stat, index) => (
+              <StatCard key={index} value={stat.value} label={stat.label} />
+            ))}
           </div>
         </div>
       </div>
