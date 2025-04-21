@@ -4,20 +4,19 @@ import CountUp from 'react-countup';
 import { useInView } from 'react-intersection-observer';
 
 // Stat Card Component
-const StatCard = ({ value, label }) => {
+const StatCard = ({ value, label, startAnimation }) => {
   let endValue = 0;
   let suffix = '';
   let prefix = '';
 
-  // Parse the value string to extract number and suffix/prefix
+  // Parse the value string
   if (typeof value === 'string') {
-    const match = value.match(/([₹]*)(\d+[,\d]*)([+Cr]*\+*)/);
+    const match = value.match(/([₹]*)(\d+[\d,]*)([+Cr]*\+*)/);
     if (match) {
       prefix = match[1] || '';
       endValue = parseInt(match[2].replace(/,/g, ''), 10);
       suffix = match[3] || '';
     } else {
-      // Fallback if regex doesn't match (e.g., plain number)
       const parsed = parseInt(value.replace(/,/g, ''), 10);
       if (!isNaN(parsed)) {
         endValue = parsed;
@@ -30,16 +29,18 @@ const StatCard = ({ value, label }) => {
   return (
     <div className="bg-aarthikaBlue/20 p-5 md:p-6 rounded-lg backdrop-blur-sm border border-aarthikaBlue/30 hover:border-aarthikaBlue/50 transition-all duration-300">
       <h3 className="font-bold text-2xl md:text-3xl mb-1">
-        <CountUp 
-          start={0} 
-          end={endValue} 
-          duration={2.5} 
-          separator="," 
-          prefix={prefix}
-          suffix={suffix}
-          enableScrollSpy
-          scrollSpyDelay={100}
-        />
+        {startAnimation ? (
+          <CountUp 
+            start={0} 
+            end={endValue} 
+            duration={3.5}
+            separator="," 
+            prefix={prefix}
+            suffix={suffix}
+          />
+        ) : (
+          `${prefix}0${suffix}`
+        )}
       </h3>
       <p className="text-gray-200 font-light">{label}</p>
     </div>
@@ -54,6 +55,11 @@ const Hero = () => {
     { value: '15+', label: 'Partnerships' },
   ];
   
+  const { ref: statsRef, inView: statsInView } = useInView({
+    triggerOnce: true,
+    threshold: 0.2,
+  });
+
   return (
     <section id="home" className="bg-gradient-to-r from-aarthikaDark to-aarthikaBlue py-20 md:py-28 text-white w-full relative overflow-hidden">
       {/* Warm overlay filter - Increased intensity */}
@@ -93,10 +99,15 @@ const Hero = () => {
           </div>
         </div>
       
-        <div className="mt-20 md:mt-28">
+        <div ref={statsRef} className="mt-20 md:mt-28">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 text-center">
             {stats.map((stat, index) => (
-              <StatCard key={index} value={stat.value} label={stat.label} />
+              <StatCard 
+                key={index} 
+                value={stat.value} 
+                label={stat.label} 
+                startAnimation={statsInView}
+              />
             ))}
           </div>
         </div>
