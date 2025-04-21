@@ -69,7 +69,8 @@ const Services = () => {
     {
       title: "Old Gold & Silver Buying",
       description: "We also buy old gold and silver ornaments. Transparent weight testing, fair market pricing, and instant cash payout — no middlemen, no confusion.",
-      icon: <i className="fas fa-balance-scale"></i>
+      icon: <i className="fas fa-balance-scale"></i>,
+      linkTo: "/services/old-gold-silver-buying"
     }
   ];
 
