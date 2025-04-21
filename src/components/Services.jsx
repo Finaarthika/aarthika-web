@@ -4,38 +4,46 @@ import { Link as RouterLink } from 'react-router-dom';
 const ServiceCard = ({ title, description, icon, index, linkTo }) => {
   const delay = index * 100;
   
-  const href = linkTo || "tel:+91-6205168541";
-  const isInternalLink = href.startsWith('/');
-  
-  return (
-    <div 
-      className={`premium-card p-8 hover-lift border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center text-center animate-fade-in`} 
-      style={{ animationDelay: `${delay}ms` }}
-    >
-      <div className="text-aarthikaBlue text-4xl mb-5 w-16 h-16 rounded-full bg-aarthikaBlue/10 flex items-center justify-center">
+  const CardContent = (
+    <>
+      <div className="text-aarthikaBlue text-4xl mb-5 w-16 h-16 rounded-full bg-aarthikaBlue/10 flex items-center justify-center shrink-0">
         {icon}
       </div>
       <h3 className="text-xl font-semibold mb-4 text-gray-800">{title}</h3>
       <p className="text-gray-600 text-base leading-relaxed flex-grow mb-4">{description}</p>
-      <div className="mt-auto pt-4">
-        {isInternalLink ? (
-          <RouterLink to={href} className="text-aarthikaBlue font-medium flex items-center justify-center hover:underline">
-            Learn More
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
-          </RouterLink>
-        ) : (
-          <a href={href} className="text-aarthikaBlue font-medium flex items-center justify-center hover:underline">
-            Contact Us
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
-          </a>
-        )}
+      <div className="mt-auto pt-4 w-full">
+        <a href="tel:+91-6205168541" className="text-aarthikaBlue font-medium inline-flex items-center justify-center hover:underline w-full">
+          Contact Us
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </a>
       </div>
-    </div>
+    </>
   );
+
+  const cardClasses = `premium-card p-6 md:p-8 border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center text-center animate-fade-in`;
+
+  if (linkTo) {
+    return (
+      <RouterLink 
+        to={linkTo} 
+        className={`${cardClasses} hover-lift group block`} 
+        style={{ animationDelay: `${delay}ms` }}
+      >
+        {CardContent}
+      </RouterLink>
+    );
+  } else {
+    return (
+      <div 
+        className={cardClasses} 
+        style={{ animationDelay: `${delay}ms` }}
+      >
+        {CardContent}
+      </div>
+    );
+  }
 };
 
 const Services = () => {
