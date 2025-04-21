@@ -7,6 +7,55 @@ const SIMULATION_INTERVAL_MS = 750; // 3/4 second for fluctuation simulation
 const MAX_FLUCTUATION_PERCENT = 0.85; // Max deviation from base rate (+/- %)
 const TICK_FLUCTUATION_PERCENT = 0.15; // Max random change per tick (+/- %), adjust for smoothness
 
+// --- Time Check Function ---
+const isMarketOpen = () => {
+  const now = new Date();
+  // Get UTC time components
+  const utcHours = now.getUTCHours();
+  const utcMinutes = now.getUTCMinutes();
+  const utcDay = now.getUTCDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+
+  // Calculate IST (UTC+5:30)
+  let istHours = utcHours + 5;
+  let istMinutes = utcMinutes + 30;
+  let istDay = utcDay;
+
+  // Adjust hours and day if minutes overflow
+  if (istMinutes >= 60) {
+    istHours += 1;
+    istMinutes -= 60;
+  }
+
+  // Adjust hours and day if hours overflow
+  if (istHours >= 24) {
+    istDay = (istDay + 1) % 7;
+    istHours -= 24;
+  }
+
+  // Market Hours: Monday 00:30 IST to Saturday 01:30 IST
+  if (istDay === 0) return false; // Closed on Sunday
+  if (istDay === 6) { // Saturday
+    if (istHours > 1 || (istHours === 1 && istMinutes >= 30)) {
+      return false; // Closed after Sat 1:30 AM
+    }
+  }
+  if (istDay === 1) { // Monday
+    if (istHours < 0 || (istHours === 0 && istMinutes < 30)) {
+      // This condition should technically not be met due to UTC offset logic,
+      // but kept for clarity. If UTC is late Sun, IST might be early Mon.
+      // We need to check if it's before Mon 00:30
+       const utcOffsetMinutes = 5 * 60 + 30;
+       const istTotalMinutes = now.getUTCHours() * 60 + now.getUTCMinutes() + utcOffsetMinutes;
+       const dayStartMinutes = 0 * 60 + 30; // 00:30
+       if ((istTotalMinutes % (24 * 60)) < dayStartMinutes) {
+           return false; // Before Monday 00:30 IST
+       }
+    }
+  }
+  // Otherwise, it's between Mon 00:30 and Sat 01:30
+  return true;
+};
+
 // --- Loan Calculator Constants (Defined INSIDE the component now) ---
 // Moved consts like LOAN_TO_VALUE, GOLD_PURITY_FACTORS etc. inside component scope
 
@@ -50,7 +99,10 @@ const LiveMetalRates = () => {
   const [rateDirections, setRateDirections] = useState({ gold: 'same', silver: 'same' });
   const [loadingRates, setLoadingRates] = useState(true);
   const [ratesError, setRatesError] = useState(null);
+  const [marketCurrentlyOpen, setMarketCurrentlyOpen] = useState(isMarketOpen()); // State for market status
   const prevDisplayRatesRef = useRef(displayRates);
+  const fetchIntervalRef = useRef(null); // Ref for fetch interval
+  const simulationIntervalRef = useRef(null); // Ref for simulation interval
 
   // --- State for Calculator ---
   const [metalType, setMetalType] = useState('gold');
@@ -61,6 +113,12 @@ const LiveMetalRates = () => {
 
   // --- Fetching Logic ---
   const fetchBaseRates = useCallback(async (isInitialLoad = false) => {
+    if (!isMarketOpen()) { // Don't fetch if market is closed
+      if(isInitialLoad) setLoadingRates(false); // Ensure loading stops on initial load if market closed
+      setMarketCurrentlyOpen(false);
+      return;
+    }
+    setMarketCurrentlyOpen(true);
     if (isInitialLoad) setLoadingRates(true);
     setRatesError(null);
     console.log("Fetching base metal rates...");
@@ -99,54 +157,84 @@ const LiveMetalRates = () => {
     }
   }, []);
 
-  // Initial fetch and interval for base rates
+  // Interval for fetching and market status check
   useEffect(() => {
-    fetchBaseRates(true);
-    const fetchInterval = setInterval(() => fetchBaseRates(false), FETCH_INTERVAL_MS);
-    return () => clearInterval(fetchInterval);
+    fetchBaseRates(true); // Initial fetch
+
+    const checkMarketAndFetch = () => {
+      const marketOpen = isMarketOpen();
+      setMarketCurrentlyOpen(marketOpen);
+      if (marketOpen) {
+        fetchBaseRates(false); // Fetch only if market is open
+      } else {
+        // Optional: Could clear display rates or show last known
+        setRateDirections({ gold: 'same', silver: 'same' }); // Reset directions
+      }
+    };
+
+    // Clear previous interval if exists
+    if (fetchIntervalRef.current) clearInterval(fetchIntervalRef.current);
+    // Set new interval
+    fetchIntervalRef.current = setInterval(checkMarketAndFetch, FETCH_INTERVAL_MS);
+
+    // Cleanup interval on unmount
+    return () => {
+      if (fetchIntervalRef.current) clearInterval(fetchIntervalRef.current);
+    };
   }, [fetchBaseRates]);
 
-  // --- Simulation Logic ---
+  // --- Simulation Logic (Conditional) ---
   useEffect(() => {
-    if (loadingRates) return;
-    const simulationInterval = setInterval(() => {
-      if (baseRates.goldRate === null && baseRates.silverRate === null) return;
+    // Clear previous interval if exists
+    if (simulationIntervalRef.current) clearInterval(simulationIntervalRef.current);
 
-      setDisplayRates(currentDisplayRates => {
+    // Start simulation only if market is open and rates are loaded
+    if (marketCurrentlyOpen && !loadingRates && (baseRates.goldRate !== null || baseRates.silverRate !== null)) {
+      simulationIntervalRef.current = setInterval(() => {
+        setDisplayRates(currentDisplayRates => {
           const newDisplay = { ...currentDisplayRates };
-          const newDirections = { ...rateDirections }; // Start with current directions
+          const newDirections = { ...rateDirections };
           const prevRates = prevDisplayRatesRef.current;
 
           // Simulate Gold
           if (baseRates.goldRate !== null && currentDisplayRates.goldRate !== null) {
-              const multiplier = getRandomMultiplier();
-              let newRate = currentDisplayRates.goldRate * multiplier;
-              const maxDev = baseRates.goldRate * MAX_FLUCTUATION_PERCENT / 100;
-              newRate = Math.max(baseRates.goldRate - maxDev, Math.min(baseRates.goldRate + maxDev, newRate));
-              newDisplay.goldRate = newRate;
-              // Compare with previous *display* rate to get tick direction
-              newDirections.gold = newRate > (prevRates.goldRate ?? -Infinity) ? 'up' : (newRate < (prevRates.goldRate ?? Infinity) ? 'down' : 'same');
+            const multiplier = getRandomMultiplier();
+            let newRate = currentDisplayRates.goldRate * multiplier;
+            const maxDev = baseRates.goldRate * MAX_FLUCTUATION_PERCENT / 100;
+            newRate = Math.max(baseRates.goldRate - maxDev, Math.min(baseRates.goldRate + maxDev, newRate));
+            newDisplay.goldRate = newRate;
+            newDirections.gold = newRate > (prevRates.goldRate ?? -Infinity) ? 'up' : (newRate < (prevRates.goldRate ?? Infinity) ? 'down' : 'same');
           }
 
           // Simulate Silver
           if (baseRates.silverRate !== null && currentDisplayRates.silverRate !== null) {
-              const multiplier = getRandomMultiplier();
-              let newRate = currentDisplayRates.silverRate * multiplier;
-              const maxDev = baseRates.silverRate * MAX_FLUCTUATION_PERCENT / 100;
-              newRate = Math.max(baseRates.silverRate - maxDev, Math.min(baseRates.silverRate + maxDev, newRate));
-              newDisplay.silverRate = newRate;
-              newDirections.silver = newRate > (prevRates.silverRate ?? -Infinity) ? 'up' : (newRate < (prevRates.silverRate ?? Infinity) ? 'down' : 'same');
+            const multiplier = getRandomMultiplier();
+            let newRate = currentDisplayRates.silverRate * multiplier;
+            const maxDev = baseRates.silverRate * MAX_FLUCTUATION_PERCENT / 100;
+            newRate = Math.max(baseRates.silverRate - maxDev, Math.min(baseRates.silverRate + maxDev, newRate));
+            newDisplay.silverRate = newRate;
+            newDirections.silver = newRate > (prevRates.silverRate ?? -Infinity) ? 'up' : (newRate < (prevRates.silverRate ?? Infinity) ? 'down' : 'same');
           }
 
-          prevDisplayRatesRef.current = newDisplay; // Update ref for next tick comparison
+          prevDisplayRatesRef.current = newDisplay;
           setRateDirections(newDirections);
           return newDisplay;
-      });
+        });
+      }, SIMULATION_INTERVAL_MS);
+    } else {
+      // If market closed or loading, ensure simulation stops
+      if (simulationIntervalRef.current) clearInterval(simulationIntervalRef.current);
+      // Reset directions when market closes
+      if (!marketCurrentlyOpen) {
+         setRateDirections({ gold: 'same', silver: 'same' });
+      }
+    }
 
-    }, SIMULATION_INTERVAL_MS);
-
-    return () => clearInterval(simulationInterval);
-  }, [baseRates, rateDirections, loadingRates]); // Re-run if base rates change
+    // Cleanup interval on unmount or dependency change
+    return () => {
+      if (simulationIntervalRef.current) clearInterval(simulationIntervalRef.current);
+    };
+  }, [marketCurrentlyOpen, loadingRates, baseRates, rateDirections]); // Added marketCurrentlyOpen dependency
 
   useEffect(() => {
     if (metalType === 'gold') {
@@ -190,7 +278,7 @@ const LiveMetalRates = () => {
   const RateCard = ({ metal, rate, direction, icon, perGramText="Per gram (24k)" }) => {
     const displayValue = formatRate(rate);
     const colorClass = direction === 'up' ? 'text-green-500' : direction === 'down' ? 'text-red-500' : 'text-white';
-    const arrow = direction === 'up' ? '↑' : direction === 'down' ? '↓' : '';
+    const arrow = marketCurrentlyOpen && direction !== 'same' ? (direction === 'up' ? '↑' : '↓') : '';
     const bgColor = metal === 'Gold' ? 'bg-gradient-to-br from-yellow-400 to-amber-500' : 'bg-gradient-to-br from-gray-400 to-gray-500';
 
     return (
@@ -207,13 +295,23 @@ const LiveMetalRates = () => {
             <div className="h-10 flex items-center">
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
             </div>
+          ) : ratesError ? (
+             <p className={`text-2xl font-bold truncate text-yellow-300 leading-tight`}>
+               Error
+             </p>
+          ) : rate === null ? (
+             <p className={`text-2xl font-bold truncate text-gray-300 leading-tight`}>
+               N/A
+             </p>
           ) : (
             <p className={`text-3xl md:text-4xl font-bold truncate transition-colors duration-300 ${colorClass} leading-tight`} title={String(rate)}>
               ₹{displayValue} 
               <span className="text-lg ml-1">{arrow}</span>
             </p>
           )}
-          <p className="text-xs opacity-80 mt-1">{perGramText}</p> 
+          <p className="text-xs opacity-80 mt-1">
+            {perGramText} {!marketCurrentlyOpen && rate !== null && <span className="ml-1 font-medium text-yellow-300">(Market Closed)</span>}
+           </p> 
        </div>
       </div>
     );
@@ -231,7 +329,10 @@ const LiveMetalRates = () => {
           <p className="text-gray-600 mx-auto">
               Check today's indicative rates and estimate your potential loan amount instantly.
           </p>
-          {ratesError && <p className="text-sm text-red-600 font-medium mt-4">Error fetching rates: {ratesError}</p>}
+          {ratesError && !loadingRates && <p className="text-sm text-red-600 font-medium mt-4">Error loading rates: {ratesError}</p>}
+          {!marketCurrentlyOpen && !loadingRates && !ratesError && (baseRates.goldRate !== null || baseRates.silverRate !== null) && (
+               <p className="text-sm text-yellow-600 font-medium mt-4 bg-yellow-100 px-3 py-1 rounded inline-block">Market Closed</p>
+           )}
         </div>
 
         {/* Main Content Grid - Applying consistent styling */}
@@ -320,14 +421,14 @@ const LiveMetalRates = () => {
                    rate={displayRates.goldRate}
                    direction={rateDirections.gold}
                    icon={<FaCoins/>}
-                   perGramText="Per gram (24k Approx.)"
+                   perGramText="Per gram (24k Pure)"
                  />
                  <RateCard
                    metal="Silver"
                    rate={displayRates.silverRate}
                    direction={rateDirections.silver}
                    icon={<FaRing/>}
-                   perGramText="Per gram (999 Approx.)"
+                   perGramText="Per gram (999 Pure)"
                  />
               </div>
                {/* Info Block - Apply consistent styling, push to bottom if needed or allow natural flow */}
