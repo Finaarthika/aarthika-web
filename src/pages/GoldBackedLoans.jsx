@@ -3,6 +3,11 @@ import { Helmet } from 'react-helmet-async';
 import { HashLink } from 'react-router-hash-link'; // For smooth scrolling back
 
 const GoldBackedLoans = () => {
+  // WhatsApp link generation
+  const phoneNumber = '6205168541';
+  const internationalPhoneNumber = `91${phoneNumber}`;
+  const whatsappLink = `https://wa.me/${internationalPhoneNumber}?text=Hello%20Aarthika,%20I%20would%20like%20to%20enquire%20about%20gold-backed%20loans.`;
+
   return (
     <div className="bg-white py-16 px-4 sm:px-6 lg:px-8">
       <Helmet>
@@ -133,7 +138,7 @@ const GoldBackedLoans = () => {
             Visit your nearest Aarthika branch or send us a message on WhatsApp. We're happy to explain everything in simple terms.
           </p>
           <p className="text-gray-700 leading-relaxed">
-            Or you can <a href="tel:+91-6205168541" className="text-aarthikaBlue font-medium hover:underline">Call us</a>.
+            Or you can <a href={`tel:+${internationalPhoneNumber}`} className="text-aarthikaBlue font-medium hover:underline">Call us</a> or <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="text-green-600 font-medium hover:underline">WhatsApp Us</a>.
           </p>
         </div>
       </div>
