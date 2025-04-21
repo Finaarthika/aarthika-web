@@ -57,7 +57,8 @@ const Services = () => {
     {
       title: "Silver-Backed Loans",
       description: "We provide short-term loans against silver ornaments with fair pricing and full security. Ideal for urgent personal or business needs in rural communities.",
-      icon: <i className="fas fa-medal"></i>
+      icon: <i className="fas fa-medal"></i>,
+      linkTo: "/services/silver-backed-loans"
     },
     {
       title: "Jewellery Sales – Gold & Silver",
