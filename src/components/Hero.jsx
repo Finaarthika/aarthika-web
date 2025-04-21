@@ -33,7 +33,7 @@ const StatCard = ({ value, label, startAnimation }) => {
           <CountUp 
             start={0} 
             end={endValue} 
-            duration={3.5}
+            duration={2.5}
             separator="," 
             prefix={prefix}
             suffix={suffix}
