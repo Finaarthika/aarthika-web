@@ -181,7 +181,6 @@ const LiveMetalRates = () => {
       const cachedRates = getRatesFromLocalStorage();
       if (cachedRates) {
         console.log("Using cached rates due to offline status:", cachedRates);
-        // Extract just the rates, not the timestamp
         const newBaseRates = {
           goldRate: parseFloat(cachedRates.goldRate),
           silverRate: parseFloat(cachedRates.silverRate)
@@ -189,10 +188,11 @@ const LiveMetalRates = () => {
         
         if (!isNaN(newBaseRates.goldRate) && !isNaN(newBaseRates.silverRate)) {
           setBaseRates(newBaseRates);
-          setDisplayRates(current => ({
-            goldRate: current.goldRate === null || isInitialLoad ? newBaseRates.goldRate : current.goldRate,
-            silverRate: current.silverRate === null || isInitialLoad ? newBaseRates.silverRate : current.silverRate,
-          }));
+          // Directly set displayRates from cached base rates when offline on initial load
+          setDisplayRates({
+            goldRate: newBaseRates.goldRate,
+            silverRate: newBaseRates.silverRate,
+          });
           if (isInitialLoad) {
             prevDisplayRatesRef.current = newBaseRates;
           }
