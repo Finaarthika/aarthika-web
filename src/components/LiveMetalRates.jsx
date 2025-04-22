@@ -332,11 +332,12 @@ const LiveMetalRates = () => {
     };
   }, [fetchBaseRates]);
 
-  // --- Simulation Logic (Uses Seeded PRNG) ---
+  // --- Simulation Logic (Uses Seeded PRNG & Checks Offline Status) ---
   useEffect(() => {
     if (simulationIntervalRef.current) clearInterval(simulationIntervalRef.current);
 
-    if (marketCurrentlyOpen && !loadingRates && (baseRates.goldRate !== null || baseRates.silverRate !== null)) {
+    // Start simulation only if ONLINE, market is open and rates are loaded
+    if (!isOffline && marketCurrentlyOpen && !loadingRates && (baseRates.goldRate !== null || baseRates.silverRate !== null)) {
       
       simulationIntervalRef.current = setInterval(() => {
         // Calculate seed based on current time interval
@@ -382,10 +383,10 @@ const LiveMetalRates = () => {
         });
       }, SIMULATION_INTERVAL_MS);
     } else {
-      // If market closed or loading, ensure simulation stops
+      // If OFFLINE, market closed or loading, ensure simulation stops
       if (simulationIntervalRef.current) clearInterval(simulationIntervalRef.current);
-      // Reset directions when market closes
-      if (!marketCurrentlyOpen) {
+      // Reset directions when market closes OR we go offline
+      if (!marketCurrentlyOpen || isOffline) {
          setRateDirections({ gold: 'same', silver: 'same' });
       }
     }
@@ -394,7 +395,8 @@ const LiveMetalRates = () => {
     return () => {
       if (simulationIntervalRef.current) clearInterval(simulationIntervalRef.current);
     };
-  }, [marketCurrentlyOpen, loadingRates, baseRates, rateDirections]); // Added marketCurrentlyOpen dependency
+  // Add isOffline to dependency array
+  }, [isOffline, marketCurrentlyOpen, loadingRates, baseRates, rateDirections]);
 
   useEffect(() => {
     if (metalType === 'gold') {
