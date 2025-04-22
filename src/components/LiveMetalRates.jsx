@@ -6,6 +6,43 @@ const FETCH_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes (for base rate refresh)
 const SIMULATION_INTERVAL_MS = 750; // 3/4 second for fluctuation simulation
 const MAX_FLUCTUATION_PERCENT = 0.85; // Max deviation from base rate (+/- %)
 const TICK_FLUCTUATION_PERCENT = 0.15; // Max random change per tick (+/- %), adjust for smoothness
+const SEED_INTERVAL_MS = 5000; // Seed changes every 5 seconds
+const LOCAL_STORAGE_KEY = 'aarthika_metal_rates_cache'; // Key for localStorage
+
+// --- Helper Functions ---
+// Function to save rates to localStorage
+const saveRatesToLocalStorage = (rates) => {
+  try {
+    const ratesWithTimestamp = {
+      ...rates,
+      timestamp: Date.now()
+    };
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(ratesWithTimestamp));
+    console.log('Rates saved to localStorage:', ratesWithTimestamp);
+  } catch (e) {
+    console.error('Error saving rates to localStorage:', e);
+  }
+};
+
+// Function to get rates from localStorage
+const getRatesFromLocalStorage = () => {
+  try {
+    const cachedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (!cachedData) return null;
+    
+    const parsedData = JSON.parse(cachedData);
+    console.log('Retrieved rates from localStorage:', parsedData);
+    return parsedData;
+  } catch (e) {
+    console.error('Error retrieving rates from localStorage:', e);
+    return null;
+  }
+};
+
+// --- Network Status Check Function ---
+const checkNetworkStatus = () => {
+  return navigator.onLine;
+};
 
 // --- Time Check Function ---
 const isMarketOpen = () => {
@@ -56,6 +93,18 @@ const isMarketOpen = () => {
   return true;
 };
 
+// --- Simple Seeded PRNG (LCG) ---
+function createLcg(seed) {
+  let state = seed;
+  const a = 1664525;
+  const c = 1013904223;
+  const m = 2**32;
+  return () => {
+    state = (a * state + c) % m;
+    return state / m; // Return a value between 0 and 1
+  };
+}
+
 // --- Loan Calculator Constants (Defined INSIDE the component now) ---
 // Moved consts like LOAN_TO_VALUE, GOLD_PURITY_FACTORS etc. inside component scope
 
@@ -100,9 +149,11 @@ const LiveMetalRates = () => {
   const [loadingRates, setLoadingRates] = useState(true);
   const [ratesError, setRatesError] = useState(null);
   const [marketCurrentlyOpen, setMarketCurrentlyOpen] = useState(isMarketOpen()); // State for market status
+  const [isOffline, setIsOffline] = useState(!checkNetworkStatus()); // Track online/offline status
   const prevDisplayRatesRef = useRef(displayRates);
   const fetchIntervalRef = useRef(null); // Ref for fetch interval
   const simulationIntervalRef = useRef(null); // Ref for simulation interval
+  const randomGeneratorRef = useRef(null); // Ref to store the PRNG function
 
   // --- State for Calculator ---
   const [metalType, setMetalType] = useState('gold');
@@ -122,6 +173,45 @@ const LiveMetalRates = () => {
     if (isInitialLoad) setLoadingRates(true);
     setRatesError(null);
     console.log("Fetching base metal rates...");
+    
+    // Check if we're offline
+    const isNetworkAvailable = checkNetworkStatus();
+    if (!isNetworkAvailable) {
+      setIsOffline(true);
+      const cachedRates = getRatesFromLocalStorage();
+      if (cachedRates) {
+        console.log("Using cached rates due to offline status:", cachedRates);
+        // Extract just the rates, not the timestamp
+        const newBaseRates = {
+          goldRate: parseFloat(cachedRates.goldRate),
+          silverRate: parseFloat(cachedRates.silverRate)
+        };
+        
+        if (!isNaN(newBaseRates.goldRate) && !isNaN(newBaseRates.silverRate)) {
+          setBaseRates(newBaseRates);
+          setDisplayRates(current => ({
+            goldRate: current.goldRate === null || isInitialLoad ? newBaseRates.goldRate : current.goldRate,
+            silverRate: current.silverRate === null || isInitialLoad ? newBaseRates.silverRate : current.silverRate,
+          }));
+          if (isInitialLoad) {
+            prevDisplayRatesRef.current = newBaseRates;
+          }
+          setRateDirections({ gold: 'same', silver: 'same' });
+          if (isInitialLoad) setLoadingRates(false);
+          return;
+        }
+      }
+      
+      // If no valid cached data available
+      console.error("No cached rates available while offline");
+      setRatesError("Network unavailable. No cached rates found.");
+      if (isInitialLoad) setLoadingRates(false);
+      return;
+    }
+
+    // Reset offline status if we get here (network available)
+    setIsOffline(false);
+    
     try {
       const response = await fetch('/api/metal-rates');
       const data = await response.json();
@@ -136,6 +226,15 @@ const LiveMetalRates = () => {
       };
 
       console.log("Base rates fetched:", newBaseRates);
+      
+      // Save rates to localStorage for offline use
+      if (newBaseRates.goldRate !== null && newBaseRates.silverRate !== null) {
+        saveRatesToLocalStorage({
+          goldRate: newBaseRates.goldRate.toString(),
+          silverRate: newBaseRates.silverRate.toString()
+        });
+      }
+      
       setBaseRates(newBaseRates);
 
       // Reset display rates if they are null or base rates change significantly (optional)
@@ -150,6 +249,33 @@ const LiveMetalRates = () => {
 
     } catch (e) {
       console.error("Error fetching base metal rates:", e);
+      
+      // Try to use cached data if fetch fails
+      const cachedRates = getRatesFromLocalStorage();
+      if (cachedRates) {
+        console.log("Using cached rates due to fetch error:", cachedRates);
+        const newBaseRates = {
+          goldRate: parseFloat(cachedRates.goldRate),
+          silverRate: parseFloat(cachedRates.silverRate)
+        };
+        
+        if (!isNaN(newBaseRates.goldRate) && !isNaN(newBaseRates.silverRate)) {
+          setBaseRates(newBaseRates);
+          setDisplayRates(current => ({
+            goldRate: current.goldRate === null || isInitialLoad ? newBaseRates.goldRate : current.goldRate,
+            silverRate: current.silverRate === null || isInitialLoad ? newBaseRates.silverRate : current.silverRate,
+          }));
+          if (isInitialLoad) {
+            prevDisplayRatesRef.current = newBaseRates;
+          }
+          setRateDirections({ gold: 'same', silver: 'same' });
+          setRatesError("Network error. Using cached rates.");
+          if (isInitialLoad) setLoadingRates(false);
+          return;
+        }
+      }
+      
+      // If no valid cached data available
       setRatesError(e.message || "Failed to load rates.");
       setDisplayRates({ goldRate: null, silverRate: null });
     } finally {
@@ -157,7 +283,30 @@ const LiveMetalRates = () => {
     }
   }, []);
 
-  // Interval for fetching and market status check
+  // --- Network status event listeners ---
+  useEffect(() => {
+    // Add event listeners for online/offline status
+    const handleOnline = () => {
+      console.log("Network is now online");
+      setIsOffline(false);
+      fetchBaseRates(false); // Fetch fresh data when back online
+    };
+    
+    const handleOffline = () => {
+      console.log("Network is now offline");
+      setIsOffline(true);
+    };
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [fetchBaseRates]);
+
+  // --- Interval for fetching and market status check ---
   useEffect(() => {
     fetchBaseRates(true); // Initial fetch
 
@@ -183,14 +332,25 @@ const LiveMetalRates = () => {
     };
   }, [fetchBaseRates]);
 
-  // --- Simulation Logic (Conditional) ---
+  // --- Simulation Logic (Uses Seeded PRNG) ---
   useEffect(() => {
-    // Clear previous interval if exists
     if (simulationIntervalRef.current) clearInterval(simulationIntervalRef.current);
 
-    // Start simulation only if market is open and rates are loaded
     if (marketCurrentlyOpen && !loadingRates && (baseRates.goldRate !== null || baseRates.silverRate !== null)) {
+      
       simulationIntervalRef.current = setInterval(() => {
+        // Calculate seed based on current time interval
+        const currentSeed = Math.floor(Date.now() / SEED_INTERVAL_MS);
+        // Create or reuse PRNG with the current seed
+        // Note: For perfect sync, we should ideally generate the *sequence* from the seed 
+        // each time, but creating a new generator per tick is simpler here.
+        const random = createLcg(currentSeed); 
+
+        const getRandomFluctuation = () => {
+           const percentChange = (random() * 2 - 1) * TICK_FLUCTUATION_PERCENT / 100;
+           return 1 + percentChange;
+        };
+
         setDisplayRates(currentDisplayRates => {
           const newDisplay = { ...currentDisplayRates };
           const newDirections = { ...rateDirections };
@@ -198,7 +358,7 @@ const LiveMetalRates = () => {
 
           // Simulate Gold
           if (baseRates.goldRate !== null && currentDisplayRates.goldRate !== null) {
-            const multiplier = getRandomMultiplier();
+            const multiplier = getRandomFluctuation(); // Use seeded random
             let newRate = currentDisplayRates.goldRate * multiplier;
             const maxDev = baseRates.goldRate * MAX_FLUCTUATION_PERCENT / 100;
             newRate = Math.max(baseRates.goldRate - maxDev, Math.min(baseRates.goldRate + maxDev, newRate));
@@ -208,7 +368,7 @@ const LiveMetalRates = () => {
 
           // Simulate Silver
           if (baseRates.silverRate !== null && currentDisplayRates.silverRate !== null) {
-            const multiplier = getRandomMultiplier();
+            const multiplier = getRandomFluctuation(); // Use seeded random
             let newRate = currentDisplayRates.silverRate * multiplier;
             const maxDev = baseRates.silverRate * MAX_FLUCTUATION_PERCENT / 100;
             newRate = Math.max(baseRates.silverRate - maxDev, Math.min(baseRates.silverRate + maxDev, newRate));
@@ -310,7 +470,9 @@ const LiveMetalRates = () => {
             </p>
           )}
           <p className="text-xs opacity-80 mt-1">
-            {perGramText} {!marketCurrentlyOpen && rate !== null && <span className="ml-1 font-medium text-yellow-300">(Market Closed)</span>}
+            {perGramText} 
+            {!marketCurrentlyOpen && rate !== null && <span className="ml-1 font-medium text-yellow-300">(Market Closed)</span>}
+            {isOffline && rate !== null && <span className="ml-1 font-medium text-yellow-300">(Offline Mode)</span>}
            </p> 
        </div>
       </div>
