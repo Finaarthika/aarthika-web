@@ -67,12 +67,16 @@ export default async (req, res) => {
   }
 
   try {
-    const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
+    let clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
     let privateKey = process.env.GOOGLE_PRIVATE_KEY;
 
     if (!clientEmail || !privateKey) {
       throw new Error('GOOGLE_CLIENT_EMAIL or GOOGLE_PRIVATE_KEY environment variable is missing.');
     }
+
+    // Clean up Vercel environment variable artifacts (accidental quotes and whitespace)
+    clientEmail = clientEmail.replace(/^"|"$/g, '').trim();
+    privateKey = privateKey.replace(/^"|"$/g, '').trim();
 
     // Fix Vercel newline character escaping
     privateKey = privateKey.replace(/\\n/g, '\n');
