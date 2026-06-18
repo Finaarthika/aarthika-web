@@ -24,6 +24,7 @@ import GoldBackedLoans from './pages/GoldBackedLoans'
 import SilverBackedLoans from './pages/SilverBackedLoans'
 import JewellerySales from './pages/JewellerySales'
 import OldGoldSilverBuying from './pages/OldGoldSilverBuying'
+import SearchGrid from './pages/passbook/SearchGrid'
 import './App.css'
 
 const NAV_OFFSET = -80;
@@ -116,6 +117,7 @@ function App() {
         <Route path="/blog/why-we-built-aarthika" element={<WhyWeBuiltAarthika />} />
         <Route path="/blog/why-interest-rates" element={<WhyInterestRates />} />
         <Route path="/blog/trust-and-time" element={<TrustAndTime />} />
+        <Route path="/passbook" element={<SearchGrid />} />
       </Routes>
       {isJoinFormVisible && <JoinAarthika onClose={toggleJoinForm} />}
     </Router>
