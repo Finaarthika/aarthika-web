@@ -6,8 +6,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { query } = req.query || {};
-    
     const credentialsStr = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
     if (!credentialsStr) {
       return res.status(500).json({ 
@@ -22,7 +20,6 @@ export default async function handler(req, res) {
     } catch (e) {
       return res.status(500).json({ 
         error: e.message, 
-        stack: e.stack, 
         details: 'Failed to parse GOOGLE_SERVICE_ACCOUNT_KEY JSON string.' 
       });
     }
@@ -35,19 +32,10 @@ export default async function handler(req, res) {
     const sheets = google.sheets({ version: 'v4', auth });
     const spreadsheetId = '14ujzie7cQjDxKVVXpmE5kKUJxNMBouf4c8F_I9AnlJw';
     
-    let response;
-    try {
-      response = await sheets.spreadsheets.values.get({
-        spreadsheetId,
-        range: 'CUSTOMER_PROFILES!A2:G', 
-      });
-    } catch (apiError) {
-      return res.status(500).json({ 
-        error: apiError.message, 
-        stack: apiError.stack,
-        details: 'Check if sheet is shared with service account, or if tab name CUSTOMER_PROFILES has typos/trailing spaces.'
-      });
-    }
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: 'CUSTOMER_PROFILES!A2:E', 
+    });
 
     const rows = (response && response.data && response.data.values) ? response.data.values : [];
     
@@ -57,42 +45,25 @@ export default async function handler(req, res) {
       const fathersName = row[2] ? String(row[2]).trim() : '';
       const village = row[3] ? String(row[3]).trim() : '';
       const phone = row[4] ? String(row[4]).trim() : '';
-      const photoLink = row[5] ? String(row[5]).trim() : '';
-      const faceVector = row[6] ? String(row[6]).trim() : '';
       
       return {
         accountNumber,
         customerName,
         fathersName,
         village,
-        phone,
-        photoLink,
-        faceVector
+        phone
       };
     });
 
-    // Filter out completely blank ghost rows
     customers = customers.filter(c => c.accountNumber !== '' || c.customerName !== '');
-
-    // Filter if text query is provided
-    if (query && typeof query === 'string') {
-      const lowerQuery = query.toLowerCase();
-      customers = customers.filter(c => 
-        c.customerName.toLowerCase().includes(lowerQuery) ||
-        c.fathersName.toLowerCase().includes(lowerQuery) ||
-        c.phone.toLowerCase().includes(lowerQuery) ||
-        c.accountNumber.toLowerCase().includes(lowerQuery)
-      );
-    }
 
     return res.status(200).json({ data: customers });
 
   } catch (error) {
-    console.error('Unhandled Server Error in Search Proxy:', error);
     return res.status(500).json({ 
       error: error.message, 
       stack: error.stack,
-      details: 'Check if sheet is shared with service account or if credentials variable parses correctly'
+      details: 'Google Sheets API error'
     });
   }
 }
