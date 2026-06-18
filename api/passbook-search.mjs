@@ -1,6 +1,5 @@
 import crypto from 'crypto';
 
-// Helper to base64url encode a string
 function base64url(str) {
   return Buffer.from(str)
     .toString('base64')
@@ -9,7 +8,6 @@ function base64url(str) {
     .replace(/\//g, '_');
 }
 
-// Custom RSA-SHA256 signature generator for JWT
 function signAssertion(payload, privateKey) {
   const header = { alg: 'RS256', typ: 'JWT' };
   const headerEncoded = base64url(JSON.stringify(header));
@@ -28,7 +26,6 @@ function signAssertion(payload, privateKey) {
   return `${signatureInput}.${signatureEncoded}`;
 }
 
-// Perform OAuth2 assertion exchange with Google OAuth2 Server
 async function getAccessToken(clientEmail, privateKey) {
   const iat = Math.floor(Date.now() / 1000);
   const exp = iat + 3600;
@@ -72,7 +69,7 @@ export default async (req, res) => {
   try {
     const credentialsStr = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
     if (!credentialsStr) {
-      throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY environment variable is not defined.');
+      throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY environment variable is missing.');
     }
 
     let credentials;
@@ -89,17 +86,15 @@ export default async (req, res) => {
       throw new Error('Google credentials JSON is missing client_email or private_key.');
     }
 
-    // Clean up Vercel newline escapings inside the private key
+    // Fix Vercel newline character escaping
     privateKey = privateKey.replace(/\\n/g, '\n');
 
-    console.log("Acquiring access token via dependency-free OAuth2 signer...");
     const accessToken = await getAccessToken(clientEmail, privateKey);
 
     const spreadsheetId = '14ujzie7cQjDxKVVXpmE5kKUJxNMBouf4c8F_I9AnlJw';
-    const range = 'CUSTOMER_PROFILES!A2:G'; // Fetching column A-G for profile fields and biometrics
+    const range = 'CUSTOMER_PROFILES!A2:G';
     const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}`;
 
-    console.log("Fetching customer profiles from Google Sheets API...");
     const sheetResponse = await fetch(sheetsUrl, {
       headers: {
         'Authorization': `Bearer ${accessToken}`
@@ -114,24 +109,16 @@ export default async (req, res) => {
     const data = await sheetResponse.json();
     const rows = data.values || [];
 
-    // Map rows using strict index checking bounds to prevent crashes on empty/truncated rows
+    // Defensively map array columns to avoid index faults on truncated rows
     const customers = rows.map(row => {
-      const accountNumber = row[0] ? String(row[0]).trim() : '';
-      const customerName = row[1] ? String(row[1]).trim() : '';
-      const fathersName = row[2] ? String(row[2]).trim() : '';
-      const village = row[3] ? String(row[3]).trim() : '';
-      const phone = row[4] ? String(row[4]).trim() : '';
-      const photoLink = row[5] ? String(row[5]).trim() : '';
-      const faceVector = row[6] ? String(row[6]).trim() : '';
-
       return {
-        accountNumber,
-        customerName,
-        fathersName,
-        village,
-        phone,
-        photoLink,
-        faceVector
+        accountNumber: row[0] ? String(row[0]).trim() : '',
+        customerName: row[1] ? String(row[1]).trim() : '',
+        fathersName: row[2] ? String(row[2]).trim() : '',
+        village: row[3] ? String(row[3]).trim() : '',
+        phone: row[4] ? String(row[4]).trim() : '',
+        photoLink: row[5] ? String(row[5]).trim() : '',
+        faceVector: row[6] ? String(row[6]).trim() : '',
       };
     }).filter(c => c.accountNumber !== '' || c.customerName !== '');
 
@@ -139,11 +126,9 @@ export default async (req, res) => {
     return res.status(200).json({ data: customers });
 
   } catch (error) {
-    console.error("Error in passbook-search API proxy:", error.message);
     res.setHeader('Content-Type', 'application/json');
     return res.status(500).json({
-      error: error.message || 'An internal server error occurred.',
-      details: error.stack
+      error: error.message || 'An internal server error occurred.'
     });
   }
 };
