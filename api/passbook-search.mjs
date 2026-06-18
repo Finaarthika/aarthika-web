@@ -131,6 +131,14 @@ export default async (req, res) => {
     const emailExists = !!process.env.GOOGLE_CLIENT_EMAIL;
     const keyExists = !!process.env.GOOGLE_PRIVATE_KEY;
     const keyLength = process.env.GOOGLE_PRIVATE_KEY ? process.env.GOOGLE_PRIVATE_KEY.length : 0;
+    
+    let keyPreview = 'none';
+    if (keyExists) {
+        let pk = process.env.GOOGLE_PRIVATE_KEY;
+        pk = pk.replace(/^"|"$/g, '').trim();
+        pk = pk.replace(/\\n/g, '\n').replace(/\n/g, '\n').trim();
+        keyPreview = `Starts with: [${pk.substring(0, 35)}] ... Ends with: [${pk.substring(pk.length - 35)}]`;
+    }
    
     return res.status(500).json({
       error: error.message || 'An internal server error occurred.',
@@ -138,7 +146,8 @@ export default async (req, res) => {
         emailActive: emailExists,
         keyActive: keyExists,
         keyCharacterCount: keyLength,
-        resolvedEmail: process.env.GOOGLE_CLIENT_EMAIL || 'none'
+        resolvedEmail: process.env.GOOGLE_CLIENT_EMAIL || 'none',
+        keyFormatPreview: keyPreview
       }
     });
   }
