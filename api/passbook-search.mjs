@@ -67,23 +67,11 @@ export default async (req, res) => {
   }
 
   try {
-    const credentialsStr = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
-    if (!credentialsStr) {
-      throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY environment variable is missing.');
-    }
-
-    let credentials;
-    try {
-      credentials = JSON.parse(credentialsStr);
-    } catch (parseError) {
-      throw new Error(`Failed to parse credentials JSON string: ${parseError.message}`);
-    }
-
-    const clientEmail = credentials.client_email;
-    let privateKey = credentials.private_key;
+    const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
+    let privateKey = process.env.GOOGLE_PRIVATE_KEY;
 
     if (!clientEmail || !privateKey) {
-      throw new Error('Google credentials JSON is missing client_email or private_key.');
+      throw new Error('GOOGLE_CLIENT_EMAIL or GOOGLE_PRIVATE_KEY environment variable is missing.');
     }
 
     // Fix Vercel newline character escaping
