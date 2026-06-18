@@ -53,7 +53,7 @@ async function getAccessToken(clientEmail, privateKey) {
   
   if (!tokenResponse.ok) {
     const errText = await tokenResponse.text();
-    throw new Error(`Failed to retrieve Google OAuth token: ${tokenResponse.status} - ${errText}`);
+    throw new Error(`Failed to retrieve Google OAuth token for email [${clientEmail}]: ${tokenResponse.status} - ${errText}`);
   }
   
   const tokenJson = await tokenResponse.json();
