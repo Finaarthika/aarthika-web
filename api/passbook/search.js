@@ -44,16 +44,18 @@ export default async function handler(req, res) {
 
     const rows = (response && response.data && response.data.values) ? response.data.values : [];
     
-    // Map rows cleanly to JSON objects with STRICT empty string fallbacks to prevent undefined crashes
-    let customers = rows.map(row => ({
-      accountNumber: String(row[0] || '').trim(),
-      customerName: String(row[1] || '').trim(),
-      fathersName: String(row[2] || '').trim(),
-      village: String(row[3] || '').trim(),
-      phone: String(row[4] || '').trim(),
-      photoLink: String(row[5] || '').trim(),
-      faceVector: String(row[6] || '').trim()
-    }));
+    // Map rows cleanly to JSON objects with array presence checks to handle Google API row truncation
+    let customers = rows.map(row => {
+      return {
+        accountNumber: row[0] ? String(row[0]).trim() : '',
+        customerName: row[1] ? String(row[1]).trim() : '',
+        fathersName: row[2] ? String(row[2]).trim() : '',
+        village: row[3] ? String(row[3]).trim() : '',
+        phone: row[4] ? String(row[4]).trim() : '',
+        photoLink: row[5] ? String(row[5]).trim() : '',
+        faceVector: row[6] ? String(row[6]).trim() : ''
+      };
+    });
 
     // Filter out completely blank ghost rows
     customers = customers.filter(c => c.accountNumber !== '' || c.customerName !== '');

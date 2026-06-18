@@ -49,18 +49,20 @@ export default async function handler(req, res) {
     
     const safeAccountNumber = String(accountNumber).trim();
 
-    // Filter by account number cleanly and safely
-    const accountRows = rows.filter(row => String(row[1] || '').trim() === safeAccountNumber);
+    // Filter by account number cleanly and safely handling truncation
+    const accountRows = rows.filter(row => (row[1] ? String(row[1]).trim() : '') === safeAccountNumber);
 
-    // Map to JSON objects with safety fallbacks
-    let transactions = accountRows.map((row, index) => ({
-      id: index,
-      timestamp: String(row[0] || '').trim(),
-      type: String(row[2] || '').trim(),
-      amount: String(row[3] || '').trim(),
-      runningBalance: String(row[4] || '').trim(),
-      status: String(row[5] || '').trim()
-    }));
+    // Map to JSON objects with safety fallbacks handling API array truncation
+    let transactions = accountRows.map((row, index) => {
+      return {
+        id: index,
+        timestamp: row[0] ? String(row[0]).trim() : '',
+        type: row[2] ? String(row[2]).trim() : '',
+        amount: row[3] ? String(row[3]).trim() : '',
+        runningBalance: row[4] ? String(row[4]).trim() : '',
+        status: row[5] ? String(row[5]).trim() : ''
+      };
+    });
 
     // Sort chronologically (newest first)
     transactions.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
