@@ -24,9 +24,6 @@ import GoldBackedLoans from './pages/GoldBackedLoans'
 import SilverBackedLoans from './pages/SilverBackedLoans'
 import JewellerySales from './pages/JewellerySales'
 import OldGoldSilverBuying from './pages/OldGoldSilverBuying'
-import PassbookLayout from './layouts/PassbookLayout'
-import SearchGrid from './pages/passbook/SearchGrid'
-import PassbookLedger from './pages/passbook/PassbookLedger'
 import './App.css'
 
 const NAV_OFFSET = -80;
@@ -119,10 +116,6 @@ function App() {
         <Route path="/blog/why-we-built-aarthika" element={<WhyWeBuiltAarthika />} />
         <Route path="/blog/why-interest-rates" element={<WhyInterestRates />} />
         <Route path="/blog/trust-and-time" element={<TrustAndTime />} />
-        <Route path="/passbook" element={<PassbookLayout />}>
-          <Route index element={<SearchGrid />} />
-          <Route path="ledger" element={<PassbookLedger />} />
-        </Route>
       </Routes>
       {isJoinFormVisible && <JoinAarthika onClose={toggleJoinForm} />}
     </Router>
