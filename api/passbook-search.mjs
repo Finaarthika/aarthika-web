@@ -120,8 +120,19 @@ export default async (req, res) => {
 
   } catch (error) {
     res.setHeader('Content-Type', 'application/json');
+    
+    const emailExists = !!process.env.GOOGLE_CLIENT_EMAIL;
+    const keyExists = !!process.env.GOOGLE_PRIVATE_KEY;
+    const keyLength = process.env.GOOGLE_PRIVATE_KEY ? process.env.GOOGLE_PRIVATE_KEY.length : 0;
+   
     return res.status(500).json({
-      error: error.message || 'An internal server error occurred.'
+      error: error.message || 'An internal server error occurred.',
+      diagnostics: {
+        emailActive: emailExists,
+        keyActive: keyExists,
+        keyCharacterCount: keyLength,
+        resolvedEmail: process.env.GOOGLE_CLIENT_EMAIL || 'none'
+      }
     });
   }
 };
