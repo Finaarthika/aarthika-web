@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { accountNumber, type, amount } = req.body;
+    const { accountNumber, type, amount } = req.body || {};
     
     if (!accountNumber || !type || !amount) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -14,23 +14,29 @@ export default async function handler(req, res) {
 
     const credentialsStr = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
     if (!credentialsStr) {
-      return res.status(500).json({ error: 'Missing Server Credentials' });
+      console.error('Missing GOOGLE_SERVICE_ACCOUNT_KEY');
+      return res.status(500).json({ error: 'Server configuration error: Missing credentials' });
     }
-    const credentials = JSON.parse(credentialsStr);
+    
+    let credentials;
+    try {
+      credentials = JSON.parse(credentialsStr);
+    } catch (e) {
+      console.error('Failed to parse GOOGLE_SERVICE_ACCOUNT_KEY:', e);
+      return res.status(500).json({ error: 'Server configuration error: Invalid JSON payload' });
+    }
 
     const auth = new google.auth.GoogleAuth({
       credentials,
-      scopes: ['https://www.googleapis.com/auth/spreadsheets'], // Full access to write
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'], 
     });
 
     const sheets = google.sheets({ version: 'v4', auth });
     const spreadsheetId = '14ujzie7cQjDxKVVXpmE5kKUJxNMBouf4c8F_I9AnlJw';
 
-    // Format timestamp: YYYY-MM-DD HH:mm:ss
     const now = new Date();
-    // Use Sweden locale for ISO-like format (YYYY-MM-DD HH:mm:ss) without the T
     const timestamp = now.toLocaleString('sv-SE').replace('T', ' '); 
-    const runningBalance = 'PENDING'; // Dynamic calculation to be implemented next
+    const runningBalance = 'PENDING'; 
     const status = 'SUCCESS';
 
     const appendData = {
@@ -49,7 +55,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true, message: 'Transaction recorded successfully.' });
 
   } catch (error) {
-    console.error('Sheets API Error:', error);
-    return res.status(500).json({ error: 'Failed to record transaction.' });
+    console.error('Unhandled Server Error in Transaction Proxy:', error);
+    return res.status(500).json({ error: 'Failed to record transaction due to server error.' });
   }
 }

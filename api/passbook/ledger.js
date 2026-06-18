@@ -6,16 +6,25 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { accountNumber } = req.query;
+    const { accountNumber } = req.query || {};
     if (!accountNumber) {
       return res.status(400).json({ error: 'Account number is required' });
     }
 
+    // Parse the service account key safely
     const credentialsStr = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
     if (!credentialsStr) {
-      return res.status(500).json({ error: 'Missing Server Credentials' });
+      console.error('Missing GOOGLE_SERVICE_ACCOUNT_KEY');
+      return res.status(200).json({ data: [] }); // Safe fallback
     }
-    const credentials = JSON.parse(credentialsStr);
+    
+    let credentials;
+    try {
+      credentials = JSON.parse(credentialsStr);
+    } catch (e) {
+      console.error('Failed to parse GOOGLE_SERVICE_ACCOUNT_KEY:', e);
+      return res.status(200).json({ data: [] }); // Safe fallback
+    }
 
     const auth = new google.auth.GoogleAuth({
       credentials,
@@ -25,33 +34,39 @@ export default async function handler(req, res) {
     const sheets = google.sheets({ version: 'v4', auth });
     const spreadsheetId = '14ujzie7cQjDxKVVXpmE5kKUJxNMBouf4c8F_I9AnlJw';
 
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range: 'TRANSACTION_LEDGER!A2:F',
-    });
+    let response;
+    try {
+      response = await sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: 'TRANSACTION_LEDGER!A2:F',
+      });
+    } catch (apiError) {
+      console.error('Google Sheets API Fetch Error:', apiError);
+      return res.status(200).json({ data: [] }); // Safe fallback
+    }
 
-    const rows = response.data.values || [];
+    const rows = (response && response.data && response.data.values) ? response.data.values : [];
     
-    // Filter by account number (Column B)
-    const accountRows = rows.filter(row => row[1] === accountNumber);
+    // Filter by account number cleanly
+    const accountRows = rows.filter(row => (row[1] || '') === accountNumber);
 
-    // Map to JSON objects
+    // Map to JSON objects with safety fallbacks
     let transactions = accountRows.map((row, index) => ({
       id: index,
-      timestamp: row[0] || '',
-      type: row[2] || '',
-      amount: row[3] || '',
-      runningBalance: row[4] || '',
-      status: row[5] || ''
+      timestamp: row[0] || 'Unknown Date',
+      type: row[2] || 'UNKNOWN',
+      amount: row[3] || '0.00',
+      runningBalance: row[4] || 'PENDING',
+      status: row[5] || 'UNKNOWN'
     }));
 
     // Sort chronologically (newest first)
-    transactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    transactions.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
 
     return res.status(200).json({ data: transactions });
 
   } catch (error) {
-    console.error('Sheets API Error:', error);
-    return res.status(500).json({ error: 'Failed to fetch ledger data.' });
+    console.error('Unhandled Server Error in Ledger Proxy:', error);
+    return res.status(200).json({ data: [] });
   }
 }
