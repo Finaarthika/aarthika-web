@@ -32,7 +32,7 @@ async function getAccessToken(clientEmail, privateKey) {
   
   const claim = {
     iss: clientEmail,
-    scope: 'https://www.googleapis.com/auth/spreadsheets.readonly',
+    scope: 'https://www.googleapis.com/auth/spreadsheets', // Need full scope to write/append
     aud: 'https://oauth2.googleapis.com/token',
     exp: exp,
     iat: iat
@@ -61,12 +61,27 @@ async function getAccessToken(clientEmail, privateKey) {
 }
 
 export default async (req, res) => {
-  if (req.method !== 'GET') {
+  if (req.method !== 'POST') {
     res.setHeader('Content-Type', 'application/json');
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   try {
+    // Collect body dynamically
+    const chunks = [];
+    for await (const chunk of req) {
+      chunks.push(chunk);
+    }
+    const bodyStr = Buffer.concat(chunks).toString();
+    const body = bodyStr ? JSON.parse(bodyStr) : {};
+
+    const { accountNumber, type, amount } = body;
+
+    if (!accountNumber || !type || !amount) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
     let clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
     let privateKey = process.env.GOOGLE_PRIVATE_KEY;
 
@@ -74,9 +89,7 @@ export default async (req, res) => {
       throw new Error('GOOGLE_CLIENT_EMAIL or GOOGLE_PRIVATE_KEY environment variable is missing.');
     }
 
-    // Clean up Vercel environment variable artifacts (accidental quotes and whitespace)
     clientEmail = clientEmail.replace(/^"|"$/g, '').trim();
-    
     if (privateKey) {
       privateKey = privateKey.replace(/^"|"$/g, '').trim();
       privateKey = privateKey.replace(/\\n/g, '\n');
@@ -85,13 +98,32 @@ export default async (req, res) => {
     const accessToken = await getAccessToken(clientEmail, privateKey);
 
     const spreadsheetId = '14ujzie7cQjDxKVVXpmE5kKUJxNMBouf4c8F_I9AnlJw';
-    const range = 'CUSTOMER_PROFILES!A2:G';
-    const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}`;
+    const range = 'TRANSACTION_LEDGER!A:F';
+    const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED`;
+
+    // Swedish locale produces 'YYYY-MM-DD HH:mm:ss' format
+    const now = new Date();
+    const timestamp = now.toLocaleString('sv-SE').replace('T', ' ');
+    const runningBalance = 'PENDING';
+    const status = 'SUCCESS';
+
+    const safeAccountNumber = String(accountNumber).trim();
+    const safeType = String(type).trim();
+    const safeAmount = String(amount).trim();
+
+    const appendData = {
+      values: [
+        [timestamp, safeAccountNumber, safeType, safeAmount, runningBalance, status]
+      ]
+    };
 
     const sheetResponse = await fetch(sheetsUrl, {
+      method: 'POST',
       headers: {
-        'Authorization': `Bearer ${accessToken}`
-      }
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(appendData)
     });
 
     if (!sheetResponse.ok) {
@@ -99,24 +131,8 @@ export default async (req, res) => {
       throw new Error(`Google Sheets API responded with status ${sheetResponse.status}: ${errorText}`);
     }
 
-    const data = await sheetResponse.json();
-    const rows = data.values || [];
-
-    // Defensively map array columns to avoid index faults on truncated rows
-    const customers = rows.map(row => {
-      return {
-        accountNumber: row[0] ? String(row[0]).trim() : '',
-        customerName: row[1] ? String(row[1]).trim() : '',
-        fathersName: row[2] ? String(row[2]).trim() : '',
-        village: row[3] ? String(row[3]).trim() : '',
-        phone: row[4] ? String(row[4]).trim() : '',
-        photoLink: row[5] ? String(row[5]).trim() : '',
-        faceVector: row[6] ? String(row[6]).trim() : '',
-      };
-    }).filter(c => c.accountNumber !== '' || c.customerName !== '');
-
     res.setHeader('Content-Type', 'application/json');
-    return res.status(200).json({ data: customers });
+    return res.status(200).json({ success: true, message: 'Transaction recorded successfully.' });
 
   } catch (error) {
     res.setHeader('Content-Type', 'application/json');

@@ -67,6 +67,12 @@ export default async (req, res) => {
   }
 
   try {
+    const { accountNumber } = req.query || {};
+    if (!accountNumber) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(400).json({ error: 'Account number is required' });
+    }
+
     let clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
     let privateKey = process.env.GOOGLE_PRIVATE_KEY;
 
@@ -74,9 +80,7 @@ export default async (req, res) => {
       throw new Error('GOOGLE_CLIENT_EMAIL or GOOGLE_PRIVATE_KEY environment variable is missing.');
     }
 
-    // Clean up Vercel environment variable artifacts (accidental quotes and whitespace)
     clientEmail = clientEmail.replace(/^"|"$/g, '').trim();
-    
     if (privateKey) {
       privateKey = privateKey.replace(/^"|"$/g, '').trim();
       privateKey = privateKey.replace(/\\n/g, '\n');
@@ -85,7 +89,7 @@ export default async (req, res) => {
     const accessToken = await getAccessToken(clientEmail, privateKey);
 
     const spreadsheetId = '14ujzie7cQjDxKVVXpmE5kKUJxNMBouf4c8F_I9AnlJw';
-    const range = 'CUSTOMER_PROFILES!A2:G';
+    const range = 'TRANSACTION_LEDGER!A2:F';
     const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}`;
 
     const sheetResponse = await fetch(sheetsUrl, {
@@ -102,21 +106,29 @@ export default async (req, res) => {
     const data = await sheetResponse.json();
     const rows = data.values || [];
 
-    // Defensively map array columns to avoid index faults on truncated rows
-    const customers = rows.map(row => {
+    const safeAccountNumber = String(accountNumber).trim();
+
+    const accountRows = rows.filter(row => {
+      const acct = row[1] ? String(row[1]).trim() : '';
+      return acct === safeAccountNumber;
+    });
+
+    let transactions = accountRows.map((row, index) => {
       return {
-        accountNumber: row[0] ? String(row[0]).trim() : '',
-        customerName: row[1] ? String(row[1]).trim() : '',
-        fathersName: row[2] ? String(row[2]).trim() : '',
-        village: row[3] ? String(row[3]).trim() : '',
-        phone: row[4] ? String(row[4]).trim() : '',
-        photoLink: row[5] ? String(row[5]).trim() : '',
-        faceVector: row[6] ? String(row[6]).trim() : '',
+        id: index,
+        timestamp: row[0] ? String(row[0]).trim() : '',
+        type: row[2] ? String(row[2]).trim() : '',
+        amount: row[3] ? String(row[3]).trim() : '',
+        runningBalance: row[4] ? String(row[4]).trim() : '',
+        status: row[5] ? String(row[5]).trim() : ''
       };
-    }).filter(c => c.accountNumber !== '' || c.customerName !== '');
+    });
+
+    // Sort descending by timestamp (newest first)
+    transactions.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
 
     res.setHeader('Content-Type', 'application/json');
-    return res.status(200).json({ data: customers });
+    return res.status(200).json({ data: transactions });
 
   } catch (error) {
     res.setHeader('Content-Type', 'application/json');
