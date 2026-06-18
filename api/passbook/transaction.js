@@ -39,9 +39,13 @@ export default async function handler(req, res) {
     const runningBalance = 'PENDING'; 
     const status = 'SUCCESS';
 
+    const safeAccountNumber = String(accountNumber).trim();
+    const safeType = String(type).trim();
+    const safeAmount = String(amount).trim();
+
     const appendData = {
       values: [
-        [timestamp, accountNumber, type, amount, runningBalance, status]
+        [timestamp, safeAccountNumber, safeType, safeAmount, runningBalance, status]
       ]
     };
 

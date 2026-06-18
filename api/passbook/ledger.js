@@ -47,17 +47,19 @@ export default async function handler(req, res) {
 
     const rows = (response && response.data && response.data.values) ? response.data.values : [];
     
-    // Filter by account number cleanly
-    const accountRows = rows.filter(row => (row[1] || '') === accountNumber);
+    const safeAccountNumber = String(accountNumber).trim();
+
+    // Filter by account number cleanly and safely
+    const accountRows = rows.filter(row => String(row[1] || '').trim() === safeAccountNumber);
 
     // Map to JSON objects with safety fallbacks
     let transactions = accountRows.map((row, index) => ({
       id: index,
-      timestamp: row[0] || 'Unknown Date',
-      type: row[2] || 'UNKNOWN',
-      amount: row[3] || '0.00',
-      runningBalance: row[4] || 'PENDING',
-      status: row[5] || 'UNKNOWN'
+      timestamp: String(row[0] || '').trim(),
+      type: String(row[2] || '').trim(),
+      amount: String(row[3] || '').trim(),
+      runningBalance: String(row[4] || '').trim(),
+      status: String(row[5] || '').trim()
     }));
 
     // Sort chronologically (newest first)

@@ -44,25 +44,28 @@ export default async function handler(req, res) {
 
     const rows = (response && response.data && response.data.values) ? response.data.values : [];
     
-    // Map rows cleanly to JSON objects with safety fallbacks
+    // Map rows cleanly to JSON objects with STRICT empty string fallbacks to prevent undefined crashes
     let customers = rows.map(row => ({
-      accountNumber: row[0] || 'UNKNOWN_ACC',
-      customerName: row[1] || 'Unknown Customer',
-      fathersName: row[2] || 'Unknown Father',
-      village: row[3] || 'Unknown Location',
-      phone: row[4] || 'N/A',
-      photoLink: row[5] || '',
-      faceVector: row[6] || ''
+      accountNumber: String(row[0] || '').trim(),
+      customerName: String(row[1] || '').trim(),
+      fathersName: String(row[2] || '').trim(),
+      village: String(row[3] || '').trim(),
+      phone: String(row[4] || '').trim(),
+      photoLink: String(row[5] || '').trim(),
+      faceVector: String(row[6] || '').trim()
     }));
+
+    // Filter out completely blank ghost rows
+    customers = customers.filter(c => c.accountNumber !== '' || c.customerName !== '');
 
     // Filter if text query is provided
     if (query && typeof query === 'string') {
       const lowerQuery = query.toLowerCase();
       customers = customers.filter(c => 
-        (c.customerName || '').toLowerCase().includes(lowerQuery) ||
-        (c.fathersName || '').toLowerCase().includes(lowerQuery) ||
-        (c.phone || '').includes(lowerQuery) ||
-        (c.accountNumber || '').toLowerCase().includes(lowerQuery)
+        c.customerName.toLowerCase().includes(lowerQuery) ||
+        c.fathersName.toLowerCase().includes(lowerQuery) ||
+        c.phone.toLowerCase().includes(lowerQuery) ||
+        c.accountNumber.toLowerCase().includes(lowerQuery)
       );
     }
 
