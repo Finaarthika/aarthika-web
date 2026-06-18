@@ -11,19 +11,23 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Account number is required' });
     }
 
-    // Parse the service account key safely
     const credentialsStr = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
     if (!credentialsStr) {
-      console.error('Missing GOOGLE_SERVICE_ACCOUNT_KEY');
-      return res.status(200).json({ data: [] }); // Safe fallback
+      return res.status(500).json({ 
+        error: 'Missing credentials', 
+        details: 'GOOGLE_SERVICE_ACCOUNT_KEY environment variable is missing.' 
+      });
     }
     
     let credentials;
     try {
       credentials = JSON.parse(credentialsStr);
     } catch (e) {
-      console.error('Failed to parse GOOGLE_SERVICE_ACCOUNT_KEY:', e);
-      return res.status(200).json({ data: [] }); // Safe fallback
+      return res.status(500).json({ 
+        error: e.message, 
+        stack: e.stack, 
+        details: 'Failed to parse GOOGLE_SERVICE_ACCOUNT_KEY JSON string.' 
+      });
     }
 
     const auth = new google.auth.GoogleAuth({
@@ -41,36 +45,49 @@ export default async function handler(req, res) {
         range: 'TRANSACTION_LEDGER!A2:F',
       });
     } catch (apiError) {
-      console.error('Google Sheets API Fetch Error:', apiError);
-      return res.status(200).json({ data: [] }); // Safe fallback
+      return res.status(500).json({ 
+        error: apiError.message, 
+        stack: apiError.stack,
+        details: 'Check if sheet is shared with service account, or if tab name TRANSACTION_LEDGER has typos/trailing spaces.'
+      });
     }
 
     const rows = (response && response.data && response.data.values) ? response.data.values : [];
     
     const safeAccountNumber = String(accountNumber).trim();
 
-    // Filter by account number cleanly and safely handling truncation
-    const accountRows = rows.filter(row => (row[1] ? String(row[1]).trim() : '') === safeAccountNumber);
+    const accountRows = rows.filter(row => {
+      const acct = row[1] ? String(row[1]).trim() : '';
+      return acct === safeAccountNumber;
+    });
 
-    // Map to JSON objects with safety fallbacks handling API array truncation
     let transactions = accountRows.map((row, index) => {
+      const timestamp = row[0] ? String(row[0]).trim() : '';
+      const type = row[2] ? String(row[2]).trim() : '';
+      const amount = row[3] ? String(row[3]).trim() : '';
+      const runningBalance = row[4] ? String(row[4]).trim() : '';
+      const status = row[5] ? String(row[5]).trim() : '';
+      
       return {
         id: index,
-        timestamp: row[0] ? String(row[0]).trim() : '',
-        type: row[2] ? String(row[2]).trim() : '',
-        amount: row[3] ? String(row[3]).trim() : '',
-        runningBalance: row[4] ? String(row[4]).trim() : '',
-        status: row[5] ? String(row[5]).trim() : ''
+        timestamp,
+        type,
+        amount,
+        runningBalance,
+        status
       };
     });
 
-    // Sort chronologically (newest first)
     transactions.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
 
     return res.status(200).json({ data: transactions });
 
   } catch (error) {
     console.error('Unhandled Server Error in Ledger Proxy:', error);
-    return res.status(200).json({ data: [] });
+    return res.status(500).json({ 
+      error: error.message, 
+      stack: error.stack,
+      details: 'Check if sheet is shared with service account or if credentials variable parses correctly'
+    });
   }
 }

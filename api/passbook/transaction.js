@@ -14,16 +14,21 @@ export default async function handler(req, res) {
 
     const credentialsStr = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
     if (!credentialsStr) {
-      console.error('Missing GOOGLE_SERVICE_ACCOUNT_KEY');
-      return res.status(500).json({ error: 'Server configuration error: Missing credentials' });
+      return res.status(500).json({ 
+        error: 'Missing credentials', 
+        details: 'GOOGLE_SERVICE_ACCOUNT_KEY environment variable is missing.' 
+      });
     }
     
     let credentials;
     try {
       credentials = JSON.parse(credentialsStr);
     } catch (e) {
-      console.error('Failed to parse GOOGLE_SERVICE_ACCOUNT_KEY:', e);
-      return res.status(500).json({ error: 'Server configuration error: Invalid JSON payload' });
+      return res.status(500).json({ 
+        error: e.message, 
+        stack: e.stack, 
+        details: 'Failed to parse GOOGLE_SERVICE_ACCOUNT_KEY JSON string.' 
+      });
     }
 
     const auth = new google.auth.GoogleAuth({
@@ -49,17 +54,29 @@ export default async function handler(req, res) {
       ]
     };
 
-    await sheets.spreadsheets.values.append({
-      spreadsheetId,
-      range: 'TRANSACTION_LEDGER!A:F',
-      valueInputOption: 'USER_ENTERED',
-      requestBody: appendData,
-    });
+    try {
+      await sheets.spreadsheets.values.append({
+        spreadsheetId,
+        range: 'TRANSACTION_LEDGER!A:F',
+        valueInputOption: 'USER_ENTERED',
+        requestBody: appendData,
+      });
+    } catch (apiError) {
+      return res.status(500).json({ 
+        error: apiError.message, 
+        stack: apiError.stack,
+        details: 'Check if sheet is shared with service account, or if tab name TRANSACTION_LEDGER has typos/trailing spaces.'
+      });
+    }
 
     return res.status(200).json({ success: true, message: 'Transaction recorded successfully.' });
 
   } catch (error) {
     console.error('Unhandled Server Error in Transaction Proxy:', error);
-    return res.status(500).json({ error: 'Failed to record transaction due to server error.' });
+    return res.status(500).json({ 
+      error: error.message, 
+      stack: error.stack,
+      details: 'Check if sheet is shared with service account or if credentials variable parses correctly'
+    });
   }
 }
