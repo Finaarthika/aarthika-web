@@ -33,7 +33,10 @@ export default async (req, res) => {
     clientEmail = clientEmail.replace(/^"|"$/g, '').trim();
     
     // Decode the perfect, uncorrupted Private Key from Base64
-    const privateKeyString = Buffer.from(privateKeyBase64, 'base64').toString('utf-8');
+    let privateKeyString = Buffer.from(privateKeyBase64, 'base64').toString('utf-8');
+    
+    // Convert literal "\n" strings (from JSON copy-paste) back into actual structural newlines
+    privateKeyString = privateKeyString.replace(/\\n/g, '\n').trim();
 
     // Import the private key into a subtle crypto object using jose
     const privateKey = await jose.importPKCS8(privateKeyString, 'RS256');
