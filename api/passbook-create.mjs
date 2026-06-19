@@ -13,7 +13,8 @@ export default async (req, res) => {
       village,
       phone,
       faceVector,
-      aadharId
+      aadharId,
+      pdfBase64
     } = req.body || {};
 
     if (!customerName || !phone) {
@@ -34,7 +35,7 @@ export default async (req, res) => {
     const privateKey = await jose.importPKCS8(privateKeyString, 'RS256');
 
     const jwt = await new jose.SignJWT({
-      scope: 'https://www.googleapis.com/auth/spreadsheets'
+      scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive'
     })
       .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
       .setIssuer(clientEmail)
@@ -92,8 +93,46 @@ export default async (req, res) => {
     const appendRange = 'CUSTOMER_PROFILES!A:H';
     const appendUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(appendRange)}:append?valueInputOption=USER_ENTERED`;
 
-    // Empty photo link column for now
-    const photoLink = '';
+    // Upload PDF to Google Drive if provided
+    let photoLink = '';
+    
+    if (pdfBase64) {
+      const boundary = 'foo_bar_baz';
+      const metadata = {
+        name: `Aarthika_Account_${newAccountNumber}.pdf`,
+        parents: ['1-n92zn1gQCxMU2Xi59dMRJLW4KNkS1sY']
+      };
+      
+      const bodyPieces = [
+        `--${boundary}`,
+        'Content-Type: application/json; charset=UTF-8',
+        '',
+        JSON.stringify(metadata),
+        `--${boundary}`,
+        'Content-Type: application/pdf',
+        'Content-Transfer-Encoding: base64',
+        '',
+        pdfBase64,
+        `--${boundary}--`
+      ];
+      
+      const driveRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': `multipart/related; boundary=${boundary}`
+        },
+        body: bodyPieces.join('\r\n')
+      });
+      
+      if (driveRes.ok) {
+        const driveData = await driveRes.json();
+        photoLink = `https://drive.google.com/file/d/${driveData.id}/view`;
+      } else {
+        const driveErr = await driveRes.text();
+        console.error('Drive upload failed:', driveErr);
+      }
+    }
 
     const appendData = {
       values: [
