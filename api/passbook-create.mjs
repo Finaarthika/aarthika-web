@@ -21,21 +21,21 @@ export default async (req, res) => {
       return res.status(400).json({ error: 'Full Name and Contact No. are required.' });
     }
 
-    let clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
-    let privateKeyBase64 = process.env.PASSBOOK_PRIVATE_KEY_BASE64;
-
-    if (!clientEmail || !privateKeyBase64) {
-      throw new Error('GOOGLE_CLIENT_EMAIL or PASSBOOK_PRIVATE_KEY_BASE64 environment variable is missing.');
+    if (!process.env.PASSBOOK_PRIVATE_KEY_BASE64) {
+      throw new Error('PASSBOOK_PRIVATE_KEY_BASE64 environment variable is missing.');
     }
 
-    clientEmail = clientEmail.replace(/^"|"$/g, '').trim();
-    let privateKeyString = Buffer.from(privateKeyBase64, 'base64').toString('utf-8');
-    privateKeyString = privateKeyString.replace(/\\n/g, '\n').trim();
+    // Decode our secure config crate cleanly
+    const secureCrate = Buffer.from(process.env.PASSBOOK_PRIVATE_KEY_BASE64, 'base64').toString('utf-8');
+    const credentials = JSON.parse(secureCrate);
+    
+    const clientEmail = credentials.client_email;
+    const privateKeyString = credentials.private_key;
 
     const privateKey = await jose.importPKCS8(privateKeyString, 'RS256');
 
     const jwt = await new jose.SignJWT({
-      scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive'
+      scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file'
     })
       .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
       .setIssuer(clientEmail)
