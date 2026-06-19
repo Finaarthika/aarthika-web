@@ -14,7 +14,8 @@ export default async (req, res) => {
       phone,
       faceVector,
       aadharId,
-      pdfFile
+      pdfFile,
+      photoFile
     } = req.body || {};
 
     if (!customerName || !phone) {
@@ -94,8 +95,6 @@ export default async (req, res) => {
     const appendUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(appendRange)}:append?valueInputOption=USER_ENTERED`;
 
     // Upload PDF to Google Drive if provided
-    let photoLink = '';
-    
     if (pdfFile) {
       const boundary = 'foo_bar_baz_boundary';
       const metadata = {
@@ -116,6 +115,38 @@ export default async (req, res) => {
       
       const multipartBody = Buffer.concat([headerBuffer, pdfBuffer, footerBuffer]);
       
+      await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': `multipart/related; boundary=${boundary}`
+        },
+        body: multipartBody
+      });
+    }
+
+    // Upload Raw Profile Photo to Google Drive
+    let photoLink = '';
+    if (photoFile) {
+      const boundary = 'photo_boundary_123';
+      const metadata = {
+        name: `Aarthika_Photo_${newAccountNumber}.jpg`,
+        parents: ['1-n92zn1gQCxMU2Xi59dMRJLW4KNkS1sY']
+      };
+      
+      const headerBuffer = Buffer.from(
+        `--${boundary}\r\n` +
+        `Content-Type: application/json; charset=UTF-8\r\n\r\n` +
+        `${JSON.stringify(metadata)}\r\n` +
+        `--${boundary}\r\n` +
+        `Content-Type: image/jpeg\r\n\r\n`
+      );
+      
+      const imageBuffer = Buffer.from(photoFile, 'base64');
+      const footerBuffer = Buffer.from(`\r\n--${boundary}--`);
+      
+      const multipartBody = Buffer.concat([headerBuffer, imageBuffer, footerBuffer]);
+      
       const driveRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
         method: 'POST',
         headers: {
@@ -127,10 +158,11 @@ export default async (req, res) => {
       
       if (driveRes.ok) {
         const driveData = await driveRes.json();
-        photoLink = `https://drive.google.com/file/d/${driveData.id}/view`;
+        // Use the uc?export=view format to allow <img> tags to render the raw image bytes
+        photoLink = `https://drive.google.com/uc?export=view&id=${driveData.id}`;
       } else {
         const driveErr = await driveRes.text();
-        console.error('Drive upload failed:', driveErr);
+        console.error('Drive Photo upload failed:', driveErr);
       }
     }
 

@@ -240,7 +240,8 @@ export default function SearchGrid() {
           phone: newCustomer.phone,
           faceVector: '', 
           aadharId: newCustomer.aadharId,
-          pdfFile: cleanBase64
+          pdfFile: cleanBase64,
+          photoFile: capturedImageBase64.split(',')[1]
         })
       });
       const body = await res.json();
