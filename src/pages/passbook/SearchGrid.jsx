@@ -206,9 +206,11 @@ export default function SearchGrid() {
         filename: `Aarthika_Account_${body.accountNumber}.pdf`,
         html2canvas: { scale: 2 },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-      }).save();
+      }).output('bloburl').then(function(pdfUrl) {
+        window.open(pdfUrl, '_blank');
+      });
 
-      alert(`Account Created Successfully: ${body.accountNumber}. PDF downloading...`);
+      alert(`Account Created Successfully: ${body.accountNumber}. Opening PDF Receipt...`);
       
       // Cleanup
       stopCamera();
