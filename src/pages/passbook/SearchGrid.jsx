@@ -41,6 +41,15 @@ const StaffHeader = () => (
   </div>
 );
 
+const toTitleCase = (str) => {
+  return str.replace(
+    /\w\S*/g,
+    function(txt) {
+      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    }
+  );
+};
+
 export default function SearchGrid() {
   const [view, setView] = useState('SEARCH'); // 'SEARCH' | 'LEDGER' | 'CREATE'
   const [searchQuery, setSearchQuery] = useState('');
@@ -411,11 +420,11 @@ export default function SearchGrid() {
                 Applicant Details
               </h2>
               <div className="space-y-5">
-                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name *</label><input className="input-premium shadow-sm focus:ring-aarthikaBlue/50 focus:border-aarthikaBlue" value={newCustomer.customerName} onChange={e=>setNewCustomer({...newCustomer, customerName: e.target.value})} placeholder="Enter full name" autoComplete="new-password" spellCheck="false" /></div>
-                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Father's Name</label><input className="input-premium shadow-sm focus:ring-aarthikaBlue/50 focus:border-aarthikaBlue" value={newCustomer.fathersName} onChange={e=>setNewCustomer({...newCustomer, fathersName: e.target.value})} placeholder="Enter father's name" autoComplete="new-password" spellCheck="false" /></div>
-                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Residential Village</label><input className="input-premium shadow-sm focus:ring-aarthikaBlue/50 focus:border-aarthikaBlue" value={newCustomer.village} onChange={e=>setNewCustomer({...newCustomer, village: e.target.value})} placeholder="Enter village or district" autoComplete="new-password" spellCheck="false" /></div>
-                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Contact Mobile Number *</label><input className="input-premium shadow-sm focus:ring-aarthikaBlue/50 focus:border-aarthikaBlue" value={newCustomer.phone} onChange={e=>setNewCustomer({...newCustomer, phone: e.target.value})} placeholder="10-digit number" autoComplete="new-password" /></div>
-                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Gov. ID (Aadhar/Voter) *</label><input className="input-premium shadow-sm focus:ring-aarthikaBlue/50 focus:border-aarthikaBlue" value={newCustomer.aadharId} onChange={e=>setNewCustomer({...newCustomer, aadharId: e.target.value})} placeholder="Enter ID number" autoComplete="new-password" spellCheck="false" /></div>
+                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name *</label><input id="input-name" onKeyDown={e => e.key === 'Enter' && document.getElementById('input-fname')?.focus()} className="input-premium shadow-sm focus:ring-aarthikaBlue/50 focus:border-aarthikaBlue" value={newCustomer.customerName} onChange={e=>setNewCustomer({...newCustomer, customerName: toTitleCase(e.target.value)})} placeholder="Enter full name" autoComplete="new-password" spellCheck="false" /></div>
+                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Father's Name</label><input id="input-fname" onKeyDown={e => e.key === 'Enter' && document.getElementById('input-village')?.focus()} className="input-premium shadow-sm focus:ring-aarthikaBlue/50 focus:border-aarthikaBlue" value={newCustomer.fathersName} onChange={e=>setNewCustomer({...newCustomer, fathersName: toTitleCase(e.target.value)})} placeholder="Enter father's name" autoComplete="new-password" spellCheck="false" /></div>
+                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Residential Village</label><input id="input-village" onKeyDown={e => e.key === 'Enter' && document.getElementById('input-phone')?.focus()} className="input-premium shadow-sm focus:ring-aarthikaBlue/50 focus:border-aarthikaBlue" value={newCustomer.village} onChange={e=>setNewCustomer({...newCustomer, village: toTitleCase(e.target.value)})} placeholder="Enter village or district" autoComplete="new-password" spellCheck="false" /></div>
+                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Contact Mobile Number *</label><input id="input-phone" onKeyDown={e => e.key === 'Enter' && document.getElementById('input-aadhar')?.focus()} className="input-premium shadow-sm focus:ring-aarthikaBlue/50 focus:border-aarthikaBlue" value={newCustomer.phone} onChange={e=>{const val = e.target.value.replace(/\D/g, ''); if(val.length <= 10) setNewCustomer({...newCustomer, phone: val})}} placeholder="10-digit number" autoComplete="new-password" /></div>
+                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Gov. ID (Aadhar/Voter) *</label><input id="input-aadhar" onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submitNewAccount(); } }} className="input-premium shadow-sm focus:ring-aarthikaBlue/50 focus:border-aarthikaBlue" value={newCustomer.aadharId} onChange={e=>setNewCustomer({...newCustomer, aadharId: e.target.value.toUpperCase()})} placeholder="Enter ID number" autoComplete="new-password" spellCheck="false" /></div>
               </div>
             </div>
 
