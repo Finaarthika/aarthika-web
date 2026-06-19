@@ -437,6 +437,7 @@ export default function SearchGrid() {
           </div>
         </div>
       </div>
+      </div>
     );
   }
 
