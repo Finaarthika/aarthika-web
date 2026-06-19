@@ -14,6 +14,7 @@ export default function SearchGrid() {
   const [biometricStatus, setBiometricStatus] = useState('');
   const videoRef = useRef(null);
   const [stream, setStream] = useState(null);
+  const [facingMode, setFacingMode] = useState('user');
 
   // Ledger state
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -146,16 +147,30 @@ export default function SearchGrid() {
   };
 
   // --- ACCOUNT CREATION ---
-  const startCreationCamera = async () => {
+  const startCreationCamera = async (mode = facingMode) => {
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: mode } 
+      });
       setStream(mediaStream);
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current.play().catch(e => console.error("Autoplay failed:", e));
+        };
       }
     } catch (err) {
       alert("Camera access required for secure account opening.");
     }
+  };
+
+  const toggleCamera = () => {
+    const newMode = facingMode === 'user' ? 'environment' : 'user';
+    setFacingMode(newMode);
+    startCreationCamera(newMode);
   };
 
   const capturePhoto = async () => {
@@ -330,12 +345,17 @@ export default function SearchGrid() {
           <div className="terminal-box">
             <div style={{ fontWeight: 'bold', marginBottom: '1rem' }}>[ BIOMETRIC SCAN ]</div>
             <div style={{ border: '2px solid #111', width: '320px', height: '240px', marginBottom: '1rem', backgroundColor: '#e2e8f0', position: 'relative' }}>
-              <video ref={videoRef} autoPlay playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
             
-            <button className="terminal-btn" onClick={capturePhoto}>
-              [ 📸 CAPTURE PHOTO ]
-            </button>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button className="terminal-btn" onClick={capturePhoto} style={{ flex: 1 }}>
+                [ 📸 CAPTURE PHOTO ]
+              </button>
+              <button className="terminal-btn" onClick={toggleCamera}>
+                [ 🔄 FLIP ]
+              </button>
+            </div>
             
             <div className="success-text" style={{ marginTop: '1rem' }}>{biometricStatus}</div>
             {capturedVector && <div style={{ fontSize: '0.7rem', wordBreak: 'break-all', marginTop: '0.5rem' }}>Vector: {capturedVector.substring(0, 40)}...</div>}
@@ -349,16 +369,19 @@ export default function SearchGrid() {
         </div>
 
         {/* --- HIDDEN PDF TEMPLATE --- */}
-        <div style={{ display: 'none' }}>
-          <div id="pdf-template" style={{ padding: '40px', fontFamily: 'sans-serif', color: '#000', backgroundColor: '#fff', width: '800px' }}>
+        <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+          <div id="pdf-template" style={{ padding: '40px', fontFamily: 'sans-serif', color: '#000', backgroundColor: '#fff', width: '800px', boxSizing: 'border-box' }}>
             <div style={{ borderBottom: '4px solid #000', paddingBottom: '20px', marginBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h1 style={{ margin: 0, fontSize: '28px', textTransform: 'uppercase', letterSpacing: '2px' }}>Aarthika Finance</h1>
-                <h3 style={{ margin: '5px 0 0 0', color: '#555' }}>Rural Branch Operations</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                <img src="/assets/Aarthika_logo.png" alt="Aarthika Logo" style={{ height: '70px', objectFit: 'contain' }} />
+                <div>
+                  <h1 style={{ margin: 0, fontSize: '32px', textTransform: 'uppercase', letterSpacing: '1px', color: '#111' }}>Aarthika Finance</h1>
+                  <h3 style={{ margin: '5px 0 0 0', color: '#555', fontSize: '16px' }}>Rural Branch Operations</h3>
+                </div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <h2 style={{ margin: 0 }}>ACCOUNT PASSBOOK</h2>
-                <div style={{ fontSize: '18px', fontWeight: 'bold', marginTop: '10px' }} id="pdf-acc-no">PENDING</div>
+                <h2 style={{ margin: 0, fontSize: '20px', textTransform: 'uppercase', color: '#333' }}>ACCOUNT ORIGINATION</h2>
+                <div style={{ fontSize: '18px', fontWeight: 'bold', marginTop: '10px', padding: '8px 15px', backgroundColor: '#f5f5f5', border: '1px solid #aaa', display: 'inline-block' }} id="pdf-acc-no">PENDING</div>
               </div>
             </div>
 
