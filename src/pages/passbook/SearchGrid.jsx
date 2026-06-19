@@ -76,6 +76,8 @@ export default function SearchGrid() {
   const [ledger, setLedger] = useState([]);
   const [netBalance, setNetBalance] = useState('0.00');
   const [ledgerLoading, setLedgerLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   
   // Transaction state
   const [depositAmount, setDepositAmount] = useState('');
@@ -124,6 +126,7 @@ export default function SearchGrid() {
     setSelectedCustomer(customer);
     setView('LEDGER');
     setTransactionMsg({ type: '', text: '' });
+    setCurrentPage(1);
     await fetchLedger(customer.accountNumber);
   };
 
@@ -587,64 +590,68 @@ export default function SearchGrid() {
           
           <div className="w-full md:w-auto text-center md:text-right mt-6 md:mt-0 md:border-l border-gray-100 md:pl-10 md:py-4">
             <div className="text-gray-500 font-semibold mb-2 uppercase text-xs tracking-wider">Current Net Balance</div>
-            <div className="text-4xl md:text-5xl font-extrabold text-aarthikaBlue tracking-tight">₹{netBalance}</div>
+            <div className="text-4xl md:text-5xl font-extrabold text-aarthikaBlue tracking-tight">{netBalance.startsWith('₹') ? netBalance : `₹${netBalance}`}</div>
           </div>
         </div>
 
         {/* Transaction Controls */}
-        <div className="grid md:grid-cols-2 gap-8 mb-8">
-          <div className="premium-card p-8 bg-green-50/30 border border-green-100 shadow-sm hover:shadow-md transition-shadow">
-            <h3 className="text-xl font-bold text-green-800 mb-6 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <div className="premium-card p-6 bg-green-50/30 border border-green-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-green-500"></div>
+            <h3 className="text-lg font-bold text-green-800 mb-4 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
               </div>
               Deposit Cash
             </h3>
-            <div className="flex flex-col gap-5">
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500 font-bold text-lg">₹</span>
+            <div className="flex items-center gap-4">
+              <div className="relative flex-1">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 font-bold text-base">₹</span>
                 <input 
                   type="number" 
-                  className="input-premium pl-10 text-lg py-3 shadow-sm focus:ring-green-500/20 focus:border-green-500 w-full" 
+                  className="input-premium pl-8 text-base py-2.5 shadow-sm focus:ring-green-500/20 focus:border-green-500 w-full" 
                   value={depositAmount}
                   onChange={e => setDepositAmount(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleTransaction('DEPOSIT')}
                   placeholder="Amount" 
                 />
               </div>
               <button 
-                className="btn bg-green-600 text-white font-semibold text-lg hover:bg-green-700 hover:shadow-lg shadow-green-600/30 transition-all flex items-center justify-center py-3" 
+                className="btn bg-green-600 text-white font-semibold text-base hover:bg-green-700 hover:shadow-lg shadow-green-600/30 transition-all px-6 py-2.5" 
                 onClick={() => handleTransaction('DEPOSIT')}
                 disabled={transactionLoading}
               >
-                {transactionLoading ? 'Processing...' : 'Execute Deposit'}
+                {transactionLoading ? '...' : 'Deposit'}
               </button>
             </div>
           </div>
 
-          <div className="premium-card p-8 bg-orange-50/30 border border-orange-100 shadow-sm hover:shadow-md transition-shadow">
-            <h3 className="text-xl font-bold text-orange-800 mb-6 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
-                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+          <div className="premium-card p-6 bg-orange-50/30 border border-orange-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-orange-500"></div>
+            <h3 className="text-lg font-bold text-orange-800 mb-4 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
+                <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
               </div>
               Withdraw Cash
             </h3>
-            <div className="flex flex-col gap-5">
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500 font-bold text-lg">₹</span>
+            <div className="flex items-center gap-4">
+              <div className="relative flex-1">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 font-bold text-base">₹</span>
                 <input 
                   type="number" 
-                  className="input-premium pl-10 text-lg py-3 shadow-sm focus:ring-orange-500/20 focus:border-orange-500 w-full" 
+                  className="input-premium pl-8 text-base py-2.5 shadow-sm focus:ring-orange-500/20 focus:border-orange-500 w-full" 
                   value={withdrawAmount}
                   onChange={e => setWithdrawAmount(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleTransaction('WITHDRAWAL')}
                   placeholder="Amount" 
                 />
               </div>
               <button 
-                className="btn bg-orange-600 text-white font-semibold text-lg hover:bg-orange-700 hover:shadow-lg shadow-orange-600/30 transition-all flex items-center justify-center py-3" 
+                className="btn bg-orange-600 text-white font-semibold text-base hover:bg-orange-700 hover:shadow-lg shadow-orange-600/30 transition-all px-6 py-2.5" 
                 onClick={() => handleTransaction('WITHDRAWAL')}
                 disabled={transactionLoading}
               >
-                {transactionLoading ? 'Processing...' : 'Execute Withdrawal'}
+                {transactionLoading ? '...' : 'Withdraw'}
               </button>
             </div>
           </div>
@@ -678,7 +685,7 @@ export default function SearchGrid() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {ledger.map((row) => (
+                  {ledger.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((row) => (
                     <tr key={row.id} className="hover:bg-gray-50/80 transition-colors">
                       <td className="py-5 px-8 text-gray-600 font-medium">{row.timestamp}</td>
                       <td className="py-5 px-8">
@@ -705,6 +712,29 @@ export default function SearchGrid() {
                   )}
                 </tbody>
               </table>
+              {Math.ceil(ledger.length / itemsPerPage) > 1 && (
+                <div className="bg-white px-8 py-4 border-t border-gray-100 flex items-center justify-between">
+                  <span className="text-sm text-gray-500 font-medium">
+                    Showing <span className="font-bold text-gray-800">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-bold text-gray-800">{Math.min(currentPage * itemsPerPage, ledger.length)}</span> of <span className="font-bold text-gray-800">{ledger.length}</span> transactions
+                  </span>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1.5 rounded-md border border-gray-200 text-gray-600 font-semibold hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+                    >
+                      Previous
+                    </button>
+                    <button 
+                      onClick={() => setCurrentPage(p => Math.min(Math.ceil(ledger.length / itemsPerPage), p + 1))}
+                      disabled={currentPage === Math.ceil(ledger.length / itemsPerPage)}
+                      className="px-3 py-1.5 rounded-md border border-gray-200 text-gray-600 font-semibold hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
