@@ -205,8 +205,37 @@ export default function SearchGrid() {
     setBiometricStatus("PROCESSING IMAGE...");
     const reader = new FileReader();
     reader.onload = (event) => {
-      setCapturedImageBase64(event.target.result);
-      setBiometricStatus("PHOTO LOCKED. READY TO SUBMIT.");
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 600;
+        const MAX_HEIGHT = 600;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Compress aggressively: JPEG at 60% quality
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+        setCapturedImageBase64(compressedBase64);
+        setBiometricStatus("PHOTO LOCKED. READY TO SUBMIT.");
+      };
+      img.src = event.target.result;
     };
     reader.readAsDataURL(file);
   };
@@ -244,7 +273,13 @@ export default function SearchGrid() {
           photoFile: capturedImageBase64.split(',')[1]
         })
       });
-      const body = await res.json();
+      const text = await res.text();
+      let body;
+      try {
+        body = JSON.parse(text);
+      } catch (err) {
+        throw new Error(`Server returned non-JSON response (likely Payload Too Large). Response: ${text.substring(0, 80)}...`);
+      }
       
       if (!res.ok) {
         throw new Error(body.message || body.error || `HTTP ${res.status}`);
