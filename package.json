@@ -12,12 +12,14 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.4.2",
-    "@tensorflow/tfjs-backend-cpu": "4.9.0",
-    "@tensorflow/tfjs-backend-webgl": "4.9.0",
-    "@tensorflow/tfjs-core": "4.9.0",
+    "@tensorflow/tfjs-backend-cpu": "^4.22.0",
+    "@tensorflow/tfjs-backend-webgl": "^4.22.0",
+    "@tensorflow/tfjs-core": "^4.22.0",
+    "@tensorflow/tfjs-tflite": "^0.0.1-alpha.10",
     "clsx": "^2.1.1",
     "google-auth-library": "^9.15.1",
     "googleapis": "^148.0.0",
+    "html2pdf.js": "^0.14.0",
     "jose": "^6.2.3",
     "lucide-react": "^1.21.0",
     "react": "^18.2.0",
@@ -44,10 +46,5 @@
     "tailwindcss": "^3.3.3",
     "vite": "^5.0.8",
     "vite-plugin-pwa": "^1.0.0"
-  },
-  "overrides": {
-    "@tensorflow/tfjs-core": "4.9.0",
-    "@tensorflow/tfjs-backend-cpu": "4.9.0",
-    "@tensorflow/tfjs-backend-webgl": "4.9.0"
   }
 }

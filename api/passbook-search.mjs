@@ -55,7 +55,7 @@ export default async (req, res) => {
     const accessToken = tokenData.access_token;
 
     const sheetId = '14ujzie7cQjDxKVVXpmE5kKUJxNMBouf4c8F_I9AnlJw';
-    const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/CUSTOMER_PROFILES!A2:G`;
+    const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/CUSTOMER_PROFILES!A2:H`;
 
     const sheetResponse = await fetch(sheetsUrl, {
       headers: {
@@ -83,6 +83,7 @@ export default async (req, res) => {
         phone: row[4] ? String(row[4]).trim() : '',
         photoLink: row[5] ? String(row[5]).trim() : '',
         faceVector: row[6] ? String(row[6]).trim() : '',
+        aadharId: row[7] ? String(row[7]).trim() : '',
       };
     }).filter(c => {
       if (c.accountNumber === '' && c.customerName === '') return false;
