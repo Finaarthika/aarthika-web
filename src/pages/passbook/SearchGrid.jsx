@@ -35,31 +35,7 @@ export default function SearchGrid() {
   const [capturedImageBase64, setCapturedImageBase64] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
 
-  // --- INIT FACE-API ---
-  useEffect(() => {
-    const loadScript = async () => {
-      if (!window.faceapi) {
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js';
-        script.async = true;
-        document.body.appendChild(script);
-        await new Promise(resolve => { script.onload = resolve; });
-      }
-      
-      try {
-        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
-        await Promise.all([
-          window.faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
-          window.faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-          window.faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
-        ]);
-        setModelsLoaded(true);
-      } catch (err) {
-        console.error("Failed to load biometrics", err);
-      }
-    };
-    loadScript();
-  }, []);
+  // --- Biometrics Temporarily Disabled ---
 
   // --- CLEANUP CAMERA ---
   const stopCamera = () => {
@@ -164,82 +140,9 @@ export default function SearchGrid() {
     }
   };
 
-  // --- BIOMETRIC SEARCH ---
+  // --- BIOMETRIC SEARCH TEMPORARILY DISABLED ---
   const handleFaceScanSearch = async () => {
-    if (!modelsLoaded) {
-      alert("Biometric models are still loading from CDN. Please wait.");
-      return;
-    }
-    
-    // Ensure we have customers
-    if (customers.length === 0) {
-      alert("No customer records loaded to search against.");
-      return;
-    }
-
-    try {
-      setBiometricStatus("INITIATING CAMERA STREAM...");
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
-      
-      // Create a temporary hidden video element for the scan to keep UI clean
-      const tempVideo = document.createElement('video');
-      tempVideo.srcObject = mediaStream;
-      tempVideo.autoplay = true;
-      // MUST specify width and height for faceapi to not crash on hidden elements
-      tempVideo.width = 640;
-      tempVideo.height = 480;
-      
-      tempVideo.onloadedmetadata = async () => {
-        setBiometricStatus("SCANNING NEURAL MATRIX...");
-        
-        // Give the camera a second to adjust light
-        await new Promise(r => setTimeout(r, 1000));
-        
-        const options = new window.faceapi.SsdMobilenetv1Options({ minConfidence: 0.2 });
-        const detection = await window.faceapi.detectSingleFace(tempVideo, options)
-                                  .withFaceLandmarks()
-                                  .withFaceDescriptor();
-                                  
-        mediaStream.getTracks().forEach(t => t.stop()); // Stop immediately
-        
-        if (!detection) {
-          setBiometricStatus("");
-          alert("No face detected in frame. Please try again in better lighting.");
-          return;
-        }
-
-        setBiometricStatus("COMPUTING EUCLIDEAN DISTANCE...");
-        const liveDescriptor = detection.descriptor;
-        
-        let bestMatch = null;
-        let minDistance = 0.55; // Threshold for a match
-
-        customers.forEach(c => {
-          if (c.faceVector && c.faceVector.includes(',')) {
-            const storedArray = c.faceVector.split(',').map(Number);
-            if (storedArray.length === 128) {
-              const storedDescriptor = new Float32Array(storedArray);
-              const dist = window.faceapi.euclideanDistance(liveDescriptor, storedDescriptor);
-              if (dist < minDistance) {
-                minDistance = dist;
-                bestMatch = c;
-              }
-            }
-          }
-        });
-
-        setBiometricStatus("");
-        if (bestMatch) {
-          openLedger(bestMatch);
-        } else {
-          alert("ACCESS DENIED: Face not found in secure database.");
-        }
-      };
-      
-    } catch (err) {
-      setBiometricStatus("");
-      alert("Camera access denied or failed: " + err.message);
-    }
+    alert("Face scan search is temporarily disabled. Please use manual search.");
   };
 
   // --- ACCOUNT CREATION ---
@@ -255,22 +158,11 @@ export default function SearchGrid() {
     }
   };
 
-  const captureNewFaceVector = async () => {
-    if (!modelsLoaded) return alert("Models loading...");
+  const capturePhoto = async () => {
     if (!videoRef.current) return;
     
-    setBiometricStatus("PROCESSING STRUCTURAL VECTOR...");
+    setBiometricStatus("CAPTURING PHOTO...");
     try {
-      // Lower confidence threshold to ensure detection in poor lighting
-      const options = new window.faceapi.SsdMobilenetv1Options({ minConfidence: 0.2 });
-      const detection = await window.faceapi.detectSingleFace(videoRef.current, options)
-                                .withFaceLandmarks()
-                                .withFaceDescriptor();
-      if (!detection) {
-        setBiometricStatus("");
-        return alert("Face not clearly detected. Please face the camera directly and ensure good lighting.");
-      }
-
       // Extract image base64 for PDF
       const canvas = document.createElement('canvas');
       canvas.width = videoRef.current.videoWidth || 640;
@@ -278,19 +170,17 @@ export default function SearchGrid() {
       canvas.getContext('2d').drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
       setCapturedImageBase64(canvas.toDataURL('image/jpeg', 0.8));
       
-      const vectorStr = Array.from(detection.descriptor).join(',');
-      setCapturedVector(vectorStr);
-      setBiometricStatus("VECTOR LOCKED. READY TO SUBMIT.");
+      setBiometricStatus("PHOTO LOCKED. READY TO SUBMIT.");
       
     } catch (err) {
       console.error(err);
-      setBiometricStatus(`ERROR COMPUTING VECTOR: ${err.message}`);
+      setBiometricStatus(`ERROR CAPTURING PHOTO: ${err.message}`);
     }
   };
 
   const submitNewAccount = async () => {
     if (!newCustomer.customerName || !newCustomer.phone) return alert("Name and Phone are required.");
-    if (!capturedVector) return alert("You must capture the biometric vector first.");
+    if (!capturedImageBase64) return alert("You must capture a photo first.");
 
     setCreateLoading(true);
     try {
@@ -299,7 +189,7 @@ export default function SearchGrid() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...newCustomer,
-          faceVector: capturedVector
+          faceVector: '' // Blank vector since biometrics are disabled
         })
       });
       const body = await res.json();
@@ -312,7 +202,7 @@ export default function SearchGrid() {
       document.getElementById('pdf-acc-no').innerText = body.accountNumber;
       
       html2pdf().from(pdfElement).set({
-        margin: 1,
+        margin: 0.5,
         filename: `Aarthika_Account_${body.accountNumber}.pdf`,
         html2canvas: { scale: 2 },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
@@ -354,10 +244,6 @@ export default function SearchGrid() {
             onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
             placeholder="Enter Name..."
           /> ] [ <button onClick={handleSearch} className="terminal-btn">🔍</button> ]
-          {' '}
-          <button onClick={handleFaceScanSearch} className="terminal-btn" style={{ marginLeft: '1rem' }}>
-            [ 📸 FACE SCAN SEARCH ]
-          </button>
           <br/>
           [================================================================================]
         </div>
@@ -445,8 +331,8 @@ export default function SearchGrid() {
               <video ref={videoRef} autoPlay playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
             
-            <button className="terminal-btn" onClick={captureNewFaceVector} disabled={!modelsLoaded}>
-              [ 📸 CAPTURE & GENERATE VECTOR ]
+            <button className="terminal-btn" onClick={capturePhoto}>
+              [ 📸 CAPTURE PHOTO ]
             </button>
             
             <div className="success-text" style={{ marginTop: '1rem' }}>{biometricStatus}</div>
@@ -500,7 +386,8 @@ export default function SearchGrid() {
             <div style={{ marginTop: '50px', paddingTop: '20px', borderTop: '1px solid #000', fontSize: '12px', color: '#666', textAlign: 'center' }}>
               This document serves as the official opening record for the above-listed account.<br/>
               Aarthika Financial Services operates under strict rural compliance guidelines.<br/>
-              Biometric vector ID generated and secured on {new Date().toLocaleString()}.
+              Account photograph and details secured on {new Date().toLocaleString()}.<br/>
+              By submitting this form, the applicant agrees to all terms and conditions of Aarthika Finance.
             </div>
           </div>
         </div>
