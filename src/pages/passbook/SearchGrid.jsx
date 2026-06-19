@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import * as tf from '@tensorflow/tfjs-core';
 import '@tensorflow/tfjs-backend-webgl';
 import '@tensorflow/tfjs-backend-cpu';
-import * as tflite from '@tensorflow/tfjs-tflite';
 import './passbook.css';
 
 export default function SearchGrid() {
@@ -34,11 +33,11 @@ export default function SearchGrid() {
 
   useEffect(() => {
     // Configure tflite WASM path pointing to the standard CDN
-    tflite.setWasmPath('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/dist/');
+    window.tflite.setWasmPath('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/dist/');
     
     const initTFLite = async () => {
       try {
-        const loadedModel = await tflite.loadTFLiteModel('/facenet_512.tflite');
+        const loadedModel = await window.tflite.loadTFLiteModel('/facenet_512.tflite');
         setModel(loadedModel);
         console.log('TFLite FaceNet Model Loaded Successfully');
       } catch (err) {
