@@ -1,4 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+import * as tf from '@tensorflow/tfjs-core';
+import '@tensorflow/tfjs-backend-webgl';
+import '@tensorflow/tfjs-backend-cpu';
+import * as tflite from '@tensorflow/tfjs-tflite';
 import './passbook.css';
 
 export default function SearchGrid() {
@@ -11,6 +15,7 @@ export default function SearchGrid() {
   // Webcam & Biometric State
   const [isScanning, setIsScanning] = useState(false);
   const [scanMessage, setScanMessage] = useState('');
+  const [model, setModel] = useState(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
@@ -28,6 +33,20 @@ export default function SearchGrid() {
   const [transactionMsg, setTransactionMsg] = useState({ type: '', text: '' });
 
   useEffect(() => {
+    // Configure tflite WASM path pointing to the standard CDN
+    tflite.setWasmPath('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/dist/');
+    
+    const initTFLite = async () => {
+      try {
+        const loadedModel = await tflite.loadTFLiteModel('/facenet_512.tflite');
+        setModel(loadedModel);
+        console.log('TFLite FaceNet Model Loaded Successfully');
+      } catch (err) {
+        console.error('Failed to load TFLite model:', err);
+      }
+    };
+    initTFLite();
+
     if (view === 'SEARCH') {
       fetchCustomers('');
     }
@@ -86,36 +105,43 @@ export default function SearchGrid() {
   };
 
   const extractFaceVector = () => {
-    if (!videoRef.current || !canvasRef.current) return;
+    if (!videoRef.current || !model) {
+      setScanMessage('MODEL OR CAMERA NOT READY.');
+      return;
+    }
     
-    setScanMessage('EXTRACTING 512-DIMENSIONAL EMBEDDING...');
+    setScanMessage('EXTRACTING NATIVE 512-DIMENSIONAL EMBEDDING VIA TFLITE...');
     const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
     
-    // Capture frame
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    // Deterministic 512-hash simulation for frontend compatibility with strict backend math
-    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-    const vector = new Float32Array(512);
-    
-    for (let i = 0; i < imgData.length; i += 4) {
-      const brightness = (imgData[i] + imgData[i+1] + imgData[i+2]) / (3 * 255);
-      const bin = (i / 4) % 512;
-      vector[bin] = (vector[bin] + brightness) / 2; 
-    }
-    
-    // Normalize to [-1, 1] standard embedding format
-    for (let i = 0; i < 512; i++) {
-      vector[i] = (vector[i] * 2) - 1;
-    }
+    try {
+      const vector = tf.tidy(() => {
+        // Create tensor from video feed
+        let imgTensor = tf.browser.fromPixels(video);
+        
+        // Resize to exactly 160x160 (Standard FaceNet input size)
+        imgTensor = tf.image.resizeBilinear(imgTensor, [160, 160]);
+        
+        // Normalize: (pixel - 127.5) / 127.5 to get standard [-1, 1] embedding range
+        imgTensor = imgTensor.sub(127.5).div(127.5);
+        
+        // Add batch dimension
+        imgTensor = imgTensor.expandDims(0);
+        
+        // Execute inference through the loaded .tflite model
+        const outputTensor = model.predict(imgTensor);
+        
+        // Pull native Float32Array of 512 dimensions
+        return outputTensor.dataSync();
+      });
 
-    setScanMessage('VECTOR EXTRACTED. CROSS-REFERENCING DATABASE...');
-    stopWebcam();
-    
-    // Execute matching engine
-    performBiometricSort(vector);
+      setScanMessage('VECTOR EXTRACTED. CROSS-REFERENCING DATABASE...');
+      stopWebcam();
+      
+      // Execute matching engine
+      performBiometricSort(vector);
+    } catch (err) {
+      setScanMessage(`INFERENCE ERROR: ${err.message}`);
+    }
   };
 
   const calculateDistance = (vectorA, vectorB) => {
