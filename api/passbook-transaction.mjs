@@ -1,64 +1,4 @@
-import crypto from 'crypto';
-
-function base64url(str) {
-  return Buffer.from(str)
-    .toString('base64')
-    .replace(/=/g, '')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_');
-}
-
-function signAssertion(payload, privateKey) {
-  const header = { alg: 'RS256', typ: 'JWT' };
-  const headerEncoded = base64url(JSON.stringify(header));
-  const payloadEncoded = base64url(JSON.stringify(payload));
-  const signatureInput = `${headerEncoded}.${payloadEncoded}`;
-  
-  const signer = crypto.createSign('RSA-SHA256');
-  signer.update(signatureInput);
-  const signature = signer.sign(privateKey, 'base64');
-  
-  const signatureEncoded = signature
-    .replace(/=/g, '')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_');
-    
-  return `${signatureInput}.${signatureEncoded}`;
-}
-
-async function getAccessToken(clientEmail, privateKey) {
-  const iat = Math.floor(Date.now() / 1000);
-  const exp = iat + 3600;
-  
-  const claim = {
-    iss: clientEmail,
-    scope: 'https://www.googleapis.com/auth/spreadsheets', // Need full scope to write/append
-    aud: 'https://oauth2.googleapis.com/token',
-    exp: exp,
-    iat: iat
-  };
-  
-  const assertion = signAssertion(claim, privateKey);
-  
-  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion: assertion
-    })
-  });
-  
-  if (!tokenResponse.ok) {
-    const errText = await tokenResponse.text();
-    throw new Error(`Failed to retrieve Google OAuth token for email [${clientEmail}]: ${tokenResponse.status} - ${errText}`);
-  }
-  
-  const tokenJson = await tokenResponse.json();
-  return tokenJson.access_token;
-}
+import * as jose from 'jose';
 
 export default async (req, res) => {
   if (req.method !== 'POST') {
@@ -83,19 +23,54 @@ export default async (req, res) => {
     }
 
     let clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
-    let privateKey = process.env.GOOGLE_PRIVATE_KEY;
+    let privateKeyString = process.env.PASSBOOK_PRIVATE_KEY;
 
-    if (!clientEmail || !privateKey) {
-      throw new Error('GOOGLE_CLIENT_EMAIL or GOOGLE_PRIVATE_KEY environment variable is missing.');
+    if (!clientEmail || !privateKeyString) {
+      throw new Error('GOOGLE_CLIENT_EMAIL or PASSBOOK_PRIVATE_KEY environment variable is missing.');
     }
 
+    // Normalize keys
     clientEmail = clientEmail.replace(/^"|"$/g, '').trim();
-    if (privateKey) {
-      privateKey = privateKey.replace(/^"|"$/g, '').trim();
-      privateKey = privateKey.replace(/\\n/g, '\n');
+    privateKeyString = privateKeyString.replace(/^"|"$/g, '').trim();
+    privateKeyString = privateKeyString.replace(/\\n/g, '\n').replace(/\n/g, '\n').trim();
+    
+    if (!privateKeyString.startsWith('-----BEGIN PRIVATE KEY-----')) {
+      privateKeyString = `-----BEGIN PRIVATE KEY-----\n${privateKeyString}`;
+    }
+    if (!privateKeyString.endsWith('-----END PRIVATE KEY-----')) {
+      privateKeyString = `${privateKeyString}\n-----END PRIVATE KEY-----`;
     }
 
-    const accessToken = await getAccessToken(clientEmail, privateKey);
+    // Import the private key into a subtle crypto object using jose
+    const privateKey = await jose.importPKCS8(privateKeyString, 'RS256');
+
+    // Create the JWT token payload exactly how Google expects it
+    const jwt = await new jose.SignJWT({
+      scope: 'https://www.googleapis.com/auth/spreadsheets' // Full scope for writing
+    })
+      .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
+      .setIssuer(clientEmail)
+      .setAudience('https://oauth2.googleapis.com/token')
+      .setExpirationTime('1h')
+      .setIssuedAt()
+      .sign(privateKey);
+
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+        assertion: jwt
+      })
+    });
+    
+    if (!tokenResponse.ok) {
+      const errText = await tokenResponse.text();
+      throw new Error(`Token Exchange Failed for email [${clientEmail}]: ${tokenResponse.status} - ${errText}`);
+    }
+
+    const tokenData = await tokenResponse.json();
+    const accessToken = tokenData.access_token;
 
     const spreadsheetId = '14ujzie7cQjDxKVVXpmE5kKUJxNMBouf4c8F_I9AnlJw';
     const range = 'TRANSACTION_LEDGER!A:F';

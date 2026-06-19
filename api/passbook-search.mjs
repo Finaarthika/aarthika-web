@@ -8,10 +8,10 @@ export default async (req, res) => {
 
   try {
     let clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
-    let privateKeyString = process.env.GOOGLE_PRIVATE_KEY;
+    let privateKeyString = process.env.PASSBOOK_PRIVATE_KEY;
 
     if (!clientEmail || !privateKeyString) {
-      throw new Error('GOOGLE_CLIENT_EMAIL or GOOGLE_PRIVATE_KEY environment variable is missing.');
+      throw new Error('GOOGLE_CLIENT_EMAIL or PASSBOOK_PRIVATE_KEY environment variable is missing.');
     }
 
     // Normalize keys
