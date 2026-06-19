@@ -165,11 +165,11 @@ export default function SearchGrid() {
       document.getElementById('pdf-acc-no').innerText = body.accountNumber;
       
       html2pdf().from(pdfElement).set({
-        margin: [0.5, 0.5, 0.5, 0.5],
+        margin: [10, 10, 10, 10],
         filename: `Aarthika_Account_${body.accountNumber}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, windowWidth: 1000 },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
       }).output('bloburl').then(function(pdfUrl) {
         window.open(pdfUrl, '_blank');
       });
@@ -324,70 +324,72 @@ export default function SearchGrid() {
 
         {/* --- HIDDEN PDF TEMPLATE --- */}
         <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
-          <div id="pdf-template" style={{ padding: '40px', fontFamily: '"Arial", sans-serif', color: '#111', backgroundColor: '#fff', width: '1000px', boxSizing: 'border-box' }}>
+          <div id="pdf-template" style={{ padding: '10px', fontFamily: '"Courier New", Courier, monospace', color: '#111', backgroundColor: '#fff', width: '277mm', boxSizing: 'border-box' }}>
             {/* Header section */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '3px solid #1a365d', paddingBottom: '15px', marginBottom: '25px' }}>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <img src="/assets/Aarthika_logo.png" alt="Logo" style={{ height: '80px' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #111', paddingBottom: '10px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                <img src="/assets/Aarthika_logo.png" alt="Logo" style={{ height: '50px' }} />
+                <div>
+                  <h1 style={{ margin: 0, fontSize: '22px', letterSpacing: '1px' }}>AARTHIKA FINANCE • RURAL BRANCH OPERATIONS & MICROFINANCE</h1>
+                  <p style={{ margin: '3px 0 0 0', fontSize: '13px', fontWeight: 'bold' }}>OFFICIAL ACCOUNT ORIGINATION RECORD</p>
+                </div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <h2 style={{ margin: 0, fontSize: '24px', color: '#333' }}>ACCOUNT OPENING CONFIRMATION</h2>
-                <div style={{ display: 'inline-block', marginTop: '8px', padding: '6px 12px', border: '1px solid #1a365d', backgroundColor: '#f8fafc', fontWeight: 'bold', fontSize: '18px', color: '#1a365d' }} id="pdf-acc-no">PENDING</div>
+                <div style={{ display: 'inline-block', padding: '5px 10px', border: '1px solid #111', fontWeight: 'bold', fontSize: '16px' }} id="pdf-acc-no">PENDING</div>
               </div>
             </div>
 
             {/* Applicant Details & Photo */}
-            <div style={{ display: 'flex', gap: '40px', marginBottom: '30px' }}>
+            <div style={{ display: 'flex', gap: '30px', marginBottom: '20px' }}>
               <div style={{ flex: 1 }}>
-                <div style={{ backgroundColor: '#1a365d', color: '#fff', padding: '8px 12px', fontWeight: 'bold', fontSize: '14px', marginBottom: '10px' }}>APPLICANT INFORMATION</div>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                   <tbody>
-                    <tr><td style={{ padding: '14px 8px', borderBottom: '1px solid #e2e8f0', width: '40%', fontWeight: 'bold', color: '#475569' }}>Full Name:</td><td style={{ padding: '14px 8px', borderBottom: '1px solid #e2e8f0', fontWeight: 'bold', fontSize: '16px' }}>{newCustomer.customerName}</td></tr>
-                    <tr><td style={{ padding: '14px 8px', borderBottom: '1px solid #e2e8f0', fontWeight: 'bold', color: '#475569' }}>Father's Name:</td><td style={{ padding: '14px 8px', borderBottom: '1px solid #e2e8f0' }}>{newCustomer.fathersName}</td></tr>
-                    <tr><td style={{ padding: '14px 8px', borderBottom: '1px solid #e2e8f0', fontWeight: 'bold', color: '#475569' }}>Residential Village:</td><td style={{ padding: '14px 8px', borderBottom: '1px solid #e2e8f0' }}>{newCustomer.village}</td></tr>
-                    <tr><td style={{ padding: '14px 8px', borderBottom: '1px solid #e2e8f0', fontWeight: 'bold', color: '#475569' }}>Contact Mobile:</td><td style={{ padding: '14px 8px', borderBottom: '1px solid #e2e8f0' }}>+91 {newCustomer.phone}</td></tr>
-                    <tr><td style={{ padding: '14px 8px', borderBottom: '1px solid #e2e8f0', fontWeight: 'bold', color: '#475569' }}>Gov. ID (Aadhar/Voter):</td><td style={{ padding: '14px 8px', borderBottom: '1px solid #e2e8f0' }}>{newCustomer.aadharId || 'NOT PROVIDED'}</td></tr>
+                    <tr><td style={{ padding: '8px 4px', borderBottom: '1px solid #ddd', width: '30%', fontWeight: 'bold' }}>Full Name:</td><td style={{ padding: '8px 4px', borderBottom: '1px solid #ddd', fontWeight: 'bold', fontSize: '16px' }}>{newCustomer.customerName}</td></tr>
+                    <tr><td style={{ padding: '8px 4px', borderBottom: '1px solid #ddd', fontWeight: 'bold' }}>Father's Name:</td><td style={{ padding: '8px 4px', borderBottom: '1px solid #ddd' }}>{newCustomer.fathersName}</td></tr>
+                    <tr><td style={{ padding: '8px 4px', borderBottom: '1px solid #ddd', fontWeight: 'bold' }}>Residential Village:</td><td style={{ padding: '8px 4px', borderBottom: '1px solid #ddd' }}>{newCustomer.village}</td></tr>
+                    <tr><td style={{ padding: '8px 4px', borderBottom: '1px solid #ddd', fontWeight: 'bold' }}>Contact Mobile:</td><td style={{ padding: '8px 4px', borderBottom: '1px solid #ddd' }}>+91 {newCustomer.phone}</td></tr>
+                    <tr><td style={{ padding: '8px 4px', borderBottom: '1px solid #ddd', fontWeight: 'bold' }}>Gov. ID (Aadhar/Voter):</td><td style={{ padding: '8px 4px', borderBottom: '1px solid #ddd' }}>{newCustomer.aadharId || 'NOT PROVIDED'}</td></tr>
                   </tbody>
                 </table>
               </div>
               
-              <div style={{ width: '220px' }}>
-                <div style={{ backgroundColor: '#1a365d', color: '#fff', padding: '8px 12px', fontWeight: 'bold', fontSize: '14px', marginBottom: '10px', textAlign: 'center' }}>PHOTOGRAPH</div>
-                <div style={{ border: '2px solid #cbd5e1', height: '260px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8fafc', padding: '4px', boxSizing: 'border-box' }}>
+              <div>
+                <div style={{ border: '2px solid #00ff41', width: '150px', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8fafc', overflow: 'hidden' }}>
                   {capturedImageBase64 ? (
-                    <img src={capturedImageBase64} alt="Captured" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
-                  ) : <span style={{fontSize: '12px', color: '#94a3b8'}}>No Photo Rendered</span>}
+                    <img src={capturedImageBase64} alt="Captured" style={{ width: '150px', height: '150px', objectFit: 'cover' }} />
+                  ) : <span style={{fontSize: '12px', color: '#94a3b8'}}>No Photo</span>}
                 </div>
-                <div style={{ textAlign: 'center', fontSize: '10px', marginTop: '6px', color: '#64748b' }}>OFFICIAL BRANCH RECORD</div>
+                <div style={{ textAlign: 'center', fontSize: '10px', marginTop: '6px', fontWeight: 'bold' }}>BIOMETRIC VERIFICATION SECURED</div>
               </div>
             </div>
 
+            <div style={{ borderTop: '1px solid #111', marginBottom: '15px' }}></div>
+
             {/* Formal Terms & Conditions */}
-            <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', padding: '20px', fontSize: '12px', color: '#334155', lineHeight: '1.6' }}>
-              <strong style={{ fontSize: '13px', color: '#1a365d' }}>TERMS & CONDITIONS OF ACCOUNT OPERATION:</strong><br/>
-              1. <strong>Identity & Verification:</strong> The applicant confirms that all information and KYC documents provided are accurate and true. The bank reserves the right to close the account if any discrepancies are found.<br/>
-              2. <strong>Account Usage:</strong> This account is intended for personal savings and transactions. It must not be used for illegal activities, money laundering, or unauthorized business purposes.<br/>
-              3. <strong>Minimum Balance:</strong> The account holder agrees to maintain the prescribed minimum balance. Failure to do so may attract applicable penalty charges as per the bank's fee schedule.<br/>
-              4. <strong>Transaction Limits:</strong> Daily transaction and withdrawal limits apply in accordance with the bank's security protocols and regulatory directives.<br/>
-              5. <strong>Data Privacy:</strong> By signing this form, the applicant authorizes Aarthika Finance to process, store, and share personal data with regulatory authorities as mandated by the law.
+            <div style={{ fontSize: '11px', color: '#111', lineHeight: '1.4', textAlign: 'justify' }}>
+              <div style={{ marginBottom: '6px' }}><strong>1. ACCOUNT VALIDITY & SECURED OPERATION:</strong> This document serves as the official registration record for account origination under Aarthika Finance Rural Branch Operations. All active ledgers are backed exclusively by deposited asset values or evaluated gold/silver collateral vectors held under branch custody.</div>
+              <div style={{ marginBottom: '6px' }}><strong>2. TRANSACTIONS & PASSBOOK ACCOUNTABILITY:</strong> Deposits and withdrawals must be authenticated in person at the portal terminal via direct text lookup or matching face biometric verification metrics. Every transaction will generate an immediate running balance update logged directly into the immutable centralized master ledger sheet.</div>
+              <div style={{ marginBottom: '6px' }}><strong>3. OVERDRAFT SHIELDING & LIQUIDATION BOUNDARIES:</strong> The ledger system enforces strict zero-overdraft boundaries. Withdrawal requests exceeding the current net balance will be automatically restricted and denied by the server terminal routing system.</div>
+              <div><strong>4. AUDIT & ASSET CUSTODY RIGOR:</strong> Aarthika Finance retains absolute authority to freeze, audit, or review ledger operations if irregular transaction histories or unauthorized profile anomalies are captured. Collateral liquidations follow regulatory micro-lending guidelines.</div>
             </div>
 
+            <div style={{ borderTop: '1px solid #111', marginTop: '15px', marginBottom: '30px' }}></div>
+
             {/* Signatures */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '50px', padding: '0 20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 40px' }}>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ borderBottom: '1px solid #111', width: '200px', height: '30px' }}></div>
+                <div style={{ borderBottom: '1px solid #111', width: '220px', height: '30px' }}></div>
                 <div style={{ marginTop: '8px', fontSize: '12px', fontWeight: 'bold' }}>Applicant Signature / Thumbprint</div>
               </div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ borderBottom: '1px solid #111', width: '200px', height: '30px' }}></div>
+                <div style={{ borderBottom: '1px solid #111', width: '220px', height: '30px' }}></div>
                 <div style={{ marginTop: '8px', fontSize: '12px', fontWeight: 'bold' }}>Branch Manager Authorization</div>
               </div>
             </div>
 
             {/* Footer */}
-            <div style={{ marginTop: '40px', borderTop: '1px solid #cbd5e1', paddingTop: '15px', display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#94a3b8' }}>
-              <div>Generated Timestamp: {new Date().toLocaleString()}</div>
-              <div>Aarthika Financial Services - Secure Ledger System v2.4</div>
+            <div style={{ marginTop: '30px', textAlign: 'center', fontSize: '10px', color: '#555' }}>
+              Generated Timestamp: {new Date().toLocaleString()} | Aarthika Financial Services - Secure Ledger System
             </div>
           </div>
         </div>
