@@ -11,10 +11,8 @@ export default function SearchGrid() {
 
   // Biometrics State
   const [modelsLoaded, setModelsLoaded] = useState(false);
-  const [biometricStatus, setBiometricStatus] = useState('');
-  const videoRef = useRef(null);
-  const [stream, setStream] = useState(null);
-  const [facingMode, setFacingMode] = useState('user');
+  // Camera State
+  const [capturedImageBase64, setCapturedImageBase64] = useState('');
 
   // Ledger state
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -37,21 +35,6 @@ export default function SearchGrid() {
   const [createLoading, setCreateLoading] = useState(false);
 
   // --- Biometrics Temporarily Disabled ---
-
-  // --- CLEANUP CAMERA ---
-  const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
-    }
-  };
-
-  useEffect(() => {
-    // Stop camera when view changes away from CREATE or if doing Search Scan modal
-    if (view === 'LEDGER') {
-      stopCamera();
-    }
-  }, [view]);
 
   // --- API LOGIC ---
   useEffect(() => {
@@ -147,50 +130,17 @@ export default function SearchGrid() {
   };
 
   // --- ACCOUNT CREATION ---
-  const startCreationCamera = async (mode = facingMode) => {
-    try {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: mode } 
-      });
-      setStream(mediaStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current.play().catch(e => console.error("Autoplay failed:", e));
-        };
-      }
-    } catch (err) {
-      alert("Camera access required for secure account opening.");
-    }
-  };
-
-  const toggleCamera = () => {
-    const newMode = facingMode === 'user' ? 'environment' : 'user';
-    setFacingMode(newMode);
-    startCreationCamera(newMode);
-  };
-
-  const capturePhoto = async () => {
-    if (!videoRef.current) return;
+  const handleNativeCameraCapture = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
     
-    setBiometricStatus("CAPTURING PHOTO...");
-    try {
-      // Extract image base64 for PDF
-      const canvas = document.createElement('canvas');
-      canvas.width = videoRef.current.videoWidth || 640;
-      canvas.height = videoRef.current.videoHeight || 480;
-      canvas.getContext('2d').drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-      setCapturedImageBase64(canvas.toDataURL('image/jpeg', 0.8));
-      
+    setBiometricStatus("PROCESSING IMAGE...");
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setCapturedImageBase64(event.target.result);
       setBiometricStatus("PHOTO LOCKED. READY TO SUBMIT.");
-      
-    } catch (err) {
-      console.error(err);
-      setBiometricStatus(`ERROR CAPTURING PHOTO: ${err.message}`);
-    }
+    };
+    reader.readAsDataURL(file);
   };
 
   const submitNewAccount = async () => {
@@ -228,7 +178,6 @@ export default function SearchGrid() {
       alert(`Account Created Successfully: ${body.accountNumber}. Opening PDF Receipt...`);
       
       // Cleanup
-      stopCamera();
       setNewCustomer({ customerName: '', fathersName: '', village: '', phone: '', aadharId: '' });
       setCapturedVector('');
       setCapturedImageBase64('');
@@ -247,7 +196,7 @@ export default function SearchGrid() {
     return (
       <div className="passbook-container">
         <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between' }}>
-          <button onClick={() => { setView('CREATE'); startCreationCamera(); }} className="terminal-btn">
+          <button onClick={() => setView('CREATE')} className="terminal-btn">
             [ 📝 OPEN NEW ACCOUNT ]
           </button>
         </div>
@@ -320,7 +269,7 @@ export default function SearchGrid() {
     return (
       <div className="passbook-container">
         <div>
-          <button onClick={() => { stopCamera(); setView('SEARCH'); }} className="terminal-btn">
+          <button onClick={() => setView('SEARCH')} className="terminal-btn">
             [ ⬅ Cancel & Back to Search ]
           </button>
         </div>
@@ -343,19 +292,25 @@ export default function SearchGrid() {
           </div>
 
           <div className="terminal-box">
-            <div style={{ fontWeight: 'bold', marginBottom: '1rem' }}>[ BIOMETRIC SCAN ]</div>
-            <div style={{ border: '2px solid #111', width: '320px', height: '240px', marginBottom: '1rem', backgroundColor: '#e2e8f0', position: 'relative' }}>
-              <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <div style={{ fontWeight: 'bold', marginBottom: '1rem' }}>[ OFFICIAL PHOTOGRAPH ]</div>
+            <div style={{ border: '2px dashed #111', width: '320px', height: '240px', marginBottom: '1rem', backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+              {capturedImageBase64 ? (
+                <img src={capturedImageBase64} alt="Captured" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <span style={{ color: '#555' }}>[ NO PHOTO ]</span>
+              )}
             </div>
             
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button className="terminal-btn" onClick={capturePhoto} style={{ flex: 1 }}>
-                [ 📸 CAPTURE PHOTO ]
-              </button>
-              <button className="terminal-btn" onClick={toggleCamera}>
-                [ 🔄 FLIP ]
-              </button>
-            </div>
+            <label className="terminal-btn" style={{ display: 'block', textAlign: 'center', cursor: 'pointer', padding: '10px' }}>
+              [ 📸 OPEN NATIVE CAMERA ]
+              <input 
+                type="file" 
+                accept="image/*" 
+                capture="environment" 
+                style={{ display: 'none' }} 
+                onChange={handleNativeCameraCapture} 
+              />
+            </label>
             
             <div className="success-text" style={{ marginTop: '1rem' }}>{biometricStatus}</div>
             {capturedVector && <div style={{ fontSize: '0.7rem', wordBreak: 'break-all', marginTop: '0.5rem' }}>Vector: {capturedVector.substring(0, 40)}...</div>}
