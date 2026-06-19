@@ -23,23 +23,17 @@ export default async (req, res) => {
     }
 
     let clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
-    let privateKeyString = process.env.PASSBOOK_PRIVATE_KEY;
+    let privateKeyBase64 = process.env.PASSBOOK_PRIVATE_KEY_BASE64;
 
-    if (!clientEmail || !privateKeyString) {
-      throw new Error('GOOGLE_CLIENT_EMAIL or PASSBOOK_PRIVATE_KEY environment variable is missing.');
+    if (!clientEmail || !privateKeyBase64) {
+      throw new Error('GOOGLE_CLIENT_EMAIL or PASSBOOK_PRIVATE_KEY_BASE64 environment variable is missing.');
     }
 
-    // Normalize keys
+    // Normalize email
     clientEmail = clientEmail.replace(/^"|"$/g, '').trim();
-    privateKeyString = privateKeyString.replace(/^"|"$/g, '').trim();
-    privateKeyString = privateKeyString.replace(/\\n/g, '\n').replace(/\n/g, '\n').trim();
     
-    if (!privateKeyString.startsWith('-----BEGIN PRIVATE KEY-----')) {
-      privateKeyString = `-----BEGIN PRIVATE KEY-----\n${privateKeyString}`;
-    }
-    if (!privateKeyString.endsWith('-----END PRIVATE KEY-----')) {
-      privateKeyString = `${privateKeyString}\n-----END PRIVATE KEY-----`;
-    }
+    // Decode the perfect, uncorrupted Private Key from Base64
+    const privateKeyString = Buffer.from(privateKeyBase64, 'base64').toString('utf-8');
 
     // Import the private key into a subtle crypto object using jose
     const privateKey = await jose.importPKCS8(privateKeyString, 'RS256');
