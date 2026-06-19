@@ -100,8 +100,17 @@ export default async (req, res) => {
     // Sort descending by timestamp (newest first)
     transactions.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
 
+    let currentNetBalance = '0.00';
+    const latestSuccess = transactions.find(t => t.status === 'SUCCESS');
+    if (latestSuccess && latestSuccess.runningBalance) {
+      currentNetBalance = latestSuccess.runningBalance;
+    }
+
     res.setHeader('Content-Type', 'application/json');
-    return res.status(200).json({ data: transactions });
+    return res.status(200).json({ 
+      data: transactions,
+      currentNetBalance: currentNetBalance
+    });
 
   } catch (error) {
     res.setHeader('Content-Type', 'application/json');

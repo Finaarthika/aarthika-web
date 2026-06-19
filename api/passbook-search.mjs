@@ -72,6 +72,8 @@ export default async (req, res) => {
     const data = await sheetResponse.json();
     const rows = data.values || [];
 
+    const searchQuery = req.query.search ? String(req.query.search).toLowerCase().trim() : '';
+
     const customers = rows.map(row => {
       return {
         accountNumber: row[0] ? String(row[0]).trim() : '',
@@ -82,7 +84,13 @@ export default async (req, res) => {
         photoLink: row[5] ? String(row[5]).trim() : '',
         faceVector: row[6] ? String(row[6]).trim() : '',
       };
-    }).filter(c => c.accountNumber !== '' || c.customerName !== '');
+    }).filter(c => {
+      if (c.accountNumber === '' && c.customerName === '') return false;
+      if (searchQuery) {
+        return c.customerName.toLowerCase().includes(searchQuery);
+      }
+      return true;
+    });
 
     res.setHeader('Content-Type', 'application/json');
     return res.status(200).json({ data: customers });

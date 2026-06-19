@@ -70,22 +70,76 @@ export default async (req, res) => {
     const accessToken = tokenData.access_token;
 
     const spreadsheetId = '14ujzie7cQjDxKVVXpmE5kKUJxNMBouf4c8F_I9AnlJw';
-    const range = 'TRANSACTION_LEDGER!A:F';
-    const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED`;
+    
+    // First, fetch the current ledger to calculate the running balance
+    const readRange = 'TRANSACTION_LEDGER!A2:F';
+    const readUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(readRange)}`;
+    
+    const readResponse = await fetch(readUrl, {
+      headers: { 'Authorization': `Bearer ${accessToken}`, 'Accept': 'application/json' }
+    });
+    
+    if (!readResponse.ok) {
+      const errorText = await readResponse.text();
+      throw new Error(`Failed to read ledger for balance check: ${errorText}`);
+    }
+    
+    const readData = await readResponse.json();
+    const rows = readData.values || [];
+    
+    const safeAccountNumber = String(accountNumber).trim();
+    const accountRows = rows.filter(row => (row[1] ? String(row[1]).trim() : '') === safeAccountNumber);
+    
+    let currentBalance = 0;
+    // Find the latest successful transaction to get the current running balance
+    // We sort descending temporarily just for calculation
+    const sortedRows = [...accountRows].sort((a, b) => new Date(b[0] || 0) - new Date(a[0] || 0));
+    const latestSuccess = sortedRows.find(row => (row[5] ? String(row[5]).trim() : '') === 'SUCCESS');
+    
+    if (latestSuccess && latestSuccess[4]) {
+      // Remove any currency symbols/commas and parse
+      currentBalance = parseFloat(String(latestSuccess[4]).replace(/[^0-9.-]+/g, '')) || 0;
+    }
+
+    const safeType = String(type).trim().toUpperCase();
+    const safeAmount = parseFloat(String(amount).replace(/[^0-9.-]+/g, '')) || 0;
+    
+    if (safeAmount <= 0) {
+      return res.status(400).json({ error: 'Transaction amount must be greater than zero.' });
+    }
+
+    // Overdraft Protection Logic
+    if (safeType === 'WITHDRAWAL' && safeAmount > currentBalance) {
+      return res.status(400).json({ 
+        error: 'Insufficient Funds', 
+        message: `Cannot withdraw ₹${safeAmount}. Current Net Balance is only ₹${currentBalance}.` 
+      });
+    }
+
+    let newBalance = currentBalance;
+    if (safeType === 'DEPOSIT') {
+      newBalance += safeAmount;
+    } else if (safeType === 'WITHDRAWAL') {
+      newBalance -= safeAmount;
+    } else {
+      return res.status(400).json({ error: 'Invalid transaction type. Must be DEPOSIT or WITHDRAWAL.' });
+    }
+
+    // Format new balance string
+    const runningBalanceStr = `₹${newBalance.toFixed(2)}`;
+    const amountStr = `₹${safeAmount.toFixed(2)}`;
+
+    const appendRange = 'TRANSACTION_LEDGER!A:F';
+    const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(appendRange)}:append?valueInputOption=USER_ENTERED`;
 
     // Swedish locale produces 'YYYY-MM-DD HH:mm:ss' format
     const now = new Date();
     const timestamp = now.toLocaleString('sv-SE').replace('T', ' ');
-    const runningBalance = 'PENDING';
     const status = 'SUCCESS';
-
-    const safeAccountNumber = String(accountNumber).trim();
-    const safeType = String(type).trim();
-    const safeAmount = String(amount).trim();
 
     const appendData = {
       values: [
-        [timestamp, safeAccountNumber, safeType, safeAmount, runningBalance, status]
+        [timestamp, safeAccountNumber, safeType, amountStr, runningBalanceStr, status]
       ]
     };
 
@@ -104,7 +158,7 @@ export default async (req, res) => {
     }
 
     res.setHeader('Content-Type', 'application/json');
-    return res.status(200).json({ success: true, message: 'Transaction recorded successfully.' });
+    return res.status(200).json({ success: true, message: 'Transaction recorded successfully.', newBalance: runningBalanceStr });
 
   } catch (error) {
     res.setHeader('Content-Type', 'application/json');
