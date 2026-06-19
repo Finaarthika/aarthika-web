@@ -47,6 +47,25 @@ export default function SearchGrid() {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const searchInputRef = useRef(null);
+
+  // Global Escape Key Listener for Power Users
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && view !== 'SEARCH') {
+        setView('SEARCH');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [view]);
+
+  // Auto-focus search bar when returning to SEARCH view
+  useEffect(() => {
+    if (view === 'SEARCH' && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [view]);
 
   // Biometrics State
   const [modelsLoaded, setModelsLoaded] = useState(false);
@@ -274,11 +293,14 @@ export default function SearchGrid() {
               <div className="flex-1 w-full relative flex items-center">
                 <svg className="absolute left-4 w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                 <input 
+                  ref={searchInputRef}
                   className="w-full text-lg sm:text-xl py-4 pl-14 pr-4 bg-transparent border-none focus:ring-0 text-gray-800 placeholder-gray-400 font-medium outline-none" 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
                   placeholder="Enter customer name, ID, or phone number..."
+                  autoComplete="off"
+                  spellCheck="false"
                 />
               </div>
               <button onClick={handleSearch} className="btn btn-primary px-8 py-4 sm:py-0 h-14 rounded-xl flex items-center justify-center gap-2 w-full sm:w-auto text-lg font-bold shadow-md hover:shadow-lg transition-all">
@@ -307,7 +329,13 @@ export default function SearchGrid() {
                   </thead>
                   <tbody className="divide-y divide-gray-100 bg-white">
                     {customers.map((c, i) => (
-                      <tr key={c.accountNumber || i} className="hover:bg-blue-50/60 transition-colors group cursor-pointer" onClick={() => openLedger(c)}>
+                      <tr 
+                        key={c.accountNumber || i} 
+                        className="hover:bg-blue-50/60 transition-colors group cursor-pointer focus:outline-none focus:bg-blue-50/60" 
+                        onClick={() => openLedger(c)}
+                        tabIndex={0}
+                        onKeyDown={(e) => e.key === 'Enter' && openLedger(c)}
+                      >
                         <td className="py-5 px-6">
                           {c.photoLink ? (
                             <a href={c.photoLink} target="_blank" rel="noreferrer" className="inline-block relative shadow-sm rounded-full" onClick={(e) => e.stopPropagation()}>
@@ -315,7 +343,11 @@ export default function SearchGrid() {
                                   <img src={c.photoLink} alt="Profile" className="w-full h-full object-cover" />
                                </div>
                             </a>
-                          ) : <span className="text-gray-400 text-xs font-bold bg-gray-50 border border-gray-100 py-2 px-3 rounded-lg shadow-inner">NO PHOTO</span>}
+                          ) : (
+                            <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white ring-2 ring-gray-100 flex items-center justify-center bg-gray-50 text-gray-300 shadow-sm">
+                              <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                            </div>
+                          )}
                         </td>
                         <td className="py-5 px-6 font-bold text-gray-800 text-base">{c.customerName || '-'}</td>
                         <td className="py-5 px-6 text-gray-600 font-medium">{c.fathersName || '-'}</td>
@@ -376,11 +408,11 @@ export default function SearchGrid() {
                 Applicant Details
               </h2>
               <div className="space-y-5">
-                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name *</label><input className="input-premium shadow-sm" value={newCustomer.customerName} onChange={e=>setNewCustomer({...newCustomer, customerName: e.target.value})} placeholder="Enter full name" /></div>
-                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Father's Name</label><input className="input-premium shadow-sm" value={newCustomer.fathersName} onChange={e=>setNewCustomer({...newCustomer, fathersName: e.target.value})} placeholder="Enter father's name" /></div>
-                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Village/Area</label><input className="input-premium shadow-sm" value={newCustomer.village} onChange={e=>setNewCustomer({...newCustomer, village: e.target.value})} placeholder="Enter residential village" /></div>
-                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Contact Number *</label><input className="input-premium shadow-sm" value={newCustomer.phone} onChange={e=>setNewCustomer({...newCustomer, phone: e.target.value})} placeholder="Enter 10-digit mobile number" /></div>
-                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Gov ID (Aadhar/Voter)</label><input className="input-premium shadow-sm" value={newCustomer.aadharId} onChange={e=>setNewCustomer({...newCustomer, aadharId: e.target.value})} placeholder="Enter ID number" /></div>
+                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name *</label><input className="input-premium shadow-sm focus:ring-aarthikaBlue/50 focus:border-aarthikaBlue" value={newCustomer.customerName} onChange={e=>setNewCustomer({...newCustomer, customerName: e.target.value})} placeholder="Enter full name" autoComplete="new-password" spellCheck="false" /></div>
+                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Father's Name</label><input className="input-premium shadow-sm focus:ring-aarthikaBlue/50 focus:border-aarthikaBlue" value={newCustomer.fathersName} onChange={e=>setNewCustomer({...newCustomer, fathersName: e.target.value})} placeholder="Enter father's name" autoComplete="new-password" spellCheck="false" /></div>
+                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Residential Village</label><input className="input-premium shadow-sm focus:ring-aarthikaBlue/50 focus:border-aarthikaBlue" value={newCustomer.village} onChange={e=>setNewCustomer({...newCustomer, village: e.target.value})} placeholder="Enter village or district" autoComplete="new-password" spellCheck="false" /></div>
+                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Contact Mobile Number *</label><input className="input-premium shadow-sm focus:ring-aarthikaBlue/50 focus:border-aarthikaBlue" value={newCustomer.phone} onChange={e=>setNewCustomer({...newCustomer, phone: e.target.value})} placeholder="10-digit number" autoComplete="new-password" /></div>
+                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Gov. ID (Aadhar/Voter) *</label><input className="input-premium shadow-sm focus:ring-aarthikaBlue/50 focus:border-aarthikaBlue" value={newCustomer.aadharId} onChange={e=>setNewCustomer({...newCustomer, aadharId: e.target.value})} placeholder="Enter ID number" autoComplete="new-password" spellCheck="false" /></div>
               </div>
             </div>
 
