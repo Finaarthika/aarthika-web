@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2pdf from 'html2pdf.js';
-import './passbook.css';
 
 export default function SearchGrid() {
   const [view, setView] = useState('SEARCH'); // 'SEARCH' | 'LEDGER' | 'CREATE'
@@ -211,72 +210,89 @@ export default function SearchGrid() {
   // --- RENDER SCREEN 1: SEARCH ---
   if (view === 'SEARCH') {
     return (
-      <div className="passbook-container">
-        <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between' }}>
-          <button onClick={() => setView('CREATE')} className="terminal-btn">
-            [ 📝 OPEN NEW ACCOUNT ]
-          </button>
-        </div>
-
-        <div className="terminal-divider">
-          [================================================================================]<br/>
-          {'  '}SEARCH BAR: [ <input 
-            className="terminal-input" 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
-            placeholder="Enter Name..."
-          /> ] [ <button onClick={handleSearch} className="terminal-btn">🔍</button> ]
-          <br/>
-          [================================================================================]
-        </div>
-
-        {biometricStatus && <div className="success-text" style={{margin: '1rem 0'}}>{biometricStatus}</div>}
-        {error && <div className="error-text">CONNECTION ERROR: {error}</div>}
-        {loading && <div>SCANNING DATABASE...</div>}
-
-        {!loading && !error && (
-          <div style={{ marginTop: '2rem' }}>
-            <div className="terminal-divider">+------------------------+-----------------+-----------------+-----------------+---------------+-------------+</div>
-            <table className="terminal-table">
-              <thead>
-                <tr>
-                  <th>| Profile Image</th>
-                  <th>| Customer Name</th>
-                  <th>| Father's Name</th>
-                  <th>| Village/Address</th>
-                  <th>| Contact Number</th>
-                  <th>| Action      |</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td colSpan="6" className="terminal-divider" style={{margin: 0}}>+------------------------+-----------------+-----------------+-----------------+---------------+-------------+</td>
-                </tr>
-                {customers.map((c, i) => (
-                  <React.Fragment key={c.accountNumber || i}>
-                    <tr>
-                      <td>| {c.photoLink ? <a href={c.photoLink} target="_blank" rel="noreferrer" className="terminal-btn">📷 IMAGE</a> : '[ NO IMG ]'}</td>
-                      <td>| {c.customerName || '-'}</td>
-                      <td>| {c.fathersName || '-'}</td>
-                      <td>| {c.village || '-'}</td>
-                      <td>| {c.phone || '-'}</td>
-                      <td>| <button onClick={() => openLedger(c)} className="terminal-btn">[VIEW U]</button> |</td>
-                    </tr>
-                    <tr>
-                      <td colSpan="6" className="terminal-divider" style={{margin: 0}}>+------------------------+-----------------+-----------------+-----------------+---------------+-------------+</td>
-                    </tr>
-                  </React.Fragment>
-                ))}
-                {customers.length === 0 && (
-                  <tr>
-                    <td colSpan="6" style={{ textAlign: 'center', padding: '2rem' }}>| NO CUSTOMER RECORDS MATCHING QUERY |</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+      <div className="bg-gray-50 min-h-screen py-10 font-sans">
+        <div className="premium-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+            <h1 className="text-3xl font-bold text-gray-800 tracking-tight">Passbook Portal</h1>
+            <button onClick={() => setView('CREATE')} className="btn btn-primary flex items-center gap-2 shadow-md hover:-translate-y-0.5 transition-transform">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+              Open New Account
+            </button>
           </div>
-        )}
+
+          <div className="premium-card p-6 mb-8 flex flex-col sm:flex-row gap-4 items-center">
+            <div className="flex-1 w-full">
+              <input 
+                className="input-premium w-full text-lg shadow-sm" 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
+                placeholder="Search by customer name or phone..."
+              />
+            </div>
+            <button onClick={handleSearch} className="btn btn-primary px-8 py-3 flex items-center justify-center gap-2 w-full sm:w-auto text-lg shadow-md">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+              Search
+            </button>
+          </div>
+
+          {biometricStatus && <div className="text-green-600 font-medium mb-4 bg-green-50 p-3 rounded-lg border border-green-100">{biometricStatus}</div>}
+          {error && <div className="text-red-600 font-medium mb-4 p-4 bg-red-50 rounded-lg border border-red-100">{error}</div>}
+          {loading && <div className="text-gray-500 font-medium flex items-center gap-3 p-4"><svg className="animate-spin h-6 w-6 text-aarthikaBlue" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Fetching Database...</div>}
+
+          {!loading && !error && (
+            <div className="premium-card overflow-hidden shadow-lg border-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse whitespace-nowrap">
+                  <thead>
+                    <tr className="bg-gray-100/80 border-b border-gray-200">
+                      <th className="py-4 px-6 font-semibold text-gray-600 uppercase text-xs tracking-wider">Profile Image</th>
+                      <th className="py-4 px-6 font-semibold text-gray-600 uppercase text-xs tracking-wider">Customer Name</th>
+                      <th className="py-4 px-6 font-semibold text-gray-600 uppercase text-xs tracking-wider">Father's Name</th>
+                      <th className="py-4 px-6 font-semibold text-gray-600 uppercase text-xs tracking-wider">Village/Address</th>
+                      <th className="py-4 px-6 font-semibold text-gray-600 uppercase text-xs tracking-wider">Contact Number</th>
+                      <th className="py-4 px-6 font-semibold text-gray-600 uppercase text-xs tracking-wider text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {customers.map((c, i) => (
+                      <tr key={c.accountNumber || i} className="hover:bg-blue-50/50 transition-colors">
+                        <td className="py-4 px-6">
+                          {c.photoLink ? (
+                            <a href={c.photoLink} target="_blank" rel="noreferrer" className="inline-block relative group">
+                               <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-aarthikaBlue/20 group-hover:border-aarthikaBlue transition-all shadow-sm">
+                                  <img src={c.photoLink} alt="Profile" className="w-full h-full object-cover" />
+                               </div>
+                            </a>
+                          ) : <span className="text-gray-500 text-xs font-semibold bg-gray-100 py-1.5 px-3 rounded-md">NO IMAGE</span>}
+                        </td>
+                        <td className="py-4 px-6 font-semibold text-gray-800">{c.customerName || '-'}</td>
+                        <td className="py-4 px-6 text-gray-600">{c.fathersName || '-'}</td>
+                        <td className="py-4 px-6 text-gray-600">{c.village || '-'}</td>
+                        <td className="py-4 px-6 font-medium text-gray-700">{c.phone || '-'}</td>
+                        <td className="py-4 px-6 text-right">
+                          <button onClick={() => openLedger(c)} className="text-aarthikaBlue font-semibold hover:text-indigo-900 transition-colors inline-flex items-center gap-1 bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-lg">
+                            View Ledger <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {customers.length === 0 && (
+                      <tr>
+                        <td colSpan="6" className="py-16 text-center text-gray-500 font-medium">
+                          <div className="flex flex-col items-center justify-center">
+                            <svg className="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                            <p>No Customer Records matching query.</p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
@@ -284,61 +300,70 @@ export default function SearchGrid() {
   // --- RENDER SCREEN: CREATE ACCOUNT ---
   if (view === 'CREATE') {
     return (
-      <div className="passbook-container">
-        <div>
-          <button onClick={() => setView('SEARCH')} className="terminal-btn">
-            [ ⬅ Cancel & Back to Search ]
+      <div className="bg-gray-50 min-h-screen py-10 font-sans">
+        <div className="premium-container max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <button onClick={() => setView('SEARCH')} className="text-gray-500 hover:text-gray-800 mb-6 flex items-center gap-2 font-semibold transition-colors">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            Back to Search
           </button>
-        </div>
 
-        <div className="terminal-divider">
-          ================================================================================<br/>
-          {'                          '}SECURE ACCOUNT ORIGINATION TERMINAL<br/>
-          ================================================================================
-        </div>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-8 tracking-tight">Open New Account</h1>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginTop: '2rem' }}>
-          <div className="terminal-box">
-            <div style={{ fontWeight: 'bold', marginBottom: '1rem' }}>[ APPLICANT DETAILS ]</div>
-            
-            <div style={{marginBottom: '0.5rem'}}>Full Name (Req): <input className="terminal-input" value={newCustomer.customerName} onChange={e=>setNewCustomer({...newCustomer, customerName: e.target.value})} /></div>
-            <div style={{marginBottom: '0.5rem'}}>Father's Name: <input className="terminal-input" value={newCustomer.fathersName} onChange={e=>setNewCustomer({...newCustomer, fathersName: e.target.value})} /></div>
-            <div style={{marginBottom: '0.5rem'}}>Village: <input className="terminal-input" value={newCustomer.village} onChange={e=>setNewCustomer({...newCustomer, village: e.target.value})} /></div>
-            <div style={{marginBottom: '0.5rem'}}>Contact No (Req): <input className="terminal-input" value={newCustomer.phone} onChange={e=>setNewCustomer({...newCustomer, phone: e.target.value})} /></div>
-            <div style={{marginBottom: '0.5rem'}}>Aadhar/Voter ID: <input className="terminal-input" value={newCustomer.aadharId} onChange={e=>setNewCustomer({...newCustomer, aadharId: e.target.value})} /></div>
-          </div>
-
-          <div className="terminal-box">
-            <div style={{ fontWeight: 'bold', marginBottom: '1rem' }}>[ OFFICIAL PHOTOGRAPH ]</div>
-            <div style={{ border: '2px dashed #111', width: '320px', height: '240px', marginBottom: '1rem', backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-              {capturedImageBase64 ? (
-                <img src={capturedImageBase64} alt="Captured" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : (
-                <span style={{ color: '#555' }}>[ NO PHOTO ]</span>
-              )}
+          <div className="grid md:grid-cols-5 gap-8">
+            <div className="premium-card p-8 md:col-span-3 shadow-lg border-0">
+              <h2 className="text-xl font-bold text-gray-800 mb-6 pb-4 border-b border-gray-100 flex items-center gap-3">
+                <svg className="w-6 h-6 text-aarthikaBlue" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                Applicant Details
+              </h2>
+              <div className="space-y-5">
+                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name *</label><input className="input-premium shadow-sm" value={newCustomer.customerName} onChange={e=>setNewCustomer({...newCustomer, customerName: e.target.value})} placeholder="Enter full name" /></div>
+                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Father's Name</label><input className="input-premium shadow-sm" value={newCustomer.fathersName} onChange={e=>setNewCustomer({...newCustomer, fathersName: e.target.value})} placeholder="Enter father's name" /></div>
+                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Village/Area</label><input className="input-premium shadow-sm" value={newCustomer.village} onChange={e=>setNewCustomer({...newCustomer, village: e.target.value})} placeholder="Enter residential village" /></div>
+                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Contact Number *</label><input className="input-premium shadow-sm" value={newCustomer.phone} onChange={e=>setNewCustomer({...newCustomer, phone: e.target.value})} placeholder="Enter 10-digit mobile number" /></div>
+                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Gov ID (Aadhar/Voter)</label><input className="input-premium shadow-sm" value={newCustomer.aadharId} onChange={e=>setNewCustomer({...newCustomer, aadharId: e.target.value})} placeholder="Enter ID number" /></div>
+              </div>
             </div>
-            
-            <label className="terminal-btn" style={{ display: 'block', textAlign: 'center', cursor: 'pointer', padding: '10px' }}>
-              [ 📸 OPEN NATIVE CAMERA ]
-              <input 
-                type="file" 
-                accept="image/*" 
-                capture="environment" 
-                style={{ display: 'none' }} 
-                onChange={handleNativeCameraCapture} 
-              />
-            </label>
-            
-            <div className="success-text" style={{ marginTop: '1rem' }}>{biometricStatus}</div>
-            {capturedVector && <div style={{ fontSize: '0.7rem', wordBreak: 'break-all', marginTop: '0.5rem' }}>Vector: {capturedVector.substring(0, 40)}...</div>}
-          </div>
-        </div>
 
-        <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-          <button className="terminal-btn" style={{ padding: '1rem 2rem', fontSize: '1.2rem' }} onClick={submitNewAccount} disabled={createLoading}>
-            {createLoading ? '[ POSTING TO SECURE LEDGER... ]' : '[ 📝 SUBMIT APPLICATION & PRINT PASSBOOK ]'}
-          </button>
-        </div>
+            <div className="premium-card p-8 md:col-span-2 flex flex-col items-center justify-center shadow-lg border-0 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-brand"></div>
+              <h2 className="text-xl font-bold text-gray-800 mb-8 pb-4 border-b border-gray-100 w-full text-center">Official Photograph</h2>
+              
+              <div className="w-56 h-56 rounded-full ring-8 ring-blue-50 bg-gray-50 flex items-center justify-center overflow-hidden mb-8 shadow-inner">
+                {capturedImageBase64 ? (
+                  <img src={capturedImageBase64} alt="Captured" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="flex flex-col items-center text-gray-400">
+                    <svg className="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    <span className="text-sm font-medium">No Photo</span>
+                  </div>
+                )}
+              </div>
+              
+              <label className="btn text-aarthikaBlue bg-blue-50 border-2 border-aarthikaBlue hover:bg-aarthikaBlue hover:text-white cursor-pointer flex items-center justify-center gap-2 w-full max-w-[240px] shadow-sm font-semibold transition-all">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
+                Open Camera
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  capture="environment" 
+                  className="hidden" 
+                  onChange={handleNativeCameraCapture} 
+                />
+              </label>
+              
+              {biometricStatus && <div className="text-aarthikaBlue font-semibold mt-6 text-sm bg-blue-50 py-2 px-4 rounded-full border border-blue-100">{biometricStatus}</div>}
+            </div>
+          </div>
+
+          <div className="mt-10 text-center">
+            <button className="btn btn-primary text-lg py-4 px-12 shadow-lg shadow-aarthikaBlue/30 hover:-translate-y-1 transform transition-all flex items-center justify-center gap-3 mx-auto w-full md:w-auto" onClick={submitNewAccount} disabled={createLoading}>
+              {createLoading ? (
+                 <><svg className="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating PDF...</>
+              ) : (
+                <><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Submit Application</>
+              )}
+            </button>
+          </div>
 
         {/* --- HIDDEN PDF TEMPLATE --- */}
         <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
@@ -417,147 +442,170 @@ export default function SearchGrid() {
 
   // --- RENDER SCREEN 2: LEDGER ---
   return (
-    <div className="passbook-container">
-      <div>
-        <button onClick={() => setView('SEARCH')} className="terminal-btn">
-          [ ⬅ Back to Customer Search List ]
+    <div className="bg-gray-50 min-h-screen py-10 font-sans">
+      <div className="premium-container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <button onClick={() => setView('SEARCH')} className="text-gray-500 hover:text-gray-800 mb-6 flex items-center gap-2 font-semibold transition-colors">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+          Back to Customer List
         </button>
-      </div>
 
-      <div className="terminal-divider">
-        ================================================================================<br/>
-        {'                               '}CUSTOMER ACCOUNT PROFILE<br/>
-        ================================================================================
-      </div>
+        {/* Customer Profile Header */}
+        <div className="premium-card p-8 mb-8 flex flex-col md:flex-row items-center gap-8 shadow-lg border-0 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-2 h-full bg-gradient-brand"></div>
+          
+          <div className="flex-shrink-0 relative">
+            {selectedCustomer?.photoLink ? (
+              <img 
+                src={selectedCustomer.photoLink} 
+                alt="Profile" 
+                className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover ring-4 ring-aarthikaBlue/10 shadow-md"
+              />
+            ) : (
+              <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 ring-4 ring-gray-50">
+                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex-1 w-full">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6 pb-4 border-b border-gray-100 flex items-center justify-between">
+              Customer Profile
+              <span className="text-sm font-semibold bg-blue-50 text-aarthikaBlue px-3 py-1 rounded-md border border-blue-100">
+                {selectedCustomer?.accountNumber}
+              </span>
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-5 gap-x-8 text-sm">
+              <div><span className="text-gray-500 block mb-1 font-medium">Full Name</span><strong className="text-gray-800 text-base">{selectedCustomer?.customerName}</strong></div>
+              <div><span className="text-gray-500 block mb-1 font-medium">Father's Name</span><strong className="text-gray-800 text-base">{selectedCustomer?.fathersName || '-'}</strong></div>
+              <div><span className="text-gray-500 block mb-1 font-medium">Village/Area</span><strong className="text-gray-800 text-base">{selectedCustomer?.village || '-'}</strong></div>
+              <div><span className="text-gray-500 block mb-1 font-medium">Phone Number</span><strong className="text-gray-800 text-base">{selectedCustomer?.phone || '-'}</strong></div>
+            </div>
+          </div>
+          
+          <div className="w-full md:w-auto text-center md:text-right mt-6 md:mt-0 md:border-l border-gray-100 md:pl-10 md:py-4">
+            <div className="text-gray-500 font-semibold mb-2 uppercase text-xs tracking-wider">Current Net Balance</div>
+            <div className="text-4xl md:text-5xl font-extrabold text-aarthikaBlue tracking-tight">₹{netBalance}</div>
+          </div>
+        </div>
 
-      <div className="ledger-details-grid">
-        <div>
-          {selectedCustomer?.photoLink ? (
-            <img 
-              src={selectedCustomer.photoLink} 
-              alt="Profile" 
-              style={{ width: '120px', height: '120px', objectFit: 'cover', border: '2px solid #111' }} 
-            />
+        {/* Transaction Controls */}
+        <div className="grid md:grid-cols-2 gap-8 mb-8">
+          <div className="premium-card p-8 bg-green-50/30 border border-green-100 shadow-sm hover:shadow-md transition-shadow">
+            <h3 className="text-xl font-bold text-green-800 mb-6 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+              </div>
+              Deposit Cash
+            </h3>
+            <div className="flex flex-col gap-5">
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500 font-bold text-lg">₹</span>
+                <input 
+                  type="number" 
+                  className="input-premium pl-10 text-lg py-3 shadow-sm focus:ring-green-500/20 focus:border-green-500 w-full" 
+                  value={depositAmount}
+                  onChange={e => setDepositAmount(e.target.value)}
+                  placeholder="Amount" 
+                />
+              </div>
+              <button 
+                className="btn bg-green-600 text-white font-semibold text-lg hover:bg-green-700 hover:shadow-lg shadow-green-600/30 transition-all flex items-center justify-center py-3" 
+                onClick={() => handleTransaction('DEPOSIT')}
+                disabled={transactionLoading}
+              >
+                {transactionLoading ? 'Processing...' : 'Execute Deposit'}
+              </button>
+            </div>
+          </div>
+
+          <div className="premium-card p-8 bg-orange-50/30 border border-orange-100 shadow-sm hover:shadow-md transition-shadow">
+            <h3 className="text-xl font-bold text-orange-800 mb-6 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
+                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+              </div>
+              Withdraw Cash
+            </h3>
+            <div className="flex flex-col gap-5">
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500 font-bold text-lg">₹</span>
+                <input 
+                  type="number" 
+                  className="input-premium pl-10 text-lg py-3 shadow-sm focus:ring-orange-500/20 focus:border-orange-500 w-full" 
+                  value={withdrawAmount}
+                  onChange={e => setWithdrawAmount(e.target.value)}
+                  placeholder="Amount" 
+                />
+              </div>
+              <button 
+                className="btn bg-orange-600 text-white font-semibold text-lg hover:bg-orange-700 hover:shadow-lg shadow-orange-600/30 transition-all flex items-center justify-center py-3" 
+                onClick={() => handleTransaction('WITHDRAWAL')}
+                disabled={transactionLoading}
+              >
+                {transactionLoading ? 'Processing...' : 'Execute Withdrawal'}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {transactionMsg.text && (
+          <div className={`p-4 rounded-xl mb-8 font-semibold text-center shadow-sm border ${transactionMsg.type === 'error' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
+            {transactionMsg.text}
+          </div>
+        )}
+
+        {/* Ledger History */}
+        <div className="premium-card overflow-hidden shadow-lg border-0">
+          <div className="bg-gray-50 px-8 py-5 border-b border-gray-200 flex items-center gap-3">
+            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            <h3 className="text-xl font-bold text-gray-800 tracking-tight">Transaction Ledger History</h3>
+          </div>
+          
+          {ledgerLoading ? (
+            <div className="p-12 text-center text-gray-500 flex items-center justify-center gap-3 font-medium"><svg className="animate-spin h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Loading records...</div>
           ) : (
-            <div style={{ width: '120px', height: '120px', border: '2px dashed #111', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              [ SECURE VECTOR ]
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse whitespace-nowrap">
+                <thead>
+                  <tr className="bg-white border-b border-gray-100">
+                    <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Date & Time</th>
+                    <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Transaction Type</th>
+                    <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Amount (₹)</th>
+                    <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Net Balance (₹)</th>
+                    <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {ledger.map((row) => (
+                    <tr key={row.id} className="hover:bg-gray-50/80 transition-colors">
+                      <td className="py-5 px-8 text-gray-600 font-medium">{row.timestamp}</td>
+                      <td className="py-5 px-8">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-wide ${row.type === 'DEPOSIT' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
+                          {row.type}
+                        </span>
+                      </td>
+                      <td className={`py-5 px-8 font-bold text-lg ${row.type === 'DEPOSIT' ? 'text-green-600' : 'text-orange-600'}`}>
+                        {row.type === 'DEPOSIT' ? '+' : '-'}{row.amount}
+                      </td>
+                      <td className="py-5 px-8 font-bold text-gray-800 text-lg">{row.runningBalance}</td>
+                      <td className="py-5 px-8"><span className="text-xs font-bold tracking-wide uppercase bg-gray-100 text-gray-600 px-3 py-1.5 rounded-md border border-gray-200">{row.status}</span></td>
+                    </tr>
+                  ))}
+                  {ledger.length === 0 && (
+                    <tr>
+                      <td colSpan="5" className="py-16 text-center text-gray-500 font-medium text-lg">
+                        <div className="flex flex-col items-center justify-center text-gray-400">
+                          <svg className="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                          No transactions found for this account.
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
-        <div>
-          <table style={{ textAlign: 'left', borderSpacing: '0 8px' }}>
-            <tbody>
-              <tr><td style={{paddingRight: '20px'}}>Account Number:</td><td><strong>{selectedCustomer?.accountNumber}</strong></td></tr>
-              <tr><td style={{paddingRight: '20px'}}>Full Name:</td><td><strong>{selectedCustomer?.customerName}</strong></td></tr>
-              <tr><td style={{paddingRight: '20px'}}>Father's Name:</td><td><strong>{selectedCustomer?.fathersName}</strong></td></tr>
-              <tr><td style={{paddingRight: '20px'}}>Village/Area:</td><td><strong>{selectedCustomer?.village}</strong></td></tr>
-              <tr><td style={{paddingRight: '20px'}}>Phone Number:</td><td><strong>{selectedCustomer?.phone}</strong></td></tr>
-              <tr><td style={{paddingRight: '20px'}}>Gov ID:</td><td><strong>{selectedCustomer?.aadharId}</strong></td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          <div>Current Net Balance:</div>
-          <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{netBalance}</div>
-        </div>
       </div>
-
-      <div className="terminal-divider">
-        ================================================================================
-      </div>
-
-      <div className="action-forms-grid">
-        <div className="terminal-box">
-          <div style={{ fontWeight: 'bold', marginBottom: '1rem' }}>[ 📥 DEPOSIT CASH ]</div>
-          <div style={{ marginBottom: '1rem' }}>
-            Amount (₹): [ <input 
-              type="number" 
-              className="terminal-input" 
-              value={depositAmount}
-              onChange={e => setDepositAmount(e.target.value)}
-              placeholder="Enter Amount" 
-            /> ]
-          </div>
-          <button 
-            className="terminal-btn" 
-            onClick={() => handleTransaction('DEPOSIT')}
-            disabled={transactionLoading}
-          >
-            [ {transactionLoading ? 'PROCESSING...' : 'EXECUTE DEPOSIT'} ]
-          </button>
-        </div>
-
-        <div className="terminal-box">
-          <div style={{ fontWeight: 'bold', marginBottom: '1rem' }}>[ 📤 WITHDRAW CASH ]</div>
-          <div style={{ marginBottom: '1rem' }}>
-            Amount (₹): [ <input 
-              type="number" 
-              className="terminal-input" 
-              value={withdrawAmount}
-              onChange={e => setWithdrawAmount(e.target.value)}
-              placeholder="Enter Amount" 
-            /> ]
-          </div>
-          <button 
-            className="terminal-btn" 
-            onClick={() => handleTransaction('WITHDRAWAL')}
-            disabled={transactionLoading}
-          >
-            [ {transactionLoading ? 'PROCESSING...' : 'EXECUTE WITHDRAWAL'} ]
-          </button>
-        </div>
-      </div>
-
-      {transactionMsg.text && (
-        <div className={transactionMsg.type === 'error' ? 'error-text' : 'success-text'} style={{ textAlign: 'center', marginBottom: '1rem' }}>
-          {transactionMsg.text}
-        </div>
-      )}
-
-      <div className="terminal-divider">
-        {'                              '}COMPLETE TRANSACTION PASSBOOK HISTORY<br/>
-        ================================================================================
-      </div>
-
-      {ledgerLoading ? (
-        <div>LOADING LEDGER RECORDS...</div>
-      ) : (
-        <table className="terminal-table">
-          <thead>
-            <tr>
-              <th>Date & Time</th>
-              <th>| Transaction Type</th>
-              <th>| Amount (INR)</th>
-              <th>| Running Balance</th>
-              <th>| Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colSpan="5" className="terminal-divider" style={{margin: 0}}>--------------------------------------------------------------------------------</td>
-            </tr>
-            {ledger.map((row) => (
-              <React.Fragment key={row.id}>
-                <tr>
-                  <td>{row.timestamp}</td>
-                  <td>| {row.type}</td>
-                  <td>| {row.amount}</td>
-                  <td>| {row.runningBalance}</td>
-                  <td>| {row.status}</td>
-                </tr>
-              </React.Fragment>
-            ))}
-            {ledger.length === 0 && (
-              <tr>
-                <td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>| NO TRANSACTIONS FOUND |</td>
-              </tr>
-            )}
-            <tr>
-              <td colSpan="5" className="terminal-divider" style={{margin: 0}}>================================================================================</td>
-            </tr>
-          </tbody>
-        </table>
-      )}
     </div>
   );
 }
