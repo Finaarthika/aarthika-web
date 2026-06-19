@@ -14,7 +14,7 @@ export default async (req, res) => {
       phone,
       faceVector,
       aadharId,
-      pdfBase64
+      pdfFile
     } = req.body || {};
 
     if (!customerName || !phone) {
@@ -96,25 +96,25 @@ export default async (req, res) => {
     // Upload PDF to Google Drive if provided
     let photoLink = '';
     
-    if (pdfBase64) {
-      const boundary = 'foo_bar_baz';
+    if (pdfFile) {
+      const boundary = 'foo_bar_baz_boundary';
       const metadata = {
         name: `Aarthika_Account_${newAccountNumber}.pdf`,
         parents: ['1-n92zn1gQCxMU2Xi59dMRJLW4KNkS1sY']
       };
       
-      const bodyPieces = [
-        `--${boundary}`,
-        'Content-Type: application/json; charset=UTF-8',
-        '',
-        JSON.stringify(metadata),
-        `--${boundary}`,
-        'Content-Type: application/pdf',
-        'Content-Transfer-Encoding: base64',
-        '',
-        pdfBase64,
-        `--${boundary}--`
-      ];
+      const headerBuffer = Buffer.from(
+        `--${boundary}\r\n` +
+        `Content-Type: application/json; charset=UTF-8\r\n\r\n` +
+        `${JSON.stringify(metadata)}\r\n` +
+        `--${boundary}\r\n` +
+        `Content-Type: application/pdf\r\n\r\n`
+      );
+      
+      const pdfBuffer = Buffer.from(pdfFile, 'base64');
+      const footerBuffer = Buffer.from(`\r\n--${boundary}--`);
+      
+      const multipartBody = Buffer.concat([headerBuffer, pdfBuffer, footerBuffer]);
       
       const driveRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
         method: 'POST',
@@ -122,7 +122,7 @@ export default async (req, res) => {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': `multipart/related; boundary=${boundary}`
         },
-        body: bodyPieces.join('\r\n')
+        body: multipartBody
       });
       
       if (driveRes.ok) {

@@ -149,15 +149,15 @@ export default function SearchGrid() {
     try {
       // 1. Generate base64 PDF to send to the secure vault
       const pdfElement = document.getElementById('pdf-template');
-      const pdfBase64DataUri = await html2pdf().from(pdfElement).set({
+      const pdfBase64Str = await html2pdf().from(pdfElement).set({
         margin: [10, 10, 10, 10],
         filename: `Aarthika_Account.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, logging: false },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-      }).output('datauristring');
+      }).toPdf().output('datauristring');
       
-      const pdfBase64 = pdfBase64DataUri.split(',')[1];
+      const cleanBase64 = pdfBase64Str.split(',')[1];
 
       // 2. Transmit to backend
       const res = await fetch('/api/passbook-create', {
@@ -170,7 +170,7 @@ export default function SearchGrid() {
           phone: newCustomer.phone,
           faceVector: '', 
           aadharId: newCustomer.aadharId,
-          pdfBase64: pdfBase64
+          pdfFile: cleanBase64
         })
       });
       const body = await res.json();
