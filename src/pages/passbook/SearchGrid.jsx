@@ -50,6 +50,17 @@ const toTitleCase = (str) => {
   );
 };
 
+const IN_MEMORY_DB_KEY = 'aarthika_passbook_ledgers';
+
+const getSecurePhotoUrl = (link) => {
+  if (!link) return null;
+  if (link.includes('drive.google.com')) {
+    const idMatch = link.match(/id=([^&]+)/);
+    if (idMatch) return `/api/passbook-image?id=${idMatch[1]}`;
+  }
+  return link;
+};
+
 export default function SearchGrid() {
   const [view, setView] = useState('SEARCH'); // 'SEARCH' | 'LEDGER' | 'CREATE'
   const [searchQuery, setSearchQuery] = useState('');
@@ -386,9 +397,9 @@ export default function SearchGrid() {
                       >
                         <td className="py-5 px-6">
                           {c.photoLink ? (
-                            <a href={c.photoLink} target="_blank" rel="noreferrer" className="inline-block relative shadow-sm rounded-full" onClick={(e) => e.stopPropagation()}>
+                            <a href={getSecurePhotoUrl(c.photoLink)} target="_blank" rel="noreferrer" className="inline-block relative shadow-sm rounded-full" onClick={(e) => e.stopPropagation()}>
                                <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white ring-2 ring-aarthikaBlue/20 hover:ring-aarthikaBlue transition-all">
-                                  <img src={c.photoLink} alt="Profile" className="w-full h-full object-cover" />
+                                  <img src={getSecurePhotoUrl(c.photoLink)} alt="Profile" className="w-full h-full object-cover" />
                                </div>
                             </a>
                           ) : (
@@ -607,7 +618,7 @@ export default function SearchGrid() {
           <div className="flex-shrink-0 relative">
             {selectedCustomer?.photoLink ? (
               <img 
-                src={selectedCustomer.photoLink} 
+                src={getSecurePhotoUrl(selectedCustomer.photoLink)} 
                 alt="Profile" 
                 className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover ring-4 ring-aarthikaBlue/10 shadow-md"
               />
