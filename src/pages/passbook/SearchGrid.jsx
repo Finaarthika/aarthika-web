@@ -210,80 +210,78 @@ export default function SearchGrid() {
   // --- RENDER SCREEN 1: SEARCH ---
   if (view === 'SEARCH') {
     return (
-      <div className="bg-gray-50 min-h-screen py-10 font-sans">
-        <div className="premium-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
-            <h1 className="text-3xl font-bold text-gray-800 tracking-tight">Passbook Portal</h1>
-            <button onClick={() => setView('CREATE')} className="btn btn-primary flex items-center gap-2 shadow-md hover:-translate-y-0.5 transition-transform">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+      <div className="bg-slate-50 min-h-screen py-10 font-sans text-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-6 border-b-2 border-slate-900 pb-4">
+            <h1 className="text-2xl font-extrabold text-slate-900 uppercase tracking-widest">Portal Ledger Access</h1>
+            <button onClick={() => setView('CREATE')} className="bg-slate-900 text-white font-bold uppercase tracking-wider text-sm px-6 py-3 rounded-sm hover:bg-slate-800 transition-colors shadow-sm flex items-center gap-2 mt-4 sm:mt-0">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
               Open New Account
             </button>
           </div>
 
-          <div className="premium-card p-6 mb-8 flex flex-col sm:flex-row gap-4 items-center">
+          <div className="bg-white border border-slate-300 p-6 mb-8 flex flex-col sm:flex-row gap-4 items-end shadow-sm rounded-sm">
             <div className="flex-1 w-full">
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Search Customer Database</label>
               <input 
-                className="input-premium w-full text-lg shadow-sm" 
+                className="w-full border border-slate-300 px-4 py-3 text-slate-900 rounded-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900 focus:outline-none transition-colors" 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
-                placeholder="Search by customer name or phone..."
+                placeholder="Enter Customer Name or Phone Number"
               />
             </div>
-            <button onClick={handleSearch} className="btn btn-primary px-8 py-3 flex items-center justify-center gap-2 w-full sm:w-auto text-lg shadow-md">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-              Search
+            <button onClick={handleSearch} className="bg-slate-900 text-white font-bold uppercase tracking-wider text-sm px-8 py-3 rounded-sm hover:bg-slate-800 transition-colors shadow-sm w-full sm:w-auto h-[50px] flex items-center justify-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+              Search Records
             </button>
           </div>
 
-          {biometricStatus && <div className="text-green-600 font-medium mb-4 bg-green-50 p-3 rounded-lg border border-green-100">{biometricStatus}</div>}
-          {error && <div className="text-red-600 font-medium mb-4 p-4 bg-red-50 rounded-lg border border-red-100">{error}</div>}
-          {loading && <div className="text-gray-500 font-medium flex items-center gap-3 p-4"><svg className="animate-spin h-6 w-6 text-aarthikaBlue" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Fetching Database...</div>}
+          {biometricStatus && <div className="text-green-800 font-bold mb-4 bg-green-50 p-4 border border-green-300 rounded-sm uppercase text-sm tracking-wide">{biometricStatus}</div>}
+          {error && <div className="text-red-800 font-bold mb-4 p-4 bg-red-50 border border-red-300 rounded-sm uppercase text-sm tracking-wide">{error}</div>}
+          {loading && <div className="text-slate-600 font-bold flex items-center gap-3 p-4 uppercase text-sm tracking-wider"><svg className="animate-spin h-5 w-5 text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Querying Master Ledger...</div>}
 
           {!loading && !error && (
-            <div className="premium-card overflow-hidden shadow-lg border-0">
+            <div className="bg-white border border-slate-300 shadow-sm rounded-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse whitespace-nowrap">
                   <thead>
-                    <tr className="bg-gray-100/80 border-b border-gray-200">
-                      <th className="py-4 px-6 font-semibold text-gray-600 uppercase text-xs tracking-wider">Profile Image</th>
-                      <th className="py-4 px-6 font-semibold text-gray-600 uppercase text-xs tracking-wider">Customer Name</th>
-                      <th className="py-4 px-6 font-semibold text-gray-600 uppercase text-xs tracking-wider">Father's Name</th>
-                      <th className="py-4 px-6 font-semibold text-gray-600 uppercase text-xs tracking-wider">Village/Address</th>
-                      <th className="py-4 px-6 font-semibold text-gray-600 uppercase text-xs tracking-wider">Contact Number</th>
-                      <th className="py-4 px-6 font-semibold text-gray-600 uppercase text-xs tracking-wider text-right">Action</th>
+                    <tr className="bg-slate-100 border-b-2 border-slate-300">
+                      <th className="py-3 px-6 font-bold text-slate-700 uppercase text-xs tracking-widest border-r border-slate-200">Profile Image</th>
+                      <th className="py-3 px-6 font-bold text-slate-700 uppercase text-xs tracking-widest border-r border-slate-200">Customer Name</th>
+                      <th className="py-3 px-6 font-bold text-slate-700 uppercase text-xs tracking-widest border-r border-slate-200">Father's Name</th>
+                      <th className="py-3 px-6 font-bold text-slate-700 uppercase text-xs tracking-widest border-r border-slate-200">Village/Address</th>
+                      <th className="py-3 px-6 font-bold text-slate-700 uppercase text-xs tracking-widest border-r border-slate-200">Contact Number</th>
+                      <th className="py-3 px-6 font-bold text-slate-700 uppercase text-xs tracking-widest text-center">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-slate-200">
                     {customers.map((c, i) => (
-                      <tr key={c.accountNumber || i} className="hover:bg-blue-50/50 transition-colors">
-                        <td className="py-4 px-6">
+                      <tr key={c.accountNumber || i} className="hover:bg-slate-50 transition-colors">
+                        <td className="py-3 px-6 border-r border-slate-200 text-center">
                           {c.photoLink ? (
-                            <a href={c.photoLink} target="_blank" rel="noreferrer" className="inline-block relative group">
-                               <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-aarthikaBlue/20 group-hover:border-aarthikaBlue transition-all shadow-sm">
+                            <a href={c.photoLink} target="_blank" rel="noreferrer" className="inline-block relative">
+                               <div className="w-10 h-10 rounded-sm overflow-hidden border border-slate-300 shadow-sm mx-auto">
                                   <img src={c.photoLink} alt="Profile" className="w-full h-full object-cover" />
                                </div>
                             </a>
-                          ) : <span className="text-gray-500 text-xs font-semibold bg-gray-100 py-1.5 px-3 rounded-md">NO IMAGE</span>}
+                          ) : <span className="text-slate-400 text-xs font-bold tracking-wider">N/A</span>}
                         </td>
-                        <td className="py-4 px-6 font-semibold text-gray-800">{c.customerName || '-'}</td>
-                        <td className="py-4 px-6 text-gray-600">{c.fathersName || '-'}</td>
-                        <td className="py-4 px-6 text-gray-600">{c.village || '-'}</td>
-                        <td className="py-4 px-6 font-medium text-gray-700">{c.phone || '-'}</td>
-                        <td className="py-4 px-6 text-right">
-                          <button onClick={() => openLedger(c)} className="text-aarthikaBlue font-semibold hover:text-indigo-900 transition-colors inline-flex items-center gap-1 bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-lg">
-                            View Ledger <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                        <td className="py-3 px-6 border-r border-slate-200 font-bold text-slate-900">{c.customerName || '-'}</td>
+                        <td className="py-3 px-6 border-r border-slate-200 text-slate-700">{c.fathersName || '-'}</td>
+                        <td className="py-3 px-6 border-r border-slate-200 text-slate-700">{c.village || '-'}</td>
+                        <td className="py-3 px-6 border-r border-slate-200 font-mono text-sm text-slate-800">{c.phone || '-'}</td>
+                        <td className="py-3 px-6 text-center">
+                          <button onClick={() => openLedger(c)} className="text-slate-900 font-bold text-xs uppercase tracking-wider hover:underline flex items-center justify-center gap-1 mx-auto">
+                            View Ledger <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                           </button>
                         </td>
                       </tr>
                     ))}
                     {customers.length === 0 && (
                       <tr>
-                        <td colSpan="6" className="py-16 text-center text-gray-500 font-medium">
-                          <div className="flex flex-col items-center justify-center">
-                            <svg className="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
-                            <p>No Customer Records matching query.</p>
-                          </div>
+                        <td colSpan="6" className="py-12 text-center text-slate-500 font-bold uppercase tracking-wider text-sm">
+                          No Customer Records Located.
                         </td>
                       </tr>
                     )}
@@ -300,48 +298,48 @@ export default function SearchGrid() {
   // --- RENDER SCREEN: CREATE ACCOUNT ---
   if (view === 'CREATE') {
     return (
-      <div className="bg-gray-50 min-h-screen py-10 font-sans">
-        <div className="premium-container max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <button onClick={() => setView('SEARCH')} className="text-gray-500 hover:text-gray-800 mb-6 flex items-center gap-2 font-semibold transition-colors">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-            Back to Search
+      <div className="bg-slate-50 min-h-screen py-10 font-sans text-slate-900">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <button onClick={() => setView('SEARCH')} className="text-slate-600 hover:text-slate-900 mb-6 flex items-center gap-2 font-bold uppercase tracking-wider text-xs transition-colors">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            Return to Ledger Search
           </button>
 
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-8 tracking-tight">Open New Account</h1>
+          <h1 className="text-2xl font-extrabold text-slate-900 mb-8 uppercase tracking-widest border-b-2 border-slate-900 pb-4">Account Origination Form</h1>
 
-          <div className="grid md:grid-cols-5 gap-8">
-            <div className="premium-card p-8 md:col-span-3 shadow-lg border-0">
-              <h2 className="text-xl font-bold text-gray-800 mb-6 pb-4 border-b border-gray-100 flex items-center gap-3">
-                <svg className="w-6 h-6 text-aarthikaBlue" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                Applicant Details
+          <div className="grid md:grid-cols-5 gap-6">
+            <div className="bg-white border border-slate-300 p-8 md:col-span-3 rounded-sm shadow-sm">
+              <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-6 pb-2 border-b border-slate-200">
+                1. Applicant Information
               </h2>
-              <div className="space-y-5">
-                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name *</label><input className="input-premium shadow-sm" value={newCustomer.customerName} onChange={e=>setNewCustomer({...newCustomer, customerName: e.target.value})} placeholder="Enter full name" /></div>
-                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Father's Name</label><input className="input-premium shadow-sm" value={newCustomer.fathersName} onChange={e=>setNewCustomer({...newCustomer, fathersName: e.target.value})} placeholder="Enter father's name" /></div>
-                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Village/Area</label><input className="input-premium shadow-sm" value={newCustomer.village} onChange={e=>setNewCustomer({...newCustomer, village: e.target.value})} placeholder="Enter residential village" /></div>
-                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Contact Number *</label><input className="input-premium shadow-sm" value={newCustomer.phone} onChange={e=>setNewCustomer({...newCustomer, phone: e.target.value})} placeholder="Enter 10-digit mobile number" /></div>
-                <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Gov ID (Aadhar/Voter)</label><input className="input-premium shadow-sm" value={newCustomer.aadharId} onChange={e=>setNewCustomer({...newCustomer, aadharId: e.target.value})} placeholder="Enter ID number" /></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="sm:col-span-2"><label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Full Name *</label><input className="w-full border border-slate-300 px-3 py-2 text-slate-900 rounded-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900 focus:outline-none" value={newCustomer.customerName} onChange={e=>setNewCustomer({...newCustomer, customerName: e.target.value})} placeholder="Legal Full Name" /></div>
+                <div><label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Father's Name</label><input className="w-full border border-slate-300 px-3 py-2 text-slate-900 rounded-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900 focus:outline-none" value={newCustomer.fathersName} onChange={e=>setNewCustomer({...newCustomer, fathersName: e.target.value})} placeholder="Father's Name" /></div>
+                <div><label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Village / Area</label><input className="w-full border border-slate-300 px-3 py-2 text-slate-900 rounded-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900 focus:outline-none" value={newCustomer.village} onChange={e=>setNewCustomer({...newCustomer, village: e.target.value})} placeholder="Residential Village" /></div>
+                <div><label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Contact Number *</label><input className="w-full border border-slate-300 px-3 py-2 text-slate-900 rounded-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900 focus:outline-none font-mono" value={newCustomer.phone} onChange={e=>setNewCustomer({...newCustomer, phone: e.target.value})} placeholder="10-digit Mobile" /></div>
+                <div><label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Gov ID Number</label><input className="w-full border border-slate-300 px-3 py-2 text-slate-900 rounded-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900 focus:outline-none font-mono" value={newCustomer.aadharId} onChange={e=>setNewCustomer({...newCustomer, aadharId: e.target.value})} placeholder="Aadhar or Voter ID" /></div>
               </div>
             </div>
 
-            <div className="premium-card p-8 md:col-span-2 flex flex-col items-center justify-center shadow-lg border-0 relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-brand"></div>
-              <h2 className="text-xl font-bold text-gray-800 mb-8 pb-4 border-b border-gray-100 w-full text-center">Official Photograph</h2>
+            <div className="bg-white border border-slate-300 p-8 md:col-span-2 flex flex-col items-center shadow-sm rounded-sm">
+              <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-6 pb-2 border-b border-slate-200 w-full text-center">
+                2. Official Biometric Record
+              </h2>
               
-              <div className="w-56 h-56 rounded-full ring-8 ring-blue-50 bg-gray-50 flex items-center justify-center overflow-hidden mb-8 shadow-inner">
+              <div className="w-48 h-48 border-2 border-dashed border-slate-300 bg-slate-50 flex items-center justify-center overflow-hidden mb-6 rounded-sm">
                 {capturedImageBase64 ? (
                   <img src={capturedImageBase64} alt="Captured" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="flex flex-col items-center text-gray-400">
-                    <svg className="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                    <span className="text-sm font-medium">No Photo</span>
+                  <div className="flex flex-col items-center text-slate-400">
+                    <svg className="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    <span className="text-xs font-bold uppercase tracking-wider mt-2">Awaiting Capture</span>
                   </div>
                 )}
               </div>
               
-              <label className="btn text-aarthikaBlue bg-blue-50 border-2 border-aarthikaBlue hover:bg-aarthikaBlue hover:text-white cursor-pointer flex items-center justify-center gap-2 w-full max-w-[240px] shadow-sm font-semibold transition-all">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
-                Open Camera
+              <label className="bg-slate-100 text-slate-900 border border-slate-300 hover:bg-slate-200 cursor-pointer flex items-center justify-center gap-2 w-full max-w-[240px] px-4 py-3 font-bold uppercase tracking-wider text-xs rounded-sm transition-colors shadow-sm">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
+                Launch Device Camera
                 <input 
                   type="file" 
                   accept="image/*" 
@@ -351,16 +349,16 @@ export default function SearchGrid() {
                 />
               </label>
               
-              {biometricStatus && <div className="text-aarthikaBlue font-semibold mt-6 text-sm bg-blue-50 py-2 px-4 rounded-full border border-blue-100">{biometricStatus}</div>}
+              {biometricStatus && <div className="text-slate-800 font-bold mt-4 text-xs uppercase tracking-wider bg-slate-100 py-2 px-4 border border-slate-300 rounded-sm w-full text-center">{biometricStatus}</div>}
             </div>
           </div>
 
-          <div className="mt-10 text-center">
-            <button className="btn btn-primary text-lg py-4 px-12 shadow-lg shadow-aarthikaBlue/30 hover:-translate-y-1 transform transition-all flex items-center justify-center gap-3 mx-auto w-full md:w-auto" onClick={submitNewAccount} disabled={createLoading}>
+          <div className="mt-8 text-right border-t border-slate-300 pt-6">
+            <button className="bg-slate-900 text-white text-sm font-bold uppercase tracking-widest py-4 px-10 rounded-sm hover:bg-slate-800 transition-colors shadow-sm inline-flex items-center justify-center gap-3 w-full md:w-auto" onClick={submitNewAccount} disabled={createLoading}>
               {createLoading ? (
-                 <><svg className="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating PDF...</>
+                 <><svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processing Application...</>
               ) : (
-                <><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Submit Application</>
+                <><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Submit & Issue Passbook</>
               )}
             </button>
           </div>
@@ -443,161 +441,148 @@ export default function SearchGrid() {
 
   // --- RENDER SCREEN 2: LEDGER ---
   return (
-    <div className="bg-gray-50 min-h-screen py-10 font-sans">
-      <div className="premium-container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <button onClick={() => setView('SEARCH')} className="text-gray-500 hover:text-gray-800 mb-6 flex items-center gap-2 font-semibold transition-colors">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-          Back to Customer List
+    <div className="bg-slate-50 min-h-screen py-10 font-sans text-slate-900">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <button onClick={() => setView('SEARCH')} className="text-slate-600 hover:text-slate-900 mb-6 flex items-center gap-2 font-bold uppercase tracking-wider text-xs transition-colors">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+          Back to Ledger Search
         </button>
 
         {/* Customer Profile Header */}
-        <div className="premium-card p-8 mb-8 flex flex-col md:flex-row items-center gap-8 shadow-lg border-0 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-2 h-full bg-gradient-brand"></div>
-          
-          <div className="flex-shrink-0 relative">
-            {selectedCustomer?.photoLink ? (
-              <img 
-                src={selectedCustomer.photoLink} 
-                alt="Profile" 
-                className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover ring-4 ring-aarthikaBlue/10 shadow-md"
-              />
-            ) : (
-              <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 ring-4 ring-gray-50">
-                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-              </div>
-            )}
+        <div className="bg-white border-t-4 border-slate-900 border-x border-b border-slate-300 mb-8 rounded-sm shadow-sm">
+          <div className="px-8 py-5 border-b border-slate-200 bg-slate-100 flex items-center justify-between">
+            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest">Master Profile Record</h2>
+            <span className="text-xs font-mono font-bold bg-slate-900 text-white px-3 py-1 rounded-sm">
+              ACC: {selectedCustomer?.accountNumber}
+            </span>
           </div>
           
-          <div className="flex-1 w-full">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6 pb-4 border-b border-gray-100 flex items-center justify-between">
-              Customer Profile
-              <span className="text-sm font-semibold bg-blue-50 text-aarthikaBlue px-3 py-1 rounded-md border border-blue-100">
-                {selectedCustomer?.accountNumber}
-              </span>
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-5 gap-x-8 text-sm">
-              <div><span className="text-gray-500 block mb-1 font-medium">Full Name</span><strong className="text-gray-800 text-base">{selectedCustomer?.customerName}</strong></div>
-              <div><span className="text-gray-500 block mb-1 font-medium">Father's Name</span><strong className="text-gray-800 text-base">{selectedCustomer?.fathersName || '-'}</strong></div>
-              <div><span className="text-gray-500 block mb-1 font-medium">Village/Area</span><strong className="text-gray-800 text-base">{selectedCustomer?.village || '-'}</strong></div>
-              <div><span className="text-gray-500 block mb-1 font-medium">Phone Number</span><strong className="text-gray-800 text-base">{selectedCustomer?.phone || '-'}</strong></div>
+          <div className="flex flex-col md:flex-row items-center p-8 gap-8">
+            <div className="flex-shrink-0">
+              {selectedCustomer?.photoLink ? (
+                <img 
+                  src={selectedCustomer.photoLink} 
+                  alt="Profile" 
+                  className="w-32 h-32 object-cover border-2 border-slate-300 rounded-sm"
+                />
+              ) : (
+                <div className="w-32 h-32 border-2 border-dashed border-slate-300 bg-slate-50 flex items-center justify-center text-slate-400 rounded-sm">
+                  <span className="text-xs font-bold uppercase tracking-wider">No Image</span>
+                </div>
+              )}
             </div>
-          </div>
-          
-          <div className="w-full md:w-auto text-center md:text-right mt-6 md:mt-0 md:border-l border-gray-100 md:pl-10 md:py-4">
-            <div className="text-gray-500 font-semibold mb-2 uppercase text-xs tracking-wider">Current Net Balance</div>
-            <div className="text-4xl md:text-5xl font-extrabold text-aarthikaBlue tracking-tight">₹{netBalance}</div>
+            
+            <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div><span className="text-slate-500 block text-xs uppercase tracking-wider font-bold mb-1.5">Legal Name</span><strong className="text-slate-900 text-base">{selectedCustomer?.customerName}</strong></div>
+              <div><span className="text-slate-500 block text-xs uppercase tracking-wider font-bold mb-1.5">Father's Name</span><strong className="text-slate-900 text-base">{selectedCustomer?.fathersName || '-'}</strong></div>
+              <div><span className="text-slate-500 block text-xs uppercase tracking-wider font-bold mb-1.5">Registered Address</span><strong className="text-slate-900 text-base">{selectedCustomer?.village || '-'}</strong></div>
+              <div><span className="text-slate-500 block text-xs uppercase tracking-wider font-bold mb-1.5">Contact Mobile</span><strong className="text-slate-900 text-base font-mono">{selectedCustomer?.phone || '-'}</strong></div>
+            </div>
+            
+            <div className="w-full md:w-auto text-center md:text-right mt-6 md:mt-0 md:border-l border-slate-200 md:pl-10">
+              <div className="text-slate-500 font-bold mb-2 uppercase text-xs tracking-widest">Active Balance</div>
+              <div className="text-4xl font-extrabold text-slate-900 font-mono tracking-tight">₹{netBalance}</div>
+            </div>
           </div>
         </div>
 
         {/* Transaction Controls */}
-        <div className="grid md:grid-cols-2 gap-8 mb-8">
-          <div className="premium-card p-8 bg-green-50/30 border border-green-100 shadow-sm hover:shadow-md transition-shadow">
-            <h3 className="text-xl font-bold text-green-800 mb-6 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
-              </div>
-              Deposit Cash
-            </h3>
-            <div className="flex flex-col gap-5">
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500 font-bold text-lg">₹</span>
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white border border-slate-300 border-l-4 border-l-slate-800 p-6 rounded-sm shadow-sm flex flex-col justify-between">
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-5 border-b border-slate-200 pb-2">Record Deposit</h3>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-500 font-bold font-mono text-lg">₹</span>
                 <input 
                   type="number" 
-                  className="input-premium pl-10 text-lg py-3 shadow-sm focus:ring-green-500/20 focus:border-green-500 w-full" 
+                  className="w-full border border-slate-300 pl-10 pr-3 py-3 text-slate-900 rounded-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900 outline-none font-mono text-lg" 
                   value={depositAmount}
                   onChange={e => setDepositAmount(e.target.value)}
                   placeholder="Amount" 
                 />
               </div>
               <button 
-                className="btn bg-green-600 text-white font-semibold text-lg hover:bg-green-700 hover:shadow-lg shadow-green-600/30 transition-all flex items-center justify-center py-3" 
+                className="bg-slate-900 text-white font-bold uppercase tracking-widest text-xs px-8 py-3 rounded-sm hover:bg-slate-800 transition-colors whitespace-nowrap" 
                 onClick={() => handleTransaction('DEPOSIT')}
                 disabled={transactionLoading}
               >
-                {transactionLoading ? 'Processing...' : 'Execute Deposit'}
+                {transactionLoading ? 'Wait...' : 'Execute'}
               </button>
             </div>
           </div>
 
-          <div className="premium-card p-8 bg-orange-50/30 border border-orange-100 shadow-sm hover:shadow-md transition-shadow">
-            <h3 className="text-xl font-bold text-orange-800 mb-6 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
-                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-              </div>
-              Withdraw Cash
-            </h3>
-            <div className="flex flex-col gap-5">
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500 font-bold text-lg">₹</span>
+          <div className="bg-white border border-slate-300 border-l-4 border-l-slate-400 p-6 rounded-sm shadow-sm flex flex-col justify-between">
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-5 border-b border-slate-200 pb-2">Process Withdrawal</h3>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-500 font-bold font-mono text-lg">₹</span>
                 <input 
                   type="number" 
-                  className="input-premium pl-10 text-lg py-3 shadow-sm focus:ring-orange-500/20 focus:border-orange-500 w-full" 
+                  className="w-full border border-slate-300 pl-10 pr-3 py-3 text-slate-900 rounded-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900 outline-none font-mono text-lg" 
                   value={withdrawAmount}
                   onChange={e => setWithdrawAmount(e.target.value)}
                   placeholder="Amount" 
                 />
               </div>
               <button 
-                className="btn bg-orange-600 text-white font-semibold text-lg hover:bg-orange-700 hover:shadow-lg shadow-orange-600/30 transition-all flex items-center justify-center py-3" 
+                className="bg-slate-600 text-white font-bold uppercase tracking-widest text-xs px-8 py-3 rounded-sm hover:bg-slate-700 transition-colors whitespace-nowrap" 
                 onClick={() => handleTransaction('WITHDRAWAL')}
                 disabled={transactionLoading}
               >
-                {transactionLoading ? 'Processing...' : 'Execute Withdrawal'}
+                {transactionLoading ? 'Wait...' : 'Execute'}
               </button>
             </div>
           </div>
         </div>
 
         {transactionMsg.text && (
-          <div className={`p-4 rounded-xl mb-8 font-semibold text-center shadow-sm border ${transactionMsg.type === 'error' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
+          <div className={`p-4 rounded-sm mb-8 font-bold uppercase tracking-wider text-xs text-center shadow-sm border ${transactionMsg.type === 'error' ? 'bg-red-50 text-red-900 border-red-300' : 'bg-green-50 text-green-900 border-green-300'}`}>
             {transactionMsg.text}
           </div>
         )}
 
         {/* Ledger History */}
-        <div className="premium-card overflow-hidden shadow-lg border-0">
-          <div className="bg-gray-50 px-8 py-5 border-b border-gray-200 flex items-center gap-3">
-            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-            <h3 className="text-xl font-bold text-gray-800 tracking-tight">Transaction Ledger History</h3>
+        <div className="bg-white border border-slate-300 rounded-sm shadow-sm overflow-hidden">
+          <div className="bg-slate-100 px-6 py-4 border-b border-slate-300 flex items-center gap-3">
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest">Statement of Operations</h3>
           </div>
           
           {ledgerLoading ? (
-            <div className="p-12 text-center text-gray-500 flex items-center justify-center gap-3 font-medium"><svg className="animate-spin h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Loading records...</div>
+            <div className="p-10 text-center text-slate-600 font-bold uppercase tracking-wider text-sm flex items-center justify-center gap-3">
+              <svg className="animate-spin h-5 w-5 text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Loading Audit Trail...
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse whitespace-nowrap">
                 <thead>
-                  <tr className="bg-white border-b border-gray-100">
-                    <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Date & Time</th>
-                    <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Transaction Type</th>
-                    <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Amount (₹)</th>
-                    <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Net Balance (₹)</th>
-                    <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Status</th>
+                  <tr className="bg-slate-50 border-b-2 border-slate-300">
+                    <th className="py-3 px-6 font-bold text-slate-700 text-xs uppercase tracking-widest border-r border-slate-200">Timestamp</th>
+                    <th className="py-3 px-6 font-bold text-slate-700 text-xs uppercase tracking-widest border-r border-slate-200">Type</th>
+                    <th className="py-3 px-6 font-bold text-slate-700 text-xs uppercase tracking-widest border-r border-slate-200">Amount (₹)</th>
+                    <th className="py-3 px-6 font-bold text-slate-700 text-xs uppercase tracking-widest border-r border-slate-200">Running Balance (₹)</th>
+                    <th className="py-3 px-6 font-bold text-slate-700 text-xs uppercase tracking-widest">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-slate-200">
                   {ledger.map((row) => (
-                    <tr key={row.id} className="hover:bg-gray-50/80 transition-colors">
-                      <td className="py-5 px-8 text-gray-600 font-medium">{row.timestamp}</td>
-                      <td className="py-5 px-8">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-wide ${row.type === 'DEPOSIT' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
+                    <tr key={row.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="py-3 px-6 font-mono text-xs text-slate-600 border-r border-slate-200">{row.timestamp}</td>
+                      <td className="py-3 px-6 border-r border-slate-200">
+                        <span className={`inline-block px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest border rounded-sm ${row.type === 'DEPOSIT' ? 'text-slate-900 border-slate-900 bg-slate-100' : 'text-slate-600 border-slate-400 bg-white'}`}>
                           {row.type}
                         </span>
                       </td>
-                      <td className={`py-5 px-8 font-bold text-lg ${row.type === 'DEPOSIT' ? 'text-green-600' : 'text-orange-600'}`}>
+                      <td className="py-3 px-6 font-mono font-bold text-sm text-slate-900 border-r border-slate-200">
                         {row.type === 'DEPOSIT' ? '+' : '-'}{row.amount}
                       </td>
-                      <td className="py-5 px-8 font-bold text-gray-800 text-lg">{row.runningBalance}</td>
-                      <td className="py-5 px-8"><span className="text-xs font-bold tracking-wide uppercase bg-gray-100 text-gray-600 px-3 py-1.5 rounded-md border border-gray-200">{row.status}</span></td>
+                      <td className="py-3 px-6 font-mono font-bold text-slate-900 text-sm border-r border-slate-200">{row.runningBalance}</td>
+                      <td className="py-3 px-6 font-bold uppercase tracking-widest text-[10px] text-slate-600">{row.status}</td>
                     </tr>
                   ))}
                   {ledger.length === 0 && (
                     <tr>
-                      <td colSpan="5" className="py-16 text-center text-gray-500 font-medium text-lg">
-                        <div className="flex flex-col items-center justify-center text-gray-400">
-                          <svg className="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                          No transactions found for this account.
-                        </div>
+                      <td colSpan="5" className="py-16 text-center text-slate-500 font-bold uppercase tracking-wider text-xs">
+                        No transactions registered on ledger.
                       </td>
                     </tr>
                   )}
