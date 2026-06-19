@@ -185,6 +185,9 @@ export default function SearchGrid() {
       const tempVideo = document.createElement('video');
       tempVideo.srcObject = mediaStream;
       tempVideo.autoplay = true;
+      // MUST specify width and height for faceapi to not crash on hidden elements
+      tempVideo.width = 640;
+      tempVideo.height = 480;
       
       tempVideo.onloadedmetadata = async () => {
         setBiometricStatus("SCANNING NEURAL MATRIX...");
@@ -192,7 +195,8 @@ export default function SearchGrid() {
         // Give the camera a second to adjust light
         await new Promise(r => setTimeout(r, 1000));
         
-        const detection = await window.faceapi.detectSingleFace(tempVideo)
+        const options = new window.faceapi.SsdMobilenetv1Options({ minConfidence: 0.2 });
+        const detection = await window.faceapi.detectSingleFace(tempVideo, options)
                                   .withFaceLandmarks()
                                   .withFaceDescriptor();
                                   
@@ -200,7 +204,7 @@ export default function SearchGrid() {
         
         if (!detection) {
           setBiometricStatus("");
-          alert("No face detected in frame. Please try again.");
+          alert("No face detected in frame. Please try again in better lighting.");
           return;
         }
 
@@ -257,20 +261,22 @@ export default function SearchGrid() {
     
     setBiometricStatus("PROCESSING STRUCTURAL VECTOR...");
     try {
-      const detection = await window.faceapi.detectSingleFace(videoRef.current)
+      // Lower confidence threshold to ensure detection in poor lighting
+      const options = new window.faceapi.SsdMobilenetv1Options({ minConfidence: 0.2 });
+      const detection = await window.faceapi.detectSingleFace(videoRef.current, options)
                                 .withFaceLandmarks()
                                 .withFaceDescriptor();
       if (!detection) {
         setBiometricStatus("");
-        return alert("Face not clearly detected. Please face the camera directly.");
+        return alert("Face not clearly detected. Please face the camera directly and ensure good lighting.");
       }
 
       // Extract image base64 for PDF
       const canvas = document.createElement('canvas');
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      canvas.getContext('2d').drawImage(videoRef.current, 0, 0);
-      setCapturedImageBase64(canvas.toDataURL('image/jpeg'));
+      canvas.width = videoRef.current.videoWidth || 640;
+      canvas.height = videoRef.current.videoHeight || 480;
+      canvas.getContext('2d').drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+      setCapturedImageBase64(canvas.toDataURL('image/jpeg', 0.8));
       
       const vectorStr = Array.from(detection.descriptor).join(',');
       setCapturedVector(vectorStr);
@@ -278,7 +284,7 @@ export default function SearchGrid() {
       
     } catch (err) {
       console.error(err);
-      setBiometricStatus("ERROR COMPUTING VECTOR.");
+      setBiometricStatus(`ERROR COMPUTING VECTOR: ${err.message}`);
     }
   };
 
