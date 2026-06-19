@@ -324,71 +324,71 @@ export default function SearchGrid() {
 
         {/* --- HIDDEN PDF TEMPLATE --- */}
         <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
-          <div id="pdf-template" style={{ padding: '10px', fontFamily: '"Courier New", Courier, monospace', color: '#111', backgroundColor: '#fff', width: '277mm', boxSizing: 'border-box' }}>
+          <div id="pdf-template" style={{ padding: '8px', fontFamily: '"Courier New", Courier, monospace', color: '#111', backgroundColor: '#fff', width: '277mm', boxSizing: 'border-box' }}>
             {/* Header section */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #111', paddingBottom: '10px', marginBottom: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                <img src="/assets/Aarthika_logo.png" alt="Logo" style={{ height: '50px' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #111', paddingBottom: '6px', marginBottom: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <img src="/assets/Aarthika_logo.png" alt="Logo" style={{ height: '40px' }} />
                 <div>
-                  <h1 style={{ margin: 0, fontSize: '22px', letterSpacing: '1px' }}>AARTHIKA FINANCE • RURAL BRANCH OPERATIONS & MICROFINANCE</h1>
-                  <p style={{ margin: '3px 0 0 0', fontSize: '13px', fontWeight: 'bold' }}>OFFICIAL ACCOUNT ORIGINATION RECORD</p>
+                  <h1 style={{ margin: 0, fontSize: '18px', letterSpacing: '0.5px' }}>AARTHIKA FINANCE • RURAL BRANCH OPERATIONS & MICROFINANCE</h1>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '11px', fontWeight: 'bold' }}>OFFICIAL ACCOUNT ORIGINATION RECORD</p>
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ display: 'inline-block', padding: '5px 10px', border: '1px solid #111', fontWeight: 'bold', fontSize: '16px' }} id="pdf-acc-no">PENDING</div>
+                <div style={{ display: 'inline-block', padding: '4px 8px', border: '1px solid #111', fontWeight: 'bold', fontSize: '14px' }} id="pdf-acc-no">PENDING</div>
               </div>
             </div>
 
             {/* Applicant Details & Photo */}
-            <div style={{ display: 'flex', gap: '30px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', gap: '20px', marginBottom: '10px' }}>
               <div style={{ flex: 1 }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
                   <tbody>
-                    <tr><td style={{ padding: '8px 4px', borderBottom: '1px solid #ddd', width: '30%', fontWeight: 'bold' }}>Full Name:</td><td style={{ padding: '8px 4px', borderBottom: '1px solid #ddd', fontWeight: 'bold', fontSize: '16px' }}>{newCustomer.customerName}</td></tr>
-                    <tr><td style={{ padding: '8px 4px', borderBottom: '1px solid #ddd', fontWeight: 'bold' }}>Father's Name:</td><td style={{ padding: '8px 4px', borderBottom: '1px solid #ddd' }}>{newCustomer.fathersName}</td></tr>
-                    <tr><td style={{ padding: '8px 4px', borderBottom: '1px solid #ddd', fontWeight: 'bold' }}>Residential Village:</td><td style={{ padding: '8px 4px', borderBottom: '1px solid #ddd' }}>{newCustomer.village}</td></tr>
-                    <tr><td style={{ padding: '8px 4px', borderBottom: '1px solid #ddd', fontWeight: 'bold' }}>Contact Mobile:</td><td style={{ padding: '8px 4px', borderBottom: '1px solid #ddd' }}>+91 {newCustomer.phone}</td></tr>
-                    <tr><td style={{ padding: '8px 4px', borderBottom: '1px solid #ddd', fontWeight: 'bold' }}>Gov. ID (Aadhar/Voter):</td><td style={{ padding: '8px 4px', borderBottom: '1px solid #ddd' }}>{newCustomer.aadharId || 'NOT PROVIDED'}</td></tr>
+                    <tr><td style={{ padding: '6px 4px', borderBottom: '1px solid #ddd', width: '30%', fontWeight: 'bold' }}>Full Name:</td><td style={{ padding: '6px 4px', borderBottom: '1px solid #ddd', fontWeight: 'bold', fontSize: '14px' }}>{newCustomer.customerName}</td></tr>
+                    <tr><td style={{ padding: '6px 4px', borderBottom: '1px solid #ddd', fontWeight: 'bold' }}>Father's Name:</td><td style={{ padding: '6px 4px', borderBottom: '1px solid #ddd' }}>{newCustomer.fathersName}</td></tr>
+                    <tr><td style={{ padding: '6px 4px', borderBottom: '1px solid #ddd', fontWeight: 'bold' }}>Residential Village:</td><td style={{ padding: '6px 4px', borderBottom: '1px solid #ddd' }}>{newCustomer.village}</td></tr>
+                    <tr><td style={{ padding: '6px 4px', borderBottom: '1px solid #ddd', fontWeight: 'bold' }}>Contact Mobile:</td><td style={{ padding: '6px 4px', borderBottom: '1px solid #ddd' }}>+91 {newCustomer.phone}</td></tr>
+                    <tr><td style={{ padding: '6px 4px', borderBottom: '1px solid #ddd', fontWeight: 'bold' }}>Gov. ID (Aadhar/Voter):</td><td style={{ padding: '6px 4px', borderBottom: '1px solid #ddd' }}>{newCustomer.aadharId || 'NOT PROVIDED'}</td></tr>
                   </tbody>
                 </table>
               </div>
               
               <div>
-                <div style={{ border: '2px solid #00ff41', width: '150px', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8fafc', overflow: 'hidden' }}>
+                <div style={{ border: '2px solid #00ff41', width: '120px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8fafc', overflow: 'hidden' }}>
                   {capturedImageBase64 ? (
-                    <img src={capturedImageBase64} alt="Captured" style={{ width: '150px', height: '150px', objectFit: 'cover' }} />
-                  ) : <span style={{fontSize: '12px', color: '#94a3b8'}}>No Photo</span>}
+                    <img src={capturedImageBase64} alt="Captured" style={{ width: '120px', height: '120px', objectFit: 'cover' }} />
+                  ) : <span style={{fontSize: '10px', color: '#94a3b8'}}>No Photo</span>}
                 </div>
-                <div style={{ textAlign: 'center', fontSize: '10px', marginTop: '6px', fontWeight: 'bold' }}>BIOMETRIC VERIFICATION SECURED</div>
+                <div style={{ textAlign: 'center', fontSize: '9px', marginTop: '4px', fontWeight: 'bold' }}>BIOMETRIC VERIFICATION SECURED</div>
               </div>
             </div>
 
-            <div style={{ borderTop: '1px solid #111', marginBottom: '15px' }}></div>
+            <div style={{ borderTop: '1px solid #111', marginBottom: '8px' }}></div>
 
             {/* Formal Terms & Conditions */}
-            <div style={{ fontSize: '11px', color: '#111', lineHeight: '1.4', textAlign: 'justify' }}>
-              <div style={{ marginBottom: '6px' }}><strong>1. ACCOUNT VALIDITY & SECURED OPERATION:</strong> This document serves as the official registration record for account origination under Aarthika Finance Rural Branch Operations. All active ledgers are backed exclusively by deposited asset values or evaluated gold/silver collateral vectors held under branch custody.</div>
-              <div style={{ marginBottom: '6px' }}><strong>2. TRANSACTIONS & PASSBOOK ACCOUNTABILITY:</strong> Deposits and withdrawals must be authenticated in person at the portal terminal via direct text lookup or matching face biometric verification metrics. Every transaction will generate an immediate running balance update logged directly into the immutable centralized master ledger sheet.</div>
-              <div style={{ marginBottom: '6px' }}><strong>3. OVERDRAFT SHIELDING & LIQUIDATION BOUNDARIES:</strong> The ledger system enforces strict zero-overdraft boundaries. Withdrawal requests exceeding the current net balance will be automatically restricted and denied by the server terminal routing system.</div>
+            <div style={{ fontSize: '10px', color: '#111', lineHeight: '1.3', textAlign: 'justify' }}>
+              <div style={{ marginBottom: '4px' }}><strong>1. ACCOUNT VALIDITY & SECURED OPERATION:</strong> This document serves as the official registration record for account origination under Aarthika Finance Rural Branch Operations. All active ledgers are backed exclusively by deposited asset values or evaluated gold/silver collateral vectors held under branch custody.</div>
+              <div style={{ marginBottom: '4px' }}><strong>2. TRANSACTIONS & PASSBOOK ACCOUNTABILITY:</strong> Deposits and withdrawals must be authenticated in person at the portal terminal via direct text lookup or matching face biometric verification metrics. Every transaction will generate an immediate running balance update logged directly into the immutable centralized master ledger sheet.</div>
+              <div style={{ marginBottom: '4px' }}><strong>3. OVERDRAFT SHIELDING & LIQUIDATION BOUNDARIES:</strong> The ledger system enforces strict zero-overdraft boundaries. Withdrawal requests exceeding the current net balance will be automatically restricted and denied by the server terminal routing system.</div>
               <div><strong>4. AUDIT & ASSET CUSTODY RIGOR:</strong> Aarthika Finance retains absolute authority to freeze, audit, or review ledger operations if irregular transaction histories or unauthorized profile anomalies are captured. Collateral liquidations follow regulatory micro-lending guidelines.</div>
             </div>
 
-            <div style={{ borderTop: '1px solid #111', marginTop: '15px', marginBottom: '30px' }}></div>
+            <div style={{ borderTop: '1px solid #111', marginTop: '10px', marginBottom: '20px' }}></div>
 
             {/* Signatures */}
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 40px' }}>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ borderBottom: '1px solid #111', width: '220px', height: '30px' }}></div>
-                <div style={{ marginTop: '8px', fontSize: '12px', fontWeight: 'bold' }}>Applicant Signature / Thumbprint</div>
+                <div style={{ borderBottom: '1px solid #111', width: '200px', height: '20px' }}></div>
+                <div style={{ marginTop: '6px', fontSize: '10px', fontWeight: 'bold' }}>Applicant Signature / Thumbprint</div>
               </div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ borderBottom: '1px solid #111', width: '220px', height: '30px' }}></div>
-                <div style={{ marginTop: '8px', fontSize: '12px', fontWeight: 'bold' }}>Branch Manager Authorization</div>
+                <div style={{ borderBottom: '1px solid #111', width: '200px', height: '20px' }}></div>
+                <div style={{ marginTop: '6px', fontSize: '10px', fontWeight: 'bold' }}>Branch Manager Authorization</div>
               </div>
             </div>
 
             {/* Footer */}
-            <div style={{ marginTop: '30px', textAlign: 'center', fontSize: '10px', color: '#555' }}>
+            <div style={{ marginTop: '15px', textAlign: 'center', fontSize: '9px', color: '#555' }}>
               Generated Timestamp: {new Date().toLocaleString()} | Aarthika Financial Services - Secure Ledger System
             </div>
           </div>
