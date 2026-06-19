@@ -11,8 +11,6 @@ export default function SearchGrid() {
 
   // Biometrics State
   const [modelsLoaded, setModelsLoaded] = useState(false);
-  // Camera State
-  const [capturedImageBase64, setCapturedImageBase64] = useState('');
 
   // Ledger state
   const [selectedCustomer, setSelectedCustomer] = useState(null);
