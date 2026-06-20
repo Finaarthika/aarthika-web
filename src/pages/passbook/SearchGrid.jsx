@@ -244,9 +244,9 @@ export default function SearchGrid() {
       const pdfBase64Str = await html2pdf().from(pdfElement).set({
         margin: [0, 0, 0, 0],
         filename: `Aarthika_TX_${new Date().getTime()}.pdf`,
-        image: { type: 'jpeg', quality: 0.7 },
-        html2canvas: { scale: 1.5, useCORS: true, logging: false },
-        jsPDF: { unit: 'px', format: [1122, 793], orientation: 'landscape' }
+        image: { type: 'jpeg', quality: 0.65 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'px', format: [1122, 793], orientation: 'landscape', compress: true }
       }).toPdf().output('datauristring');
       
       const cleanPdfBase64 = pdfBase64Str.split(',')[1];
@@ -1076,87 +1076,108 @@ export default function SearchGrid() {
         </div>
       )}
 
-      {/* Hidden PDF Template for Transactions */}
+      {/* Hidden PDF Template for Transactions (Hyper-Modern Fintech Design) */}
       <div className="fixed top-[-9999px] left-[-9999px] pointer-events-none z-[-1]">
-        <div id="tx-pdf-template" className="bg-white text-gray-900 flex font-sans box-border relative overflow-hidden" style={{ width: '1122px', height: '793px', padding: '40px' }}>
+        <div id="tx-pdf-template" className="bg-white text-gray-900 flex flex-col box-border font-sans relative" style={{ width: '1122px', height: '793px', padding: '0' }}>
           
-          {/* Subtle Background Accents */}
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-50 rounded-bl-full opacity-40 z-0"></div>
-          <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-gray-50 rounded-tr-full opacity-40 z-0"></div>
-
-          {/* Left Column - All Details */}
-          <div className="w-[600px] h-full flex flex-col pr-8 z-10 relative">
+          {/* Minimalist Brand Strip */}
+          <div className="w-full h-[6px] bg-gradient-to-r from-blue-600 via-indigo-500 to-blue-400"></div>
+          
+          <div className="flex-1 flex px-14 py-12 w-full h-full gap-16 box-border">
             
-            {/* Header with Custom Logo */}
-            <div className="flex items-center gap-5 mb-6 pb-6 border-b-2 border-gray-100">
-              <img src={AarthikaLogo} alt="Aarthika Logo" className="w-20 h-20 object-contain" />
-              <div>
-                <h1 className="text-4xl font-extrabold text-gray-800 tracking-tight">Aarthika Finance</h1>
-                <p className="text-gray-500 font-bold tracking-widest text-sm uppercase mt-1">Official Transaction Receipt</p>
-              </div>
-            </div>
-
-            {/* Transaction Type & Stamp */}
-            <div className="flex justify-between items-center mb-8 bg-gray-50 p-5 rounded-xl border border-gray-200">
-              <div>
-                <div className={`text-4xl font-black uppercase tracking-wider ${txType === 'DEPOSIT' ? 'text-green-600' : 'text-orange-600'}`}>
-                  {txType}
-                </div>
-                <div className="text-gray-500 font-mono mt-1 text-sm font-bold">TXN-{new Date().getTime().toString().slice(-6)}</div>
-              </div>
-              <div className="text-right">
-                <div className="text-xs text-gray-500 font-bold uppercase tracking-widest">Date & Time</div>
-                <div className="text-lg font-bold text-gray-800">{new Date().toLocaleString()}</div>
-              </div>
-            </div>
-
-            {/* Customer Information Block */}
-            <div className="mb-8">
-              <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4 border-l-4 border-blue-500 pl-3">Customer Profile</h2>
-              <div className="grid grid-cols-2 gap-y-6 gap-x-8">
-                <div><span className="text-xs text-gray-500 block mb-1 uppercase font-bold">Customer Name</span><strong className="text-xl text-gray-800">{selectedCustomer?.customerName}</strong></div>
-                <div><span className="text-xs text-gray-500 block mb-1 uppercase font-bold">Account Number</span><strong className="text-xl text-blue-700 font-mono">{selectedCustomer?.accountNumber}</strong></div>
-                <div><span className="text-xs text-gray-500 block mb-1 uppercase font-bold">Father's Name</span><strong className="text-lg text-gray-800">{selectedCustomer?.fathersName || 'N/A'}</strong></div>
-                <div><span className="text-xs text-gray-500 block mb-1 uppercase font-bold">Gov ID (Aadhar)</span><strong className="text-lg text-gray-800">{selectedCustomer?.aadharId || 'N/A'}</strong></div>
-                <div><span className="text-xs text-gray-500 block mb-1 uppercase font-bold">Village/Area</span><strong className="text-lg text-gray-800">{selectedCustomer?.village || 'N/A'}</strong></div>
-                <div><span className="text-xs text-gray-500 block mb-1 uppercase font-bold">Contact Number</span><strong className="text-lg text-gray-800">{selectedCustomer?.phone || 'N/A'}</strong></div>
-              </div>
-            </div>
-
-            {/* Financial Details Block */}
-            <div className="mt-auto bg-blue-50 p-6 rounded-2xl border border-blue-200">
-              <h2 className="text-sm font-bold text-blue-400 uppercase tracking-widest mb-4">Financial Details</h2>
-              <div className="flex justify-between items-end">
-                <div>
-                  <span className="text-xs text-blue-500 block mb-2 font-bold uppercase tracking-wider">Payment Method</span>
-                  <strong className="text-2xl text-blue-900 bg-white px-5 py-2 rounded-lg border border-blue-200 inline-block tracking-widest">{txMethod}</strong>
+            {/* LEFT COLUMN - Receipt Data */}
+            <div className="w-[55%] flex flex-col h-full">
+              
+              {/* Brand & Receipt Title */}
+              <div className="flex justify-between items-start mb-12">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-blue-600 text-white rounded-lg flex items-center justify-center font-black text-2xl shadow-sm">ā</div>
+                  <div>
+                    <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight leading-none">aarthikā</h1>
+                    <p className="text-gray-400 font-bold tracking-widest text-[9px] uppercase mt-1">Core Banking System</p>
+                  </div>
                 </div>
                 <div className="text-right">
-                  <span className="text-xs text-blue-500 block mb-1 font-bold uppercase tracking-wider">Transaction Amount</span>
-                  <strong className="text-5xl font-black text-blue-600">₹{parseFloat(txAmount || 0).toFixed(2)}</strong>
+                  <div className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-1">Official Receipt</div>
+                  <div className="text-lg font-mono text-gray-800 font-bold tracking-tight">TXN-{new Date().getTime().toString().slice(-8)}</div>
                 </div>
               </div>
-            </div>
-            
-            <div className="mt-6 text-xs font-bold text-gray-400">
-              Generated by Aarthika Core Banking System • Secure Node HQ-Terminal-01
-            </div>
-          </div>
 
-          {/* Right Column - Explicit Fixed-Height Images to Prevent Cutoffs */}
-          <div className="w-[450px] h-[713px] flex flex-col gap-5 z-10 relative">
-            
-            <div className="w-full bg-white rounded-xl border-4 border-gray-200 overflow-hidden relative shadow-md flex flex-col" style={{ height: '345px' }}>
-              <div className="bg-gray-800 text-white text-[10px] font-bold px-4 py-1.5 uppercase tracking-widest text-center z-20 absolute top-0 w-full">Customer Face Verification</div>
-              <div className="w-full h-full relative bg-gray-50 pt-8">
-                {txPersonImage ? <img src={txPersonImage} className="absolute inset-0 w-full h-full object-contain p-2 mt-4" /> : <div className="absolute inset-0 flex items-center justify-center text-gray-400">No Image Captured</div>}
+              {/* Hero Financial Amount */}
+              <div className="mb-10 pb-10 border-b border-gray-100 flex items-end justify-between">
+                <div>
+                  <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Transaction Amount</div>
+                  <div className="text-6xl font-black text-gray-900 tracking-tighter">₹{parseFloat(txAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                </div>
+                <div className="text-right flex flex-col items-end">
+                  <div className={`px-5 py-2 rounded-full text-xs font-black tracking-widest uppercase mb-3 ${txType === 'DEPOSIT' ? 'bg-green-50 text-green-700' : 'bg-orange-50 text-orange-700'}`}>
+                    {txType}
+                  </div>
+                  <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest bg-gray-50 px-3 py-1 rounded">Method: {txMethod}</div>
+                </div>
+              </div>
+
+              {/* Customer Profile Grid */}
+              <div className="flex-1">
+                <div className="text-[10px] text-blue-500 font-bold uppercase tracking-widest mb-8 border-l-2 border-blue-500 pl-3">Account Details</div>
+                <div className="grid grid-cols-2 gap-y-8 gap-x-12 pl-3">
+                  <div>
+                    <div className="text-[9px] text-gray-400 uppercase font-bold tracking-wider mb-1">Account Number</div>
+                    <div className="text-lg text-blue-700 font-mono font-bold">{selectedCustomer?.accountNumber}</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] text-gray-400 uppercase font-bold tracking-wider mb-1">Customer Name</div>
+                    <div className="text-lg text-gray-900 font-bold">{selectedCustomer?.customerName}</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] text-gray-400 uppercase font-bold tracking-wider mb-1">Father's Name</div>
+                    <div className="text-base text-gray-800 font-medium">{selectedCustomer?.fathersName || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] text-gray-400 uppercase font-bold tracking-wider mb-1">Gov ID (Aadhar)</div>
+                    <div className="text-base text-gray-800 font-medium">{selectedCustomer?.aadharId || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] text-gray-400 uppercase font-bold tracking-wider mb-1">Contact Number</div>
+                    <div className="text-base text-gray-800 font-medium">{selectedCustomer?.phone || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] text-gray-400 uppercase font-bold tracking-wider mb-1">Village / Area</div>
+                    <div className="text-base text-gray-800 font-medium">{selectedCustomer?.village || 'N/A'}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="mt-auto pt-6 border-t border-gray-100 flex justify-between items-center text-[9px] text-gray-400 uppercase tracking-widest font-bold">
+                <div>Authorized by Secure Node HQ-Terminal-01</div>
+                <div>{new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'medium' })}</div>
               </div>
             </div>
-            
-            <div className="w-full bg-white rounded-xl border-4 border-gray-200 overflow-hidden relative shadow-md flex flex-col" style={{ height: '345px' }}>
-              <div className="bg-gray-800 text-white text-[10px] font-bold px-4 py-1.5 uppercase tracking-widest text-center z-20 absolute top-0 w-full">Document / Form Verification</div>
-              <div className="w-full h-full relative bg-gray-50 pt-8">
-                {txFormImage ? <img src={txFormImage} className="absolute inset-0 w-full h-full object-contain p-2 mt-4" /> : <div className="absolute inset-0 flex items-center justify-center text-gray-400">No Form Captured</div>}
+
+            {/* RIGHT COLUMN - Verification Evidence */}
+            <div className="w-[45%] h-full bg-gray-50/50 rounded-3xl border border-gray-100 p-8 flex flex-col relative overflow-hidden shadow-sm">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-blue-50 rounded-bl-full opacity-60 z-0 pointer-events-none"></div>
+              
+              <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-6 relative z-10 flex items-center gap-2">
+                <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                Identity & Form Verification
+              </div>
+
+              <div className="flex-1 flex flex-col gap-6 relative z-10">
+                <div className="flex-1 rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 relative flex flex-col">
+                  <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded text-[9px] font-bold text-gray-700 tracking-widest shadow-sm z-10 uppercase border border-gray-50">Customer Face</div>
+                  <div className="flex-1 relative p-2">
+                    {txPersonImage ? <img src={txPersonImage} className="w-full h-full object-contain rounded-xl" /> : <div className="w-full h-full flex items-center justify-center text-xs text-gray-300">No Image Captured</div>}
+                  </div>
+                </div>
+                
+                <div className="flex-1 rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 relative flex flex-col">
+                  <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded text-[9px] font-bold text-gray-700 tracking-widest shadow-sm z-10 uppercase border border-gray-50">Signed Form</div>
+                  <div className="flex-1 relative p-2">
+                    {txFormImage ? <img src={txFormImage} className="w-full h-full object-contain rounded-xl" /> : <div className="w-full h-full flex items-center justify-center text-xs text-gray-300">No Form Captured</div>}
+                  </div>
+                </div>
               </div>
             </div>
 
