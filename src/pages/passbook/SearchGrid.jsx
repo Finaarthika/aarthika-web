@@ -1076,111 +1076,127 @@ export default function SearchGrid() {
         </div>
       )}
 
-      {/* Hidden PDF Template for Transactions (Hyper-Modern Fintech Design) */}
+      {/* Hidden PDF Template for Transactions (Ultra-Reliable Inline Style Design) */}
       <div className="fixed top-[-9999px] left-[-9999px] pointer-events-none z-[-1]">
-        <div id="tx-pdf-template" className="bg-white text-gray-900 flex flex-col box-border font-sans relative" style={{ width: '1122px', height: '793px', padding: '0' }}>
+        <div id="tx-pdf-template" style={{ width: '1122px', height: '793px', margin: 0, padding: 0, backgroundColor: '#ffffff', fontFamily: 'sans-serif', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           
-          {/* Minimalist Brand Strip */}
-          <div className="w-full h-[6px] bg-gradient-to-r from-blue-600 via-indigo-500 to-blue-400"></div>
-          
-          <div className="flex-1 flex px-14 py-12 w-full h-full gap-16 box-border">
+          {/* TOP HEADER - Inline Styled */}
+          <div style={{ width: '1122px', height: '180px', background: 'linear-gradient(to right, #1e3a8a, #3730a3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 64px', boxSizing: 'border-box', position: 'relative' }}>
             
-            {/* LEFT COLUMN - Receipt Data */}
-            <div className="w-[55%] flex flex-col h-full">
-              
-              {/* Brand & Receipt Title */}
-              <div className="flex justify-between items-start mb-12">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-blue-600 text-white rounded-lg flex items-center justify-center font-black text-2xl shadow-sm">ā</div>
-                  <div>
-                    <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight leading-none">aarthikā</h1>
-                    <p className="text-gray-400 font-bold tracking-widest text-[9px] uppercase mt-1">Core Banking System</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-1">Official Receipt</div>
-                  <div className="text-lg font-mono text-gray-800 font-bold tracking-tight">TXN-{new Date().getTime().toString().slice(-8)}</div>
-                </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '32px', zIndex: 10 }}>
+              <div style={{ width: '96px', height: '96px', backgroundColor: '#ffffff', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+                <img src={AarthikaLogo} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
               </div>
-
-              {/* Hero Financial Amount */}
-              <div className="mb-10 pb-10 border-b border-gray-100 flex items-end justify-between">
-                <div>
-                  <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Transaction Amount</div>
-                  <div className="text-6xl font-black text-gray-900 tracking-tighter">₹{parseFloat(txAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <h1 style={{ fontSize: '48px', fontWeight: 800, color: '#ffffff', margin: '0 0 8px 0', letterSpacing: '-0.025em' }}>Aarthika Finance</h1>
+                <div style={{ backgroundColor: 'rgba(59, 130, 246, 0.3)', padding: '8px 20px', borderRadius: '9999px', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#bfdbfe', border: '1px solid rgba(96, 165, 250, 0.3)', display: 'inline-block' }}>
+                  Official Core Banking Receipt
                 </div>
-                <div className="text-right flex flex-col items-end">
-                  <div className={`px-5 py-2 rounded-full text-xs font-black tracking-widest uppercase mb-3 ${txType === 'DEPOSIT' ? 'bg-green-50 text-green-700' : 'bg-orange-50 text-orange-700'}`}>
-                    {txType}
-                  </div>
-                  <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest bg-gray-50 px-3 py-1 rounded">Method: {txMethod}</div>
-                </div>
-              </div>
-
-              {/* Customer Profile Grid */}
-              <div className="flex-1">
-                <div className="text-[10px] text-blue-500 font-bold uppercase tracking-widest mb-8 border-l-2 border-blue-500 pl-3">Account Details</div>
-                <div className="grid grid-cols-2 gap-y-8 gap-x-12 pl-3">
-                  <div>
-                    <div className="text-[9px] text-gray-400 uppercase font-bold tracking-wider mb-1">Account Number</div>
-                    <div className="text-lg text-blue-700 font-mono font-bold">{selectedCustomer?.accountNumber}</div>
-                  </div>
-                  <div>
-                    <div className="text-[9px] text-gray-400 uppercase font-bold tracking-wider mb-1">Customer Name</div>
-                    <div className="text-lg text-gray-900 font-bold">{selectedCustomer?.customerName}</div>
-                  </div>
-                  <div>
-                    <div className="text-[9px] text-gray-400 uppercase font-bold tracking-wider mb-1">Father's Name</div>
-                    <div className="text-base text-gray-800 font-medium">{selectedCustomer?.fathersName || 'N/A'}</div>
-                  </div>
-                  <div>
-                    <div className="text-[9px] text-gray-400 uppercase font-bold tracking-wider mb-1">Gov ID (Aadhar)</div>
-                    <div className="text-base text-gray-800 font-medium">{selectedCustomer?.aadharId || 'N/A'}</div>
-                  </div>
-                  <div>
-                    <div className="text-[9px] text-gray-400 uppercase font-bold tracking-wider mb-1">Contact Number</div>
-                    <div className="text-base text-gray-800 font-medium">{selectedCustomer?.phone || 'N/A'}</div>
-                  </div>
-                  <div>
-                    <div className="text-[9px] text-gray-400 uppercase font-bold tracking-wider mb-1">Village / Area</div>
-                    <div className="text-base text-gray-800 font-medium">{selectedCustomer?.village || 'N/A'}</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="mt-auto pt-6 border-t border-gray-100 flex justify-between items-center text-[9px] text-gray-400 uppercase tracking-widest font-bold">
-                <div>Authorized by Secure Node HQ-Terminal-01</div>
-                <div>{new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'medium' })}</div>
               </div>
             </div>
+            
+            <div style={{ textAlign: 'right', zIndex: 10, backgroundColor: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div style={{ color: '#bfdbfe', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>Receipt Number</div>
+              <div style={{ fontSize: '30px', fontFamily: 'monospace', fontWeight: 700, color: '#ffffff', letterSpacing: '0.05em' }}>TXN-{new Date().getTime().toString().slice(-8)}</div>
+              <div style={{ fontSize: '12px', fontWeight: 500, color: '#bfdbfe', marginTop: '8px' }}>{new Date().toLocaleString('en-IN', { dateStyle: 'long', timeStyle: 'short' })}</div>
+            </div>
+          </div>
 
-            {/* RIGHT COLUMN - Verification Evidence */}
-            <div className="w-[45%] h-full bg-gray-50/50 rounded-3xl border border-gray-100 p-8 flex flex-col relative overflow-hidden shadow-sm">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-blue-50 rounded-bl-full opacity-60 z-0 pointer-events-none"></div>
+          {/* MAIN CONTENT AREA - Inline Styled */}
+          <div style={{ width: '1122px', height: '581px', padding: '40px 64px', display: 'flex', boxSizing: 'border-box' }}>
+            
+            {/* LEFT: DETAILS */}
+            <div style={{ width: '580px', height: '501px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', paddingRight: '40px' }}>
               
-              <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-6 relative z-10 flex items-center gap-2">
-                <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                Identity & Form Verification
-              </div>
-
-              <div className="flex-1 flex flex-col gap-6 relative z-10">
-                <div className="flex-1 rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 relative flex flex-col">
-                  <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded text-[9px] font-bold text-gray-700 tracking-widest shadow-sm z-10 uppercase border border-gray-50">Customer Face</div>
-                  <div className="flex-1 relative p-2">
-                    {txPersonImage ? <img src={txPersonImage} className="w-full h-full object-contain rounded-xl" /> : <div className="w-full h-full flex items-center justify-center text-xs text-gray-300">No Image Captured</div>}
+              {/* AMOUNT AND TYPE */}
+              <div style={{ backgroundColor: '#f9fafb', borderRadius: '24px', padding: '32px', border: '1px solid #e5e7eb', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: 0, right: 0, width: '12px', height: '100%', backgroundColor: txType === 'DEPOSIT' ? '#22c55e' : '#f97316' }}></div>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                  <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Transaction Amount</div>
+                  <div style={{ padding: '8px 20px', borderRadius: '9999px', fontSize: '12px', fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', backgroundColor: txType === 'DEPOSIT' ? '#dcfce7' : '#ffedd5', color: txType === 'DEPOSIT' ? '#166534' : '#9a3412', border: `1px solid ${txType === 'DEPOSIT' ? '#bbf7d0' : '#fed7aa'}` }}>
+                    {txType}
                   </div>
                 </div>
                 
-                <div className="flex-1 rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 relative flex flex-col">
-                  <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded text-[9px] font-bold text-gray-700 tracking-widest shadow-sm z-10 uppercase border border-gray-50">Signed Form</div>
-                  <div className="flex-1 relative p-2">
-                    {txFormImage ? <img src={txFormImage} className="w-full h-full object-contain rounded-xl" /> : <div className="w-full h-full flex items-center justify-center text-xs text-gray-300">No Form Captured</div>}
+                <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+                  <div style={{ fontSize: '72px', fontWeight: 900, color: '#111827', letterSpacing: '-0.05em', lineHeight: 1 }}>
+                    <span style={{ fontSize: '48px', color: '#9ca3af', marginRight: '8px', fontFamily: 'sans-serif' }}>₹</span>
+                    {parseFloat(txAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '10px', color: '#9ca3af', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>Payment Method</div>
+                    <div style={{ fontSize: '20px', fontWeight: 900, color: '#1e3a8a', backgroundColor: '#dbeafe', padding: '8px 20px', borderRadius: '12px', border: '1px solid #bfdbfe', letterSpacing: '0.1em' }}>{txMethod}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* CUSTOMER DETAILS */}
+              <div style={{ backgroundColor: '#ffffff', borderRadius: '24px', padding: '32px', border: '2px solid #f3f4f6', flex: 1, marginTop: '32px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px', paddingBottom: '16px', borderBottom: '1px solid #f3f4f6' }}>
+                  <div style={{ width: '40px', height: '40px', backgroundColor: '#eff6ff', color: '#2563eb', borderRadius: '9999px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #dbeafe' }}>
+                    <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                  </div>
+                  <h2 style={{ fontSize: '14px', fontWeight: 900, color: '#1f2937', textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>Account Holder Profile</h2>
+                </div>
+                
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '32px 0' }}>
+                  <div style={{ width: '50%' }}>
+                    <div style={{ fontSize: '10px', color: '#9ca3af', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '8px' }}>Account Number</div>
+                    <div style={{ fontSize: '20px', color: '#1d4ed8', fontFamily: 'monospace', fontWeight: 900, backgroundColor: '#eff6ff', border: '1px solid #dbeafe', display: 'inline-block', padding: '4px 16px', borderRadius: '8px' }}>{selectedCustomer?.accountNumber}</div>
+                  </div>
+                  <div style={{ width: '50%' }}>
+                    <div style={{ fontSize: '10px', color: '#9ca3af', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '8px' }}>Customer Name</div>
+                    <div style={{ fontSize: '24px', color: '#111827', fontWeight: 800 }}>{selectedCustomer?.customerName}</div>
+                  </div>
+                  <div style={{ width: '50%' }}>
+                    <div style={{ fontSize: '10px', color: '#9ca3af', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '8px' }}>Father's Name</div>
+                    <div style={{ fontSize: '18px', color: '#1f2937', fontWeight: 700 }}>{selectedCustomer?.fathersName || 'N/A'}</div>
+                  </div>
+                  <div style={{ width: '50%' }}>
+                    <div style={{ fontSize: '10px', color: '#9ca3af', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '8px' }}>Gov ID (Aadhar)</div>
+                    <div style={{ fontSize: '18px', color: '#1f2937', fontWeight: 700 }}>{selectedCustomer?.aadharId || 'N/A'}</div>
+                  </div>
+                  <div style={{ width: '50%' }}>
+                    <div style={{ fontSize: '10px', color: '#9ca3af', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '8px' }}>Contact Number</div>
+                    <div style={{ fontSize: '18px', color: '#1f2937', fontWeight: 700 }}>{selectedCustomer?.phone || 'N/A'}</div>
+                  </div>
+                  <div style={{ width: '50%' }}>
+                    <div style={{ fontSize: '10px', color: '#9ca3af', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '8px' }}>Village / Area</div>
+                    <div style={{ fontSize: '18px', color: '#1f2937', fontWeight: 700 }}>{selectedCustomer?.village || 'N/A'}</div>
                   </div>
                 </div>
               </div>
             </div>
 
+            {/* RIGHT: PHOTOS */}
+            <div style={{ width: '414px', height: '501px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+              <div style={{ backgroundColor: '#ffffff', borderRadius: '24px', border: '4px solid #f3f4f6', overflow: 'hidden', display: 'flex', flexDirection: 'column', width: '100%', height: '234px' }}>
+                <div style={{ backgroundColor: '#111827', color: '#ffffff', fontSize: '10px', fontWeight: 900, padding: '10px 20px', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>Customer Face Capture</span>
+                  <svg style={{ width: '16px', height: '16px', color: '#4ade80' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                </div>
+                <div style={{ width: '100%', height: '190px', backgroundColor: '#f3f4f6', position: 'relative' }}>
+                  {txPersonImage ? <img src={txPersonImage} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#9ca3af' }}>No Image Captured</div>}
+                </div>
+              </div>
+              
+              <div style={{ backgroundColor: '#ffffff', borderRadius: '24px', border: '4px solid #f3f4f6', overflow: 'hidden', display: 'flex', flexDirection: 'column', width: '100%', height: '234px' }}>
+                <div style={{ backgroundColor: '#111827', color: '#ffffff', fontSize: '10px', fontWeight: 900, padding: '10px 20px', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>Signed Form Capture</span>
+                  <svg style={{ width: '16px', height: '16px', color: '#4ade80' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                </div>
+                <div style={{ width: '100%', height: '190px', backgroundColor: '#f3f4f6', position: 'relative' }}>
+                  {txFormImage ? <img src={txFormImage} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#9ca3af' }}>No Form Captured</div>}
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* BOTTOM FOOTER */}
+          <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '32px', backgroundColor: '#1e3a8a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, color: '#bfdbfe', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+            Secured by Aarthika Banking Network • Node ID: HQ-Terminal-01
           </div>
         </div>
       </div>
