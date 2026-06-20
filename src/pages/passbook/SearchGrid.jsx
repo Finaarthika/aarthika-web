@@ -53,12 +53,18 @@ const toTitleCase = (str) => {
 const IN_MEMORY_DB_KEY = 'aarthika_passbook_ledgers';
 
 const getSecurePhotoUrl = (link) => {
-  if (!link) return null;
-  if (link.includes('drive.google.com')) {
-    const idMatch = link.match(/id=([^&]+)/);
-    if (idMatch) return `/api/passbook-image?id=${idMatch[1]}`;
+  try {
+    if (!link) return null;
+    const strLink = String(link);
+    if (strLink.includes('drive.google.com')) {
+      const idMatch = strLink.match(/id=([^&]+)/);
+      if (idMatch && idMatch[1]) return `/api/passbook-image?id=${idMatch[1]}`;
+    }
+    return strLink;
+  } catch (e) {
+    console.error("Photo URL parse error:", e);
+    return null;
   }
-  return link;
 };
 
 export default function SearchGrid() {
