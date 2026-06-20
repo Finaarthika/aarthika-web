@@ -3,7 +3,7 @@ import html2pdf from 'html2pdf.js';
 import logoIcon from '../../assets/4.png';
 import logoTextUrl from '../../assets/Aarthika (1).png';
 
-const StaffHeader = () => (
+const StaffHeader = ({ staffName, onLogout }) => (
   <div className="sticky top-0 z-50 w-full bg-gradient-to-r from-[#0d0d14] via-aarthikaDark to-aarthikaBlue py-3 sm:py-4 px-4 sm:px-8 shadow-2xl border-b border-white/10 overflow-hidden backdrop-blur-md">
     {/* Abstract background glows */}
     <div className="absolute top-0 right-[10%] w-96 h-96 bg-blue-400/10 rounded-full blur-3xl pointer-events-none transform -translate-y-1/2"></div>
@@ -25,10 +25,13 @@ const StaffHeader = () => (
       
       <div className="flex items-center gap-4 sm:gap-6 z-10">
         <div className="flex flex-col items-end hidden sm:flex">
-          <div className="text-white/60 text-xs font-medium tracking-wider uppercase">Secure Node</div>
-          <div className="text-white/90 text-sm font-semibold">HQ-Terminal-01</div>
+          <div className="text-white/60 text-xs font-medium tracking-wider uppercase">Active Staff</div>
+          <div className="text-white/90 text-sm font-semibold">{staffName || 'System'}</div>
         </div>
         <div className="hidden sm:block h-8 w-px bg-white/20"></div>
+        <button onClick={onLogout} className="flex items-center justify-center p-1.5 sm:p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-colors group" title="Secure Logout">
+          <svg className="w-4 h-4 sm:w-5 sm:h-5 text-red-400 group-hover:text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+        </button>
         <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-1.5 sm:py-2 rounded-full backdrop-blur-sm">
           <div className="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -78,6 +81,84 @@ export default function SearchGrid() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const searchInputRef = useRef(null);
+
+  // Authentication State
+  const [staffAuth, setStaffAuth] = useState(() => {
+    const saved = localStorage.getItem('aarthika_staff_auth');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return { loggedIn: false, userId: '', password: '', staffName: '' };
+  });
+
+  const [authError, setAuthError] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+  const [loginForm, setLoginForm] = useState({ userId: '', password: '' });
+
+  // The Sentinel
+  const verifyAuthSentinel = async (currentAuth) => {
+    if (!currentAuth.loggedIn) return false;
+    try {
+      const res = await fetch('/api/passbook-auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentAuth.userId, password: currentAuth.password })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.authorized) {
+        // Access revoked!
+        localStorage.removeItem('aarthika_staff_auth');
+        setStaffAuth({ loggedIn: false, userId: '', password: '', staffName: '' });
+        alert(`SECURITY ALERT: ${data.reason || 'Access Revoked'}. You have been forcibly logged out.`);
+        setView('SEARCH'); // Reset view for when they log back in
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error("Sentinel check failed:", err);
+      return true;
+    }
+  };
+
+  // Run Sentinel on every view change
+  useEffect(() => {
+    if (staffAuth.loggedIn) {
+      verifyAuthSentinel(staffAuth);
+    }
+  }, [view, staffAuth.loggedIn]);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError('');
+    try {
+      const res = await fetch('/api/passbook-auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(loginForm)
+      });
+      const data = await res.json();
+      if (!res.ok || !data.authorized) {
+        setAuthError(data.reason || 'Invalid Credentials');
+      } else {
+        const newAuth = { loggedIn: true, userId: data.userId, password: loginForm.password, staffName: data.staffName };
+        setStaffAuth(newAuth);
+        localStorage.setItem('aarthika_staff_auth', JSON.stringify(newAuth));
+        setLoginForm({ userId: '', password: '' });
+      }
+    } catch (err) {
+      setAuthError('Connection error. Try again.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('aarthika_staff_auth');
+    setStaffAuth({ loggedIn: false, userId: '', password: '', staffName: '' });
+  };
 
   // Global Escape Key Listener for Power Users
   const [zoomedImage, setZoomedImage] = useState(null);
@@ -658,11 +739,71 @@ export default function SearchGrid() {
   };
 
 
+  // --- RENDER SCREEN 0: LOGIN ---
+  if (!staffAuth.loggedIn) {
+    return (
+      <div className="bg-gradient-to-br from-gray-900 via-[#0d0d14] to-aarthikaDark min-h-screen flex items-center justify-center p-4">
+        <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-8 sm:p-12 rounded-3xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in-95 duration-500">
+          <div className="flex flex-col items-center mb-10">
+            <div className="w-20 h-20 bg-white rounded-full p-1 mb-4 shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+              <img src={logoIcon} alt="Aarthika" className="w-full h-full object-cover rounded-full" />
+            </div>
+            <img src={logoTextUrl} alt="Aarthika" className="h-8 object-contain mb-2" style={{ filter: 'brightness(0) invert(1)' }} />
+            <div className="text-blue-300 tracking-[0.3em] text-xs font-bold uppercase opacity-80">Terminal Access</div>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div>
+              <label className="block text-white/80 text-sm font-semibold mb-2">Authorized User ID</label>
+              <input 
+                type="text" 
+                className="w-full bg-black/30 border border-white/10 text-white placeholder-white/30 px-5 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-aarthikaBlue focus:border-transparent transition-all"
+                value={loginForm.userId}
+                onChange={e => setLoginForm({...loginForm, userId: e.target.value})}
+                placeholder="Enter Terminal ID"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-white/80 text-sm font-semibold mb-2">Secure Passkey</label>
+              <input 
+                type="password" 
+                className="w-full bg-black/30 border border-white/10 text-white placeholder-white/30 px-5 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-aarthikaBlue focus:border-transparent transition-all"
+                value={loginForm.password}
+                onChange={e => setLoginForm({...loginForm, password: e.target.value})}
+                placeholder="••••••••"
+                required
+              />
+            </div>
+
+            {authError && <div className="text-red-400 text-sm font-semibold text-center bg-red-400/10 py-2 rounded-lg border border-red-400/20">{authError}</div>}
+
+            <button 
+              type="submit" 
+              disabled={authLoading}
+              className="w-full bg-aarthikaBlue hover:bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-aarthikaBlue/30 transition-all transform hover:-translate-y-1 disabled:opacity-50 disabled:transform-none flex justify-center items-center gap-2"
+            >
+              {authLoading ? (
+                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+              ) : (
+                <><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg> Authenticate</>
+              )}
+            </button>
+          </form>
+          <div className="mt-8 text-center text-white/40 text-xs leading-relaxed">
+            Aarthika Secure Terminal Environment<br/>
+            Unregistered node activity is monitored and restricted.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // --- RENDER SCREEN 1: SEARCH ---
   if (view === 'SEARCH') {
     return (
       <div className="bg-gradient-to-b from-gray-50 to-gray-100/50 min-h-screen font-sans pb-16">
-        <StaffHeader />
+        <StaffHeader staffName={staffAuth.staffName} onLogout={handleLogout} />
         
         <div className="premium-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
           <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
@@ -787,7 +928,7 @@ export default function SearchGrid() {
   if (view === 'CREATE') {
     return (
       <div className="bg-gradient-to-b from-gray-50 to-gray-100/50 min-h-screen font-sans pb-16">
-        <StaffHeader />
+        <StaffHeader staffName={staffAuth.staffName} onLogout={handleLogout} />
         
         <div className="premium-container max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
           <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
@@ -939,7 +1080,7 @@ export default function SearchGrid() {
   // --- RENDER SCREEN 2: LEDGER ---
   return (
     <div className="bg-gradient-to-b from-gray-50 to-gray-100/50 min-h-screen font-sans pb-16">
-      <StaffHeader />
+      <StaffHeader staffName={staffAuth.staffName} onLogout={handleLogout} />
       
       <div className="premium-container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
@@ -1435,7 +1576,7 @@ export default function SearchGrid() {
                  <p className="mb-1"><strong>Name:</strong> {selectedCustomer?.customerName}</p>
                  <p className="mb-1"><strong>Phone:</strong> {selectedCustomer?.phone}</p>
                  <p className="mb-1"><strong>Village:</strong> {selectedCustomer?.village || '-'}</p>
-                 <p><strong>Executed By:</strong> <span className="italic text-gray-400">[STAFF NAME]</span></p>
+                 <p><strong>Executed By:</strong> <span className="font-bold uppercase">{staffAuth.staffName}</span></p>
                </div>
                <div className="border-t border-dashed border-gray-400 py-2 mb-2">
                  <div className="flex justify-between mb-1">
