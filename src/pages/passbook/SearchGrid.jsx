@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2pdf from 'html2pdf.js';
-import * as tf from '@tensorflow/tfjs';
-import * as tflite from '@tensorflow/tfjs-tflite';
 import logoIcon from '../../assets/4.png';
 import logoTextUrl from '../../assets/Aarthika (1).png';
 
@@ -150,8 +148,21 @@ export default function SearchGrid() {
       }
       
       try {
-        tflite.setWasmPath('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/dist/');
-        const tfliteModel = await tflite.loadTFLiteModel('/facenet_512.tflite');
+        if (!window.tf) {
+          const tfScript = document.createElement('script');
+          tfScript.src = 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js';
+          document.body.appendChild(tfScript);
+          await new Promise((resolve) => { tfScript.onload = resolve; });
+        }
+        if (!window.tflite) {
+          const tfliteScript = document.createElement('script');
+          tfliteScript.src = 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/dist/tf-tflite.min.js';
+          document.body.appendChild(tfliteScript);
+          await new Promise((resolve) => { tfliteScript.onload = resolve; });
+        }
+        
+        window.tflite.setWasmPath('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/dist/');
+        const tfliteModel = await window.tflite.loadTFLiteModel('/facenet_512.tflite');
         setCustomFaceNet(tfliteModel);
         setModelsLoaded(true);
       } catch (err) {
@@ -359,8 +370,8 @@ export default function SearchGrid() {
           );
           
           // 3. Extract 512-dimensional vector via TensorFlow
-          let tensor = tf.browser.fromPixels(faceCanvas);
-          tensor = tf.cast(tensor, 'float32').sub(127.5).div(127.5).expandDims(0);
+          let tensor = window.tf.browser.fromPixels(faceCanvas);
+          tensor = window.tf.cast(tensor, 'float32').sub(127.5).div(127.5).expandDims(0);
           const output = customFaceNet.predict(tensor);
           const vectorArray = Array.from(output.dataSync());
           tensor.dispose();
@@ -464,8 +475,8 @@ export default function SearchGrid() {
               0, 0, 160, 160
             );
             
-            let tensor = tf.browser.fromPixels(faceCanvas);
-            tensor = tf.cast(tensor, 'float32').sub(127.5).div(127.5).expandDims(0);
+            let tensor = window.tf.browser.fromPixels(faceCanvas);
+            tensor = window.tf.cast(tensor, 'float32').sub(127.5).div(127.5).expandDims(0);
             const output = customFaceNet.predict(tensor);
             const vectorArray = Array.from(output.dataSync());
             tensor.dispose();
