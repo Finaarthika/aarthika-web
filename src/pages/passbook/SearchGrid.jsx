@@ -76,6 +76,8 @@ export default function SearchGrid() {
   const searchInputRef = useRef(null);
 
   // Global Escape Key Listener for Power Users
+  const [zoomedImage, setZoomedImage] = useState(null);
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
@@ -100,7 +102,6 @@ export default function SearchGrid() {
   // Biometrics State
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [biometricStatus, setBiometricStatus] = useState('');
-  const [zoomedImage, setZoomedImage] = useState(null);
 
   // Ledger state
   const [selectedCustomer, setSelectedCustomer] = useState(null);
