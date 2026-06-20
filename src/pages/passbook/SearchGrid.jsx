@@ -128,6 +128,52 @@ export default function SearchGrid() {
   const [customFaceNet, setCustomFaceNet] = useState(null);
   const [modelLoadingStatus, setModelLoadingStatus] = useState("INITIALIZING SECURE ENGINE...");
 
+  const getCachedModelUrl = async (setStatus) => {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('AarthikaBiometricDB', 1);
+      
+      request.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains('models')) {
+          db.createObjectStore('models');
+        }
+      };
+      
+      request.onsuccess = async (e) => {
+        const db = e.target.result;
+        const transaction = db.transaction(['models'], 'readonly');
+        const store = transaction.objectStore('models');
+        const getReq = store.get('facenet_512');
+        
+        getReq.onsuccess = async () => {
+          if (getReq.result) {
+            setStatus("LOADING BIOMETRIC MODEL FROM INSTANT LOCAL CACHE...");
+            const blob = new Blob([getReq.result], { type: 'application/octet-stream' });
+            resolve(URL.createObjectURL(blob));
+          } else {
+            setStatus("DOWNLOADING 47MB BIOMETRIC MODEL... (MAY TAKE 10-30 SECONDS)");
+            try {
+              const response = await fetch('/facenet_512.tflite');
+              if (!response.ok) throw new Error("Failed to fetch model");
+              const buffer = await response.arrayBuffer();
+              
+              const writeTx = db.transaction(['models'], 'readwrite');
+              const writeStore = writeTx.objectStore('models');
+              writeStore.put(buffer, 'facenet_512');
+              
+              const blob = new Blob([buffer], { type: 'application/octet-stream' });
+              resolve(URL.createObjectURL(blob));
+            } catch (err) {
+              reject(err);
+            }
+          }
+        };
+        getReq.onerror = () => reject(getReq.error);
+      };
+      request.onerror = () => reject(request.error);
+    });
+  };
+
   // --- INIT FACE-API & TFLITE ---
   useEffect(() => {
     const loadScript = async () => {
@@ -171,9 +217,9 @@ export default function SearchGrid() {
           });
         }
         
-        setModelLoadingStatus("DOWNLOADING 47MB BIOMETRIC MODEL... (MAY TAKE 10-30 SECONDS)");
+        const modelUrl = await getCachedModelUrl(setModelLoadingStatus);
         window.tflite.setWasmPath('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/wasm/');
-        const tfliteModel = await window.tflite.loadTFLiteModel('/facenet_512.tflite');
+        const tfliteModel = await window.tflite.loadTFLiteModel(modelUrl);
         setCustomFaceNet(tfliteModel);
         setModelLoadingStatus("MODELS LOADED SUCCESSFULLY");
         setModelsLoaded(true);
@@ -386,13 +432,19 @@ export default function SearchGrid() {
           let tensor = window.tf.browser.fromPixels(faceCanvas);
           tensor = window.tf.cast(tensor, 'float32').sub(127.5).div(127.5).expandDims(0);
           const output = customFaceNet.predict(tensor);
-          const vectorArray = Array.from(output.dataSync());
+          const rawVectorArray = Array.from(output.dataSync());
           tensor.dispose();
           output.dispose();
           
+          // Apply mathematical L2 Normalization to place vector on a unit hypersphere
+          let sumSq = 0;
+          for (let i = 0; i < rawVectorArray.length; i++) sumSq += rawVectorArray[i] * rawVectorArray[i];
+          const magnitude = Math.sqrt(sumSq) || 1;
+          const vectorArray = rawVectorArray.map(val => val / magnitude);
+          
           const liveDescriptor = new Float32Array(vectorArray);
           
-          setBiometricStatus("MATCHING TENSOR IN DATABASE...");
+          setBiometricStatus("MATCHING NORMALIZED TENSOR IN DATABASE...");
           const matchedCustomers = [];
           
           customers.forEach(c => {
@@ -491,9 +543,15 @@ export default function SearchGrid() {
             let tensor = window.tf.browser.fromPixels(faceCanvas);
             tensor = window.tf.cast(tensor, 'float32').sub(127.5).div(127.5).expandDims(0);
             const output = customFaceNet.predict(tensor);
-            const vectorArray = Array.from(output.dataSync());
+            const rawVectorArray = Array.from(output.dataSync());
             tensor.dispose();
             output.dispose();
+            
+            // Apply mathematical L2 Normalization to place vector on a unit hypersphere
+            let sumSq = 0;
+            for (let i = 0; i < rawVectorArray.length; i++) sumSq += rawVectorArray[i] * rawVectorArray[i];
+            const magnitude = Math.sqrt(sumSq) || 1;
+            const vectorArray = rawVectorArray.map(val => val / magnitude);
             
             const vectorStr = vectorArray.join(',');
             setCapturedVector(vectorStr);
