@@ -208,33 +208,31 @@ export default function SearchGrid() {
     }
   };
 
-  const handleTxCameraCapture = (e, setBase64Str) => {
+  const handleTxCameraCapture = async (e, setBase64Str) => {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 1200;
-        const MAX_HEIGHT = 1200;
-        let width = img.width;
-        let height = img.height;
-        if (width > height) {
-          if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-        } else {
-          if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-        }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
-        setBase64Str(compressedBase64);
-      };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
+    try {
+      const bmp = await window.createImageBitmap(file);
+      const MAX_WIDTH = 1200;
+      const MAX_HEIGHT = 1200;
+      let width = bmp.width;
+      let height = bmp.height;
+      if (width > height) {
+        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+      } else {
+        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(bmp, 0, 0, width, height);
+      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+      setBase64Str(compressedBase64);
+    } catch (err) {
+      console.error("Camera Capture Error:", err);
+      alert("Error processing camera image.");
+    }
   };
 
   const openTxModal = (type) => {
@@ -298,76 +296,67 @@ export default function SearchGrid() {
   };
 
   // --- ACCOUNT CREATION ---
-  const handleNativeCameraCapture = (e) => {
+  const handleNativeCameraCapture = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     
     setBiometricStatus("PROCESSING IMAGE...");
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 600;
-        const MAX_HEIGHT = 600;
-        let width = img.width;
-        let height = img.height;
+    try {
+      // Use modern createImageBitmap which natively parses and applies EXIF orientation
+      // and safely scales down massive Android hardware photos before touching canvas
+      const bmp = await window.createImageBitmap(file);
+      const MAX_WIDTH = 600;
+      const MAX_HEIGHT = 600;
+      let width = bmp.width;
+      let height = bmp.height;
 
-        if (width > height) {
-          if (width > MAX_WIDTH) {
-            height *= MAX_WIDTH / width;
-            width = MAX_WIDTH;
-          }
-        } else {
-          if (height > MAX_HEIGHT) {
-            width *= MAX_HEIGHT / height;
-            height = MAX_HEIGHT;
-          }
-        }
+      if (width > height) {
+        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+      } else {
+        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+      }
 
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(bmp, 0, 0, width, height);
+      
+      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+      setCapturedImageBase64(compressedBase64);
+      
+      if (modelsLoaded && window.faceapi) {
+        setBiometricStatus("COMPUTING BIOMETRIC VECTOR...");
         
-        // Compress aggressively: JPEG at 60% quality
-        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
-        setCapturedImageBase64(compressedBase64);
-        
-        if (modelsLoaded && window.faceapi) {
-          setBiometricStatus("COMPUTING BIOMETRIC VECTOR...");
-          
-          // Create a perfectly normalized, clean image object from the compressed canvas output
-          // This bypasses any raw EXIF or detached DOM parsing bugs in face-api.js
-          const normalizedImg = new Image();
-          normalizedImg.onload = () => {
-            const options = new window.faceapi.SsdMobilenetv1Options({ minConfidence: 0.3 });
-            window.faceapi.detectSingleFace(normalizedImg, options)
-              .withFaceLandmarks()
-              .withFaceDescriptor()
-              .then(detection => {
-                if (!detection) {
-                  setBiometricStatus("FACE NOT DETECTED. PLEASE RETRY.");
-                  setCapturedVector('');
-                } else {
-                  const vectorStr = Array.from(detection.descriptor).join(',');
-                  setCapturedVector(vectorStr);
-                  setBiometricStatus("FACE VECTOR LOCKED & SECURED.");
-                }
-              })
-              .catch(err => {
-                console.error(err);
-                setBiometricStatus("ERROR COMPUTING VECTOR.");
-              });
-          };
-          normalizedImg.src = compressedBase64;
-        } else {
-          setBiometricStatus("MODELS NOT LOADED. PLEASE RETRY IN A MOMENT.");
-        }
-      };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
+        const normalizedImg = new Image();
+        normalizedImg.onload = () => {
+          const options = new window.faceapi.SsdMobilenetv1Options({ minConfidence: 0.3 });
+          window.faceapi.detectSingleFace(normalizedImg, options)
+            .withFaceLandmarks()
+            .withFaceDescriptor()
+            .then(detection => {
+              if (!detection) {
+                setBiometricStatus("FACE NOT DETECTED. PLEASE RETRY.");
+                setCapturedVector('');
+              } else {
+                const vectorStr = Array.from(detection.descriptor).join(',');
+                setCapturedVector(vectorStr);
+                setBiometricStatus("FACE VECTOR LOCKED & SECURED.");
+              }
+            })
+            .catch(err => {
+              console.error(err);
+              setBiometricStatus("ERROR COMPUTING VECTOR.");
+            });
+        };
+        normalizedImg.src = compressedBase64;
+      } else {
+        setBiometricStatus("MODELS NOT LOADED. PLEASE RETRY IN A MOMENT.");
+      }
+    } catch (err) {
+      console.error(err);
+      setBiometricStatus("ERROR PROCESSING IMAGE.");
+    }
   };
 
   const submitNewAccount = async () => {
