@@ -115,6 +115,9 @@ export default function SearchGrid() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   
+  // Print state
+  const [printTransaction, setPrintTransaction] = useState(null);
+  
   // Transaction state
   const [depositAmount, setDepositAmount] = useState('');
   const [withdrawAmount, setWithdrawAmount] = useState('');
@@ -1122,7 +1125,9 @@ export default function SearchGrid() {
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                               </button>
                             )}
-                            {!formLink && !personLink && <span className="text-xs text-gray-300">-</span>}
+                            <button onClick={() => setPrintTransaction({ type, method, amount, balance, status, timestamp: row[0], rowId: i })} className="w-8 h-8 rounded bg-gray-50 text-gray-600 border border-gray-200 flex items-center justify-center hover:bg-gray-200 hover:scale-110 transition-all" title="Print Receipt">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                            </button>
                           </div>
                         </td>
                         <td className="py-4 px-8 text-right">
@@ -1340,6 +1345,64 @@ export default function SearchGrid() {
           </div>
         </div>
       )}
+
+      {/* THERMAL RECEIPT MODAL */}
+      {printTransaction && (
+        <div className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm print:bg-white print:p-0">
+          <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden print:w-[80mm] print:shadow-none print:rounded-none">
+            <div className="p-4 bg-gray-50 border-b flex justify-between items-center print:hidden">
+              <h3 className="font-bold text-gray-800">Print Preview (80mm)</h3>
+              <button onClick={() => setPrintTransaction(null)} className="text-gray-500 hover:text-gray-800 transition-colors">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            
+            <div className="print-receipt-container p-6 bg-white text-black font-mono text-sm print:p-0 print:w-[80mm] print:text-xs mx-auto">
+               <div className="text-center mb-4">
+                 <img src={logoIcon} className="w-12 h-12 mx-auto grayscale mb-1" alt="Aarthika" />
+                 <h2 className="font-bold text-lg leading-tight uppercase">Aarthika Bank</h2>
+                 <p className="text-xs text-gray-600">Terminal: HQ-01</p>
+               </div>
+               <div className="border-t border-dashed border-gray-400 py-2 mb-2">
+                 <p className="mb-1"><strong>Date:</strong> {printTransaction.timestamp}</p>
+                 <p className="mb-1"><strong>Name:</strong> {selectedCustomer?.customerName}</p>
+                 <p><strong>Phone:</strong> {selectedCustomer?.phone}</p>
+               </div>
+               <div className="border-t border-dashed border-gray-400 py-2 mb-2">
+                 <div className="flex justify-between mb-1">
+                   <span>Type:</span>
+                   <span className="font-bold">{printTransaction.type} ({printTransaction.method})</span>
+                 </div>
+                 <div className="flex justify-between mb-1">
+                   <span>Amount:</span>
+                   <span className="font-bold">Rs. {printTransaction.amount}</span>
+                 </div>
+                 <div className="flex justify-between">
+                   <span>Status:</span>
+                   <span className="font-bold uppercase">{printTransaction.status}</span>
+                 </div>
+               </div>
+               <div className="border-t-2 border-black py-4 mb-2 text-center bg-gray-50 print:bg-transparent">
+                 <p className="text-xs uppercase font-bold text-gray-500 mb-1">Available Balance</p>
+                 <h1 className="text-2xl font-black">Rs. {printTransaction.balance}</h1>
+               </div>
+               <div className="text-center text-[10px] text-gray-500 mt-6 border-t border-dashed border-gray-400 pt-3">
+                 <p>Thank you for banking with us.</p>
+                 <p>Keep this slip for your records.</p>
+                 <p className="mt-2 text-gray-300">- - - - - - - - - - - - - -</p>
+               </div>
+            </div>
+            
+            <div className="p-4 bg-gray-50 border-t flex gap-2 print:hidden">
+              <button onClick={() => window.print()} className="flex-1 bg-gray-800 text-white font-bold py-3 rounded-xl hover:bg-gray-900 flex items-center justify-center gap-2 shadow-lg transition-all">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                Print to Thermal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
