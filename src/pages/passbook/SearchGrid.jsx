@@ -138,7 +138,7 @@ export default function SearchGrid() {
       try {
         const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
         await Promise.all([
-          window.faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+          window.faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
           window.faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
           window.faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
         ]);
@@ -322,7 +322,7 @@ export default function SearchGrid() {
       
       const normalizedImg = new Image();
       normalizedImg.onload = async () => {
-        const options = new window.faceapi.TinyFaceDetectorOptions({ inputSize: 512, scoreThreshold: 0.2 });
+        const options = new window.faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 });
         try {
           const detection = await window.faceapi.detectSingleFace(normalizedImg, options)
                                     .withFaceLandmarks()
@@ -336,8 +336,7 @@ export default function SearchGrid() {
           
           setBiometricStatus("MATCHING FACE IN DATABASE...");
           const liveDescriptor = detection.descriptor;
-          let minDistance = 0.50; // High accuracy Euclidean threshold
-          let bestMatch = null;
+          const matchedCustomers = [];
           
           customers.forEach(c => {
             if (c.faceVector && c.faceVector.includes(',')) {
@@ -345,20 +344,21 @@ export default function SearchGrid() {
               if (storedArray.length === 128) {
                 const storedDescriptor = new Float32Array(storedArray);
                 const dist = window.faceapi.euclideanDistance(liveDescriptor, storedDescriptor);
-                if (dist < minDistance) {
-                  minDistance = dist;
-                  bestMatch = c;
+                if (dist < 0.60) {
+                  matchedCustomers.push({ ...c, faceDistance: dist });
                 }
               }
             }
           });
           
-          if (bestMatch) {
-            setBiometricStatus(`MATCH FOUND: ${bestMatch.customerName}`);
-            openLedger(bestMatch);
+          if (matchedCustomers.length > 0) {
+            matchedCustomers.sort((a, b) => a.faceDistance - b.faceDistance);
+            setCustomers(matchedCustomers);
+            setBiometricStatus(`FOUND ${matchedCustomers.length} MATCHING PROFILES`);
+            setCurrentPage(1);
           } else {
             setBiometricStatus("");
-            alert("ACCESS DENIED: Face not found in secure database.");
+            alert("No matching profiles found in secure database.");
           }
         } catch (err) {
           console.error(err);
@@ -411,7 +411,7 @@ export default function SearchGrid() {
         
         const normalizedImg = new Image();
         normalizedImg.onload = () => {
-          const options = new window.faceapi.TinyFaceDetectorOptions({ inputSize: 512, scoreThreshold: 0.2 });
+          const options = new window.faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 });
           window.faceapi.detectSingleFace(normalizedImg, options)
             .withFaceLandmarks()
             .withFaceDescriptor()
