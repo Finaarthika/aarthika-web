@@ -21,7 +21,7 @@ export default async (req, res) => {
     const privateKey = await jose.importPKCS8(privateKeyString, 'RS256');
 
     const jwt = await new jose.SignJWT({
-      scope: 'https://www.googleapis.com/auth/spreadsheets.readonly'
+      scope: 'https://www.googleapis.com/auth/spreadsheets'
     })
       .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
       .setIssuer(clientEmail)
@@ -47,7 +47,7 @@ export default async (req, res) => {
     const accessToken = tokenData.access_token;
 
     const sheetId = '1Vu4mOrQhee8mw-kmhrTsSrjS3IeJuY2Zjb04DpwDKt8';
-    const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/StaffAccess!B3:H100`;
+    const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/StaffAccess!B3:I100`;
 
     const sheetResponse = await fetch(sheetsUrl, {
       headers: {
@@ -71,27 +71,36 @@ export default async (req, res) => {
         body = req.body || {};
     }
 
+    const reqAction = String(body.action || 'login'); // 'login' or 'check'
     const reqUserId = String(body.userId || '').trim();
     const reqPassword = String(body.password || '').trim();
+    const reqDeviceId = String(body.deviceId || '').trim();
 
-    if (!reqUserId || !reqPassword) {
-        return res.status(400).json({ authorized: false, error: 'User ID and Password are required.' });
+    if (!reqUserId || (!reqPassword && reqAction === 'login') || !reqDeviceId) {
+        return res.status(400).json({ authorized: false, error: 'User ID, Password, and Device ID are required.' });
     }
 
     // Find user in the sheet
-    // B=0 (ID), C=1 (Name), D=2 (Password), E=3, F=4, G=5, H=6 (Access)
+    // B=0 (ID), C=1 (Name), D=2 (Password), E=3, F=4, G=5, H=6 (Access), I=7 (Device ID)
     let foundUser = null;
+    let rowIndex = -1;
 
-    for (const row of rows) {
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
         const id = row[0] ? String(row[0]).trim() : '';
-        const pass = row[2] ? String(row[2]).trim() : '';
         
-        if (id === reqUserId && pass === reqPassword) {
+        if (id === reqUserId) {
+            const pass = row[2] ? String(row[2]).trim() : '';
+            // For 'login', password must match. For 'check', we trust the device ID and sentinel.
+            if (reqAction === 'login' && pass !== reqPassword) continue;
+
             foundUser = {
                 userId: id,
                 staffName: row[1] ? String(row[1]).trim() : '',
-                accessStatus: row[6] ? String(row[6]).trim() : ''
+                accessStatus: row[6] ? String(row[6]).trim() : '',
+                boundDeviceId: row[7] ? String(row[7]).trim() : ''
             };
+            rowIndex = i + 3; // +3 because range starts at B3
             break;
         }
     }
@@ -102,6 +111,39 @@ export default async (req, res) => {
 
     if (foundUser.accessStatus.toLowerCase() !== 'access') {
         return res.status(403).json({ authorized: false, reason: 'Access Revoked' });
+    }
+
+    // Hardware Binding Check
+    if (reqAction === 'login') {
+        if (foundUser.boundDeviceId && foundUser.boundDeviceId !== reqDeviceId) {
+            return res.status(403).json({ 
+                authorized: false, 
+                reason: 'Hardware Mismatch: These credentials are locked to a different authorized branch computer.' 
+            });
+        }
+
+        // If no device is bound, bind this device to Column I
+        if (!foundUser.boundDeviceId) {
+            const updateUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/StaffAccess!I${rowIndex}?valueInputOption=USER_ENTERED`;
+            await fetch(updateUrl, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    values: [[reqDeviceId]]
+                })
+            });
+        }
+    } else if (reqAction === 'check') {
+        // Sentinel check ensures the device ID still matches what's in the sheet
+        if (foundUser.boundDeviceId !== reqDeviceId) {
+            return res.status(403).json({ 
+                authorized: false, 
+                reason: 'Hardware Mismatch: Session invalidated by another device lock.' 
+            });
+        }
     }
 
     // Fully authorized

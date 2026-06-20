@@ -82,12 +82,29 @@ export default function SearchGrid() {
   const [error, setError] = useState(null);
   const searchInputRef = useRef(null);
 
+  const getDeviceId = () => {
+    let id = localStorage.getItem('aarthika_device_id');
+    if (!id) {
+      id = 'dev_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      localStorage.setItem('aarthika_device_id', id);
+    }
+    return id;
+  };
+
   // Authentication State
   const [staffAuth, setStaffAuth] = useState(() => {
     const saved = localStorage.getItem('aarthika_staff_auth');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (parsed.loggedIn && parsed.loginTimestamp) {
+           const hoursElapsed = (Date.now() - parsed.loginTimestamp) / (1000 * 60 * 60);
+           if (hoursElapsed >= 8) {
+              localStorage.removeItem('aarthika_staff_auth');
+              return { loggedIn: false, userId: '', password: '', staffName: '' };
+           }
+        }
+        return parsed;
       } catch (e) {}
     }
     return { loggedIn: false, userId: '', password: '', staffName: '' };
@@ -100,19 +117,37 @@ export default function SearchGrid() {
   // The Sentinel
   const verifyAuthSentinel = async (currentAuth) => {
     if (!currentAuth.loggedIn) return false;
+    
+    // 1. Local 8-Hour Check
+    if (currentAuth.loginTimestamp) {
+      const hoursElapsed = (Date.now() - currentAuth.loginTimestamp) / (1000 * 60 * 60);
+      if (hoursElapsed >= 8) {
+        localStorage.removeItem('aarthika_staff_auth');
+        setStaffAuth({ loggedIn: false, userId: '', password: '', staffName: '' });
+        alert(`SECURITY ALERT: Session Expired (8 Hour Limit). Please log in again.`);
+        setView('SEARCH');
+        return false;
+      }
+    }
+
+    // 2. Hardware Binding & Revocation Check
     try {
+      const deviceId = getDeviceId();
       const res = await fetch('/api/passbook-auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentAuth.userId, password: currentAuth.password })
+        body: JSON.stringify({ 
+          userId: currentAuth.userId, 
+          action: 'check',
+          deviceId 
+        })
       });
       const data = await res.json();
       if (!res.ok || !data.authorized) {
-        // Access revoked!
         localStorage.removeItem('aarthika_staff_auth');
         setStaffAuth({ loggedIn: false, userId: '', password: '', staffName: '' });
         alert(`SECURITY ALERT: ${data.reason || 'Access Revoked'}. You have been forcibly logged out.`);
-        setView('SEARCH'); // Reset view for when they log back in
+        setView('SEARCH'); 
         return false;
       }
       return true;
@@ -134,16 +169,23 @@ export default function SearchGrid() {
     setAuthLoading(true);
     setAuthError('');
     try {
+      const deviceId = getDeviceId();
       const res = await fetch('/api/passbook-auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(loginForm)
+        body: JSON.stringify({ ...loginForm, action: 'login', deviceId })
       });
       const data = await res.json();
       if (!res.ok || !data.authorized) {
         setAuthError(data.reason || 'Invalid Credentials');
       } else {
-        const newAuth = { loggedIn: true, userId: data.userId, password: loginForm.password, staffName: data.staffName };
+        const newAuth = { 
+          loggedIn: true, 
+          userId: data.userId, 
+          password: loginForm.password, 
+          staffName: data.staffName,
+          loginTimestamp: Date.now()
+        };
         setStaffAuth(newAuth);
         localStorage.setItem('aarthika_staff_auth', JSON.stringify(newAuth));
         setLoginForm({ userId: '', password: '' });
