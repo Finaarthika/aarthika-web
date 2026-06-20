@@ -1359,14 +1359,16 @@ export default function SearchGrid() {
             
             <div id="thermal-receipt-content" className="print-receipt-container p-6 bg-white text-black font-mono text-sm print:p-0 print:w-[80mm] print:text-xs mx-auto w-[80mm]">
                <div className="text-center mb-4">
-                 <img src={logoIcon} className="w-12 h-12 mx-auto grayscale mb-1" alt="Aarthika" />
-                 <h2 className="font-bold text-lg leading-tight uppercase">Aarthika Bank</h2>
-                 <p className="text-xs text-gray-600">Terminal: HQ-01</p>
+                 <img src={logoTextUrl} className="h-6 mx-auto grayscale mb-2 object-contain" alt="Aarthika" />
+                 <p className="text-xs text-gray-600 font-bold">Terminal: HQ-01</p>
                </div>
-               <div className="border-t border-dashed border-gray-400 py-2 mb-2">
+               <div className="border-t border-dashed border-gray-400 py-3 mb-2">
                  <p className="mb-1"><strong>Date:</strong> {printTransaction.timestamp}</p>
+                 <p className="mb-1"><strong>Account:</strong> {selectedCustomer?.accountNumber}</p>
                  <p className="mb-1"><strong>Name:</strong> {selectedCustomer?.customerName}</p>
-                 <p><strong>Phone:</strong> {selectedCustomer?.phone}</p>
+                 <p className="mb-1"><strong>Phone:</strong> {selectedCustomer?.phone}</p>
+                 <p className="mb-1"><strong>Village:</strong> {selectedCustomer?.village || '-'}</p>
+                 <p><strong>Executed By:</strong> <span className="italic text-gray-400">[STAFF NAME]</span></p>
                </div>
                <div className="border-t border-dashed border-gray-400 py-2 mb-2">
                  <div className="flex justify-between mb-1">
