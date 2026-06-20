@@ -9,7 +9,7 @@ const StaffHeader = () => (
     <div className="absolute top-0 right-[10%] w-96 h-96 bg-blue-400/10 rounded-full blur-3xl pointer-events-none transform -translate-y-1/2"></div>
     <div className="absolute bottom-0 left-[20%] w-64 h-64 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none transform translate-y-1/2"></div>
     
-    <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between relative z-10">
+    <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between relative z-10 gap-3 sm:gap-0">
       <div className="flex items-center group cursor-default">
         <div className="relative">
           <div className="absolute inset-0 bg-white/20 rounded-full blur group-hover:bg-white/40 transition-all duration-500"></div>
@@ -23,18 +23,18 @@ const StaffHeader = () => (
         </div>
       </div>
       
-      <div className="hidden sm:flex items-center gap-6 z-10">
-        <div className="flex flex-col items-end">
+      <div className="flex items-center gap-4 sm:gap-6 z-10">
+        <div className="flex flex-col items-end hidden sm:flex">
           <div className="text-white/60 text-xs font-medium tracking-wider uppercase">Secure Node</div>
           <div className="text-white/90 text-sm font-semibold">HQ-Terminal-01</div>
         </div>
-        <div className="h-8 w-px bg-white/20"></div>
-        <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2 rounded-full backdrop-blur-sm">
-          <div className="relative flex h-3 w-3">
+        <div className="hidden sm:block h-8 w-px bg-white/20"></div>
+        <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-1.5 sm:py-2 rounded-full backdrop-blur-sm">
+          <div className="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]"></span>
           </div>
-          <span className="text-green-400 text-xs font-bold tracking-widest">NETWORK SECURE</span>
+          <span className="text-green-400 text-[10px] sm:text-xs font-bold tracking-widest">NETWORK SECURE</span>
         </div>
       </div>
     </div>
@@ -1072,84 +1072,150 @@ export default function SearchGrid() {
           
           {ledgerLoading ? (
             <div className="p-12 text-center text-gray-500 flex items-center justify-center gap-3 font-medium"><svg className="animate-spin h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Loading records...</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse whitespace-nowrap">
-                <thead>
-                  <tr className="bg-white border-b border-gray-100">
-                    <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Date & Time</th>
-                    <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Type / Method</th>
-                    <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Amount (₹)</th>
-                    <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Net Balance (₹)</th>
-                    <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Proof</th>
-                    <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider text-right">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {ledger.map((row, index) => {
-                    const date = row.timestamp || 'Unknown';
-                    const type = row.type || '';
-                    const amount = row.amount || '0.00';
-                    const balance = row.runningBalance || '0.00';
-                    const status = row.status || 'PENDING';
-                    const method = row.method || 'CASH';
-                    const formLink = row.formLink || '';
-                    const personLink = row.personLink || '';
+                 <div>
+              {/* DESKTOP VIEW */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left border-collapse whitespace-nowrap">
+                  <thead>
+                    <tr className="bg-white border-b border-gray-100">
+                      <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Date & Time</th>
+                      <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Type / Method</th>
+                      <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Amount (₹)</th>
+                      <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Net Balance (₹)</th>
+                      <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Proof</th>
+                      <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider text-right">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {ledger.map((row, index) => {
+                      const date = row.timestamp || 'Unknown';
+                      const type = row.type || '';
+                      const amount = row.amount || '0.00';
+                      const balance = row.runningBalance || '0.00';
+                      const status = row.status || 'PENDING';
+                      const method = row.method || 'CASH';
+                      const formLink = row.formLink || '';
+                      const personLink = row.personLink || '';
 
-                    return (
-                      <tr key={index} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                        <td className="py-4 px-8 text-sm text-gray-600 font-medium">{date}</td>
-                        <td className="py-4 px-8">
-                          <div className="flex flex-col">
-                            <span className={`inline-flex items-center w-fit px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                              type === 'DEPOSIT' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
-                            }`}>
-                              {type}
+                      return (
+                        <tr key={index} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                          <td className="py-4 px-8 text-sm text-gray-600 font-medium">{date}</td>
+                          <td className="py-4 px-8">
+                            <div className="flex flex-col">
+                              <span className={`inline-flex items-center w-fit px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                type === 'DEPOSIT' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
+                              }`}>
+                                {type}
+                              </span>
+                              <span className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-widest">{method}</span>
+                            </div>
+                          </td>
+                          <td className={`py-4 px-8 text-sm font-bold ${type === 'DEPOSIT' ? 'text-green-600' : 'text-orange-600'}`}>
+                            {type === 'DEPOSIT' ? '+' : '-'}{amount}
+                          </td>
+                          <td className="py-4 px-8 text-sm font-bold text-gray-800">{balance}</td>
+                          <td className="py-4 px-8">
+                            <div className="flex gap-2">
+                              {formLink && (
+                                <button onClick={() => setZoomedImage(getSecurePhotoUrl(formLink))} className="w-8 h-8 rounded bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 hover:scale-110 transition-all" title="View Form">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                </button>
+                              )}
+                              {personLink && (
+                                <button onClick={() => setZoomedImage(getSecurePhotoUrl(personLink))} className="w-8 h-8 rounded bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-100 hover:scale-110 transition-all" title="View Customer">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                </button>
+                              )}
+                              <button onClick={() => setPrintTransaction({ type, method, amount, balance, status, timestamp: date, rowId: index })} className="w-8 h-8 rounded bg-gray-50 text-gray-600 border border-gray-200 flex items-center justify-center hover:bg-gray-200 hover:scale-110 transition-all" title="Print Receipt">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                              </button>
+                            </div>
+                          </td>
+                          <td className="py-4 px-8 text-right">
+                            <span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold tracking-widest uppercase border border-gray-200 text-gray-500 bg-gray-50">
+                              {status}
                             </span>
-                            <span className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-widest">{method}</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {ledger.length === 0 && (
+                      <tr>
+                        <td colSpan="6" className="py-16 text-center text-gray-500 font-medium text-lg">
+                          <div className="flex flex-col items-center justify-center text-gray-400">
+                            <svg className="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                            No transactions found for this account.
                           </div>
-                        </td>
-                        <td className={`py-4 px-8 text-sm font-bold ${type === 'DEPOSIT' ? 'text-green-600' : 'text-orange-600'}`}>
-                          {type === 'DEPOSIT' ? '+' : '-'}{amount}
-                        </td>
-                        <td className="py-4 px-8 text-sm font-bold text-gray-800">{balance}</td>
-                        <td className="py-4 px-8">
-                          <div className="flex gap-2">
-                            {formLink && (
-                              <button onClick={() => setZoomedImage(getSecurePhotoUrl(formLink))} className="w-8 h-8 rounded bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 hover:scale-110 transition-all" title="View Form">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                              </button>
-                            )}
-                            {personLink && (
-                              <button onClick={() => setZoomedImage(getSecurePhotoUrl(personLink))} className="w-8 h-8 rounded bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-100 hover:scale-110 transition-all" title="View Customer">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                              </button>
-                            )}
-                            <button onClick={() => setPrintTransaction({ type, method, amount, balance, status, timestamp: date, rowId: index })} className="w-8 h-8 rounded bg-gray-50 text-gray-600 border border-gray-200 flex items-center justify-center hover:bg-gray-200 hover:scale-110 transition-all" title="Print Receipt">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                            </button>
-                          </div>
-                        </td>
-                        <td className="py-4 px-8 text-right">
-                          <span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold tracking-widest uppercase border border-gray-200 text-gray-500 bg-gray-50">
-                            {status}
-                          </span>
                         </td>
                       </tr>
-                    );
-                  })}
-                  {ledger.length === 0 && (
-                    <tr>
-                      <td colSpan="6" className="py-16 text-center text-gray-500 font-medium text-lg">
-                        <div className="flex flex-col items-center justify-center text-gray-400">
-                          <svg className="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                          No transactions found for this account.
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* MOBILE VIEW (CARDS) */}
+              <div className="block md:hidden divide-y divide-gray-100 bg-white">
+                {ledger.map((row, index) => {
+                  const date = row.timestamp || 'Unknown';
+                  const type = row.type || '';
+                  const amount = row.amount || '0.00';
+                  const balance = row.runningBalance || '0.00';
+                  const status = row.status || 'PENDING';
+                  const method = row.method || 'CASH';
+                  const formLink = row.formLink || '';
+                  const personLink = row.personLink || '';
+
+                  return (
+                    <div key={index} className="p-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${type === 'DEPOSIT' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
+                            {type}
+                          </span>
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{method}</span>
                         </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                        <span className={`text-base font-bold ${type === 'DEPOSIT' ? 'text-green-600' : 'text-orange-600'}`}>
+                          {type === 'DEPOSIT' ? '+' : '-'}{amount}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center mb-4">
+                        <span className="text-xs text-gray-500 font-medium">{date}</span>
+                        <span className="text-sm font-bold text-gray-800 tracking-tight">Bal: {balance}</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center pt-2 border-t border-gray-50">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold tracking-widest uppercase border border-gray-200 text-gray-500 bg-gray-50 shadow-sm">
+                          {status}
+                        </span>
+                        
+                        <div className="flex gap-2">
+                          {formLink && (
+                            <button onClick={() => setZoomedImage(getSecurePhotoUrl(formLink))} className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 shadow-sm" title="View Form">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                            </button>
+                          )}
+                          {personLink && (
+                            <button onClick={() => setZoomedImage(getSecurePhotoUrl(personLink))} className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-100 shadow-sm" title="View Customer">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                            </button>
+                          )}
+                          <button onClick={() => setPrintTransaction({ type, method, amount, balance, status, timestamp: date, rowId: index })} className="w-8 h-8 rounded-lg bg-gray-800 text-white flex items-center justify-center hover:bg-gray-900 shadow-sm" title="Print Receipt">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {ledger.length === 0 && (
+                  <div className="py-12 text-center text-gray-500 font-medium">
+                    <svg className="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    No transactions found.
+                  </div>
+                )}
+              </div>
+            </div>e>
               {Math.ceil(ledger.length / itemsPerPage) > 1 && (
                 <div className="bg-white px-8 py-4 border-t border-gray-100 flex items-center justify-between">
                   <span className="text-sm text-gray-500 font-medium">
@@ -1205,8 +1271,8 @@ export default function SearchGrid() {
       {txModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-full overflow-y-auto relative animate-in fade-in zoom-in-95 duration-200">
-            <div className={`p-6 border-b text-white sticky top-0 z-10 flex justify-between items-center ${txType === 'DEPOSIT' ? 'bg-gradient-to-r from-green-600 to-green-500' : 'bg-gradient-to-r from-orange-600 to-orange-500'}`}>
-              <h2 className="text-xl font-bold uppercase tracking-wide">
+            <div className={`p-4 sm:p-6 border-b text-white sticky top-0 z-10 flex justify-between items-center ${txType === 'DEPOSIT' ? 'bg-gradient-to-r from-green-600 to-green-500' : 'bg-gradient-to-r from-orange-600 to-orange-500'}`}>
+              <h2 className="text-lg sm:text-xl font-bold uppercase tracking-wide">
                 Secure {txType} Authentication
               </h2>
               <button onClick={() => !transactionLoading && setTxModalOpen(false)} className="text-white/80 hover:text-white bg-black/20 hover:bg-black/40 p-1.5 rounded-full transition-colors">
@@ -1214,8 +1280,8 @@ export default function SearchGrid() {
               </button>
             </div>
             
-            <div className="p-6 md:p-8">
-              <div className="flex flex-col md:flex-row gap-6 mb-8">
+            <div className="p-4 sm:p-6 md:p-8">
+              <div className="flex flex-col md:flex-row gap-4 sm:gap-6 mb-6 sm:mb-8">
                 <div className="flex-1">
                   <label className="block text-sm font-bold text-gray-700 mb-2">Final Amount (₹)</label>
                   <input 
@@ -1247,9 +1313,9 @@ export default function SearchGrid() {
                 </div>
               </div>
 
-              <div className="mb-8">
+              <div className="mb-6 sm:mb-8">
                 <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4 pb-2 border-b border-gray-100">Verification Capture (Mandatory)</h3>
-                <div className="grid sm:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   {/* Form Capture */}
                   <div className="relative group">
                     <input 
@@ -1261,7 +1327,7 @@ export default function SearchGrid() {
                       onChange={(e) => handleTxCameraCapture(e, setTxFormImage)}
                       disabled={transactionLoading}
                     />
-                    <label htmlFor="formCamera" className={`block w-full h-40 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden ${txFormImage ? 'border-green-400 bg-green-50' : 'border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400'}`}>
+                    <label htmlFor="formCamera" className={`block w-full aspect-square sm:aspect-auto sm:h-48 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden ${txFormImage ? 'border-green-400 bg-green-50' : 'border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400'}`}>
                       {txFormImage ? (
                         <div className="relative w-full h-full">
                           <img src={txFormImage} alt="Form" className="w-full h-full object-cover" />
@@ -1280,7 +1346,7 @@ export default function SearchGrid() {
                     </label>
                   </div>
 
-                  {/* Person Capture */}
+                  {/* Customer Photo */}
                   <div className="relative group">
                     <input 
                       type="file" 
@@ -1291,7 +1357,7 @@ export default function SearchGrid() {
                       onChange={(e) => handleTxCameraCapture(e, setTxPersonImage)}
                       disabled={transactionLoading}
                     />
-                    <label htmlFor="personCamera" className={`block w-full h-40 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden ${txPersonImage ? 'border-green-400 bg-green-50' : 'border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400'}`}>
+                    <label htmlFor="personCamera" className={`block w-full aspect-square sm:aspect-auto sm:h-48 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden ${txPersonImage ? 'border-indigo-400 bg-indigo-50' : 'border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400'}`}>
                       {txPersonImage ? (
                         <div className="relative w-full h-full">
                           <img src={txPersonImage} alt="Person" className="w-full h-full object-cover" />
