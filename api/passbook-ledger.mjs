@@ -95,7 +95,8 @@ export default async (req, res) => {
         runningBalance: row[4] ? String(row[4]).trim() : '',
         status: row[5] ? String(row[5]).trim() : '',
         method: row[6] ? String(row[6]).trim() : 'CASH',
-        pdfLink: row[7] ? String(row[7]).trim() : ''
+        formLink: row[7] ? String(row[7]).trim() : '',
+        personLink: row[8] ? String(row[8]).trim() : ''
       };
     });
 
