@@ -162,6 +162,19 @@ export default function SearchGrid() {
     await fetchLedger(customer.accountNumber);
   };
 
+  const [depositAmount, setDepositAmount] = useState('');
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [transactionLoading, setTransactionLoading] = useState(false);
+  const [transactionMsg, setTransactionMsg] = useState({ type: '', text: '' });
+
+  // Transaction Modal State
+  const [txModalOpen, setTxModalOpen] = useState(false);
+  const [txType, setTxType] = useState(''); // 'DEPOSIT' | 'WITHDRAWAL'
+  const [txAmount, setTxAmount] = useState('');
+  const [txMethod, setTxMethod] = useState('CASH'); // 'CASH' | 'UPI'
+  const [txFormImage, setTxFormImage] = useState(null);
+  const [txPersonImage, setTxPersonImage] = useState(null);
+
   const fetchLedger = async (accountNumber) => {
     setLedgerLoading(true);
     try {
@@ -177,15 +190,57 @@ export default function SearchGrid() {
     }
   };
 
-  const handleTransaction = async (type) => {
-    const amount = type === 'DEPOSIT' ? depositAmount : withdrawAmount;
-    if (!amount || isNaN(amount) || Number(amount) <= 0) {
+  const handleTxCameraCapture = (e, setBase64Str) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 600;
+        const MAX_HEIGHT = 600;
+        let width = img.width;
+        let height = img.height;
+        if (width > height) {
+          if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+        } else {
+          if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.5);
+        setBase64Str(compressedBase64);
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const openTxModal = (type) => {
+    setTxType(type);
+    setTxAmount(type === 'DEPOSIT' ? depositAmount : withdrawAmount);
+    setTxMethod('CASH');
+    setTxFormImage(null);
+    setTxPersonImage(null);
+    setTransactionMsg({ type: '', text: '' });
+    setTxModalOpen(true);
+  };
+
+  const handleTransactionSubmit = async () => {
+    if (!txAmount || isNaN(txAmount) || Number(txAmount) <= 0) {
       setTransactionMsg({ type: 'error', text: 'Please enter a valid positive amount.' });
+      return;
+    }
+    if (!txFormImage || !txPersonImage) {
+      setTransactionMsg({ type: 'error', text: 'Both Form Photo and Person Photo are required for verification.' });
       return;
     }
 
     setTransactionLoading(true);
-    setTransactionMsg({ type: '', text: '' });
+    setTransactionMsg({ type: '', text: 'Processing and uploading secure images... Please wait.' });
 
     try {
       const res = await fetch('/api/passbook-transaction', {
@@ -193,8 +248,11 @@ export default function SearchGrid() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           accountNumber: selectedCustomer.accountNumber,
-          type: type,
-          amount: amount
+          type: txType,
+          amount: txAmount,
+          method: txMethod,
+          formImage: txFormImage,
+          personImage: txPersonImage
         })
       });
       const body = await res.json();
@@ -203,9 +261,10 @@ export default function SearchGrid() {
         throw new Error(body.message || body.error || `HTTP ${res.status}`);
       }
 
-      setTransactionMsg({ type: 'success', text: `SUCCESS: ${type} of ₹${amount} completed. New Balance: ${body.newBalance}` });
-      if (type === 'DEPOSIT') setDepositAmount('');
-      if (type === 'WITHDRAWAL') setWithdrawAmount('');
+      setTransactionMsg({ type: 'success', text: `SUCCESS: ${txType} of ₹${txAmount} via ${txMethod} completed. New Balance: ${body.newBalance}` });
+      if (txType === 'DEPOSIT') setDepositAmount('');
+      if (txType === 'WITHDRAWAL') setWithdrawAmount('');
+      setTxModalOpen(false);
       
       await fetchLedger(selectedCustomer.accountNumber);
     } catch (err) {
@@ -672,7 +731,7 @@ export default function SearchGrid() {
               <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
                 <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
               </div>
-              Deposit Cash
+              Deposit Funds
             </h3>
             <div className="flex items-center gap-4">
               <div className="relative flex-1">
@@ -682,16 +741,15 @@ export default function SearchGrid() {
                   className="input-premium pl-8 text-base py-2.5 shadow-sm focus:ring-green-500/20 focus:border-green-500 w-full" 
                   value={depositAmount}
                   onChange={e => setDepositAmount(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleTransaction('DEPOSIT')}
+                  onKeyDown={e => e.key === 'Enter' && openTxModal('DEPOSIT')}
                   placeholder="Amount" 
                 />
               </div>
               <button 
-                className="btn bg-green-600 text-white font-semibold text-base hover:bg-green-700 hover:shadow-lg shadow-green-600/30 transition-all px-6 py-2.5" 
-                onClick={() => handleTransaction('DEPOSIT')}
-                disabled={transactionLoading}
+                className="btn bg-green-600 text-white font-semibold text-base hover:bg-green-700 hover:shadow-lg shadow-green-600/30 transition-all px-6 py-2.5 whitespace-nowrap" 
+                onClick={() => openTxModal('DEPOSIT')}
               >
-                {transactionLoading ? '...' : 'Deposit'}
+                Initiate
               </button>
             </div>
           </div>
@@ -702,7 +760,7 @@ export default function SearchGrid() {
               <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
                 <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
               </div>
-              Withdraw Cash
+              Withdraw Funds
             </h3>
             <div className="flex items-center gap-4">
               <div className="relative flex-1">
@@ -712,16 +770,15 @@ export default function SearchGrid() {
                   className="input-premium pl-8 text-base py-2.5 shadow-sm focus:ring-orange-500/20 focus:border-orange-500 w-full" 
                   value={withdrawAmount}
                   onChange={e => setWithdrawAmount(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleTransaction('WITHDRAWAL')}
+                  onKeyDown={e => e.key === 'Enter' && openTxModal('WITHDRAWAL')}
                   placeholder="Amount" 
                 />
               </div>
               <button 
-                className="btn bg-orange-600 text-white font-semibold text-base hover:bg-orange-700 hover:shadow-lg shadow-orange-600/30 transition-all px-6 py-2.5" 
-                onClick={() => handleTransaction('WITHDRAWAL')}
-                disabled={transactionLoading}
+                className="btn bg-orange-600 text-white font-semibold text-base hover:bg-orange-700 hover:shadow-lg shadow-orange-600/30 transition-all px-6 py-2.5 whitespace-nowrap" 
+                onClick={() => openTxModal('WITHDRAWAL')}
               >
-                {transactionLoading ? '...' : 'Withdraw'}
+                Initiate
               </button>
             </div>
           </div>
@@ -748,31 +805,67 @@ export default function SearchGrid() {
                 <thead>
                   <tr className="bg-white border-b border-gray-100">
                     <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Date & Time</th>
-                    <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Transaction Type</th>
+                    <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Type / Method</th>
                     <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Amount (₹)</th>
                     <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Net Balance (₹)</th>
-                    <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Status</th>
+                    <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider">Proof</th>
+                    <th className="py-4 px-8 font-semibold text-gray-500 text-sm uppercase tracking-wider text-right">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {ledger.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((row) => (
-                    <tr key={row.id} className="hover:bg-gray-50/80 transition-colors">
-                      <td className="py-5 px-8 text-gray-600 font-medium">{row.timestamp}</td>
-                      <td className="py-5 px-8">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-wide ${row.type === 'DEPOSIT' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
-                          {row.type}
-                        </span>
-                      </td>
-                      <td className={`py-5 px-8 font-bold text-lg ${row.type === 'DEPOSIT' ? 'text-green-600' : 'text-orange-600'}`}>
-                        {row.type === 'DEPOSIT' ? '+' : '-'}{row.amount}
-                      </td>
-                      <td className="py-5 px-8 font-bold text-gray-800 text-lg">{row.runningBalance}</td>
-                      <td className="py-5 px-8"><span className="text-xs font-bold tracking-wide uppercase bg-gray-100 text-gray-600 px-3 py-1.5 rounded-md border border-gray-200">{row.status}</span></td>
-                    </tr>
-                  ))}
+                  {ledger.map((row, index) => {
+                    const date = row[0] || 'Unknown';
+                    const type = row[2] || '';
+                    const amount = row[3] || '0.00';
+                    const balance = row[4] || '0.00';
+                    const status = row[5] || 'PENDING';
+                    const method = row[6] || 'CASH';
+                    const formLink = row[7] || '';
+                    const personLink = row[8] || '';
+
+                    return (
+                      <tr key={index} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                        <td className="py-4 px-8 text-sm text-gray-600 font-medium">{date}</td>
+                        <td className="py-4 px-8">
+                          <div className="flex flex-col">
+                            <span className={`inline-flex items-center w-fit px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                              type === 'DEPOSIT' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
+                            }`}>
+                              {type}
+                            </span>
+                            <span className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-widest">{method}</span>
+                          </div>
+                        </td>
+                        <td className={`py-4 px-8 text-sm font-bold ${type === 'DEPOSIT' ? 'text-green-600' : 'text-orange-600'}`}>
+                          {type === 'DEPOSIT' ? '+' : '-'}{amount}
+                        </td>
+                        <td className="py-4 px-8 text-sm font-bold text-gray-800">{balance}</td>
+                        <td className="py-4 px-8">
+                          <div className="flex gap-2">
+                            {formLink && (
+                              <button onClick={() => setZoomedImage(getSecurePhotoUrl(formLink))} className="w-8 h-8 rounded bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 hover:scale-110 transition-all" title="View Form">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                              </button>
+                            )}
+                            {personLink && (
+                              <button onClick={() => setZoomedImage(getSecurePhotoUrl(personLink))} className="w-8 h-8 rounded bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-100 hover:scale-110 transition-all" title="View Customer">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                              </button>
+                            )}
+                            {!formLink && !personLink && <span className="text-xs text-gray-300">-</span>}
+                          </div>
+                        </td>
+                        <td className="py-4 px-8 text-right">
+                          <span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold tracking-widest uppercase border border-gray-200 text-gray-500 bg-gray-50">
+                            {status}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                   {ledger.length === 0 && (
                     <tr>
-                      <td colSpan="5" className="py-16 text-center text-gray-500 font-medium text-lg">
+                      <td colSpan="6" className="py-16 text-center text-gray-500 font-medium text-lg">
                         <div className="flex flex-col items-center justify-center text-gray-400">
                           <svg className="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                           No transactions found for this account.
@@ -829,6 +922,151 @@ export default function SearchGrid() {
               className="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl ring-4 ring-white/20"
               onClick={(e) => e.stopPropagation()} 
             />
+          </div>
+        </div>
+      )}
+
+      {/* Transaction Modal Overlay */}
+      {txModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-full overflow-y-auto relative animate-in fade-in zoom-in-95 duration-200">
+            <div className={`p-6 border-b text-white sticky top-0 z-10 flex justify-between items-center ${txType === 'DEPOSIT' ? 'bg-gradient-to-r from-green-600 to-green-500' : 'bg-gradient-to-r from-orange-600 to-orange-500'}`}>
+              <h2 className="text-xl font-bold uppercase tracking-wide">
+                Secure {txType} Authentication
+              </h2>
+              <button onClick={() => !transactionLoading && setTxModalOpen(false)} className="text-white/80 hover:text-white bg-black/20 hover:bg-black/40 p-1.5 rounded-full transition-colors">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            
+            <div className="p-6 md:p-8">
+              <div className="flex flex-col md:flex-row gap-6 mb-8">
+                <div className="flex-1">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Final Amount (₹)</label>
+                  <input 
+                    type="number" 
+                    className={`input-premium w-full text-xl font-bold py-3 ${txType === 'DEPOSIT' ? 'focus:border-green-500 focus:ring-green-500/20' : 'focus:border-orange-500 focus:ring-orange-500/20'}`}
+                    value={txAmount}
+                    onChange={(e) => setTxAmount(e.target.value)}
+                    disabled={transactionLoading}
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Payment Method</label>
+                  <div className="flex bg-gray-100 p-1 rounded-xl">
+                    <button 
+                      className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${txMethod === 'CASH' ? 'bg-white shadow-sm text-aarthikaBlue' : 'text-gray-500 hover:text-gray-700'}`}
+                      onClick={() => setTxMethod('CASH')}
+                      disabled={transactionLoading}
+                    >
+                      CASH
+                    </button>
+                    <button 
+                      className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${txMethod === 'UPI' ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+                      onClick={() => setTxMethod('UPI')}
+                      disabled={transactionLoading}
+                    >
+                      UPI
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-8">
+                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4 pb-2 border-b border-gray-100">Verification Capture (Mandatory)</h3>
+                <div className="grid sm:grid-cols-2 gap-6">
+                  {/* Form Capture */}
+                  <div className="relative group">
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      capture="environment" 
+                      id="formCamera" 
+                      className="hidden" 
+                      onChange={(e) => handleTxCameraCapture(e, setTxFormImage)}
+                      disabled={transactionLoading}
+                    />
+                    <label htmlFor="formCamera" className={`block w-full h-40 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden ${txFormImage ? 'border-green-400 bg-green-50' : 'border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400'}`}>
+                      {txFormImage ? (
+                        <div className="relative w-full h-full">
+                          <img src={txFormImage} alt="Form" className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span className="text-white font-bold text-sm bg-black/60 px-3 py-1 rounded-full">Retake Photo</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center text-gray-400 mb-3 group-hover:text-aarthikaBlue group-hover:scale-110 transition-all">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                          </div>
+                          <span className="text-sm font-bold text-gray-600">Scan Filled Form</span>
+                        </>
+                      )}
+                    </label>
+                  </div>
+
+                  {/* Person Capture */}
+                  <div className="relative group">
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      capture="user" 
+                      id="personCamera" 
+                      className="hidden" 
+                      onChange={(e) => handleTxCameraCapture(e, setTxPersonImage)}
+                      disabled={transactionLoading}
+                    />
+                    <label htmlFor="personCamera" className={`block w-full h-40 rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden ${txPersonImage ? 'border-green-400 bg-green-50' : 'border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400'}`}>
+                      {txPersonImage ? (
+                        <div className="relative w-full h-full">
+                          <img src={txPersonImage} alt="Person" className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span className="text-white font-bold text-sm bg-black/60 px-3 py-1 rounded-full">Retake Photo</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center text-gray-400 mb-3 group-hover:text-aarthikaBlue group-hover:scale-110 transition-all">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                          </div>
+                          <span className="text-sm font-bold text-gray-600">Scan Customer Face</span>
+                        </>
+                      )}
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {transactionMsg.text && (
+                <div className={`p-4 rounded-xl mb-6 font-semibold text-center text-sm shadow-sm border ${transactionMsg.type === 'error' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
+                  {transactionMsg.text}
+                </div>
+              )}
+
+              <button 
+                onClick={handleTransactionSubmit}
+                disabled={transactionLoading || !txAmount || !txFormImage || !txPersonImage}
+                className={`w-full py-4 rounded-xl font-bold text-white text-lg transition-all shadow-lg flex items-center justify-center gap-3 ${
+                  transactionLoading || !txAmount || !txFormImage || !txPersonImage
+                    ? 'bg-gray-300 cursor-not-allowed opacity-70 shadow-none'
+                    : txType === 'DEPOSIT' 
+                      ? 'bg-green-600 hover:bg-green-700 shadow-green-600/30 hover:shadow-green-600/50'
+                      : 'bg-orange-600 hover:bg-orange-700 shadow-orange-600/30 hover:shadow-orange-600/50'
+                }`}
+              >
+                {transactionLoading ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    Uploading Assets & Authenticating...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                    Confirm & Secure {txType}
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

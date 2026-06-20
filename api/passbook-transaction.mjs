@@ -15,11 +15,15 @@ export default async (req, res) => {
     const bodyStr = Buffer.concat(chunks).toString();
     const body = bodyStr ? JSON.parse(bodyStr) : {};
 
-    const { accountNumber, type, amount } = body;
+    const { accountNumber, type, amount, method, formImage, personImage } = body;
 
     if (!accountNumber || !type || !amount) {
       res.setHeader('Content-Type', 'application/json');
       return res.status(400).json({ error: 'Missing required fields' });
+    }
+    if (!formImage || !personImage) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(400).json({ error: 'Compliance Error: Both Form and Person photos are required.' });
     }
 
     let clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
@@ -102,6 +106,7 @@ export default async (req, res) => {
     }
 
     const safeType = String(type).trim().toUpperCase();
+    const safeMethod = String(method || 'CASH').trim().toUpperCase();
     const safeAmount = parseFloat(String(amount).replace(/[^0-9.-]+/g, '')) || 0;
     
     if (safeAmount <= 0) {
@@ -137,9 +142,40 @@ export default async (req, res) => {
     const timestamp = now.toLocaleString('sv-SE').replace('T', ' ');
     const status = 'SUCCESS';
 
+    // Prepare files for Google Drive
+    const uploadToDrive = async (base64Str, name) => {
+      const metadata = { name: name, parents: ['1-n92zn1gQCxMU2Xi59dMRJLW4KNkS1sY'] };
+      const form = new FormData();
+      form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+      const byteCharacters = atob(base64Str);
+      const byteArrays = [];
+      for (let i = 0; i < byteCharacters.length; i++) byteArrays.push(byteCharacters.charCodeAt(i));
+      form.append('file', new Blob([new Uint8Array(byteArrays)], { type: 'image/jpeg' }));
+
+      const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${accessToken}` },
+        body: form
+      });
+      if (!res.ok) throw new Error(`Drive Upload Failed: ${await res.text()}`);
+      return await res.json();
+    };
+
+    // Clean base64 strings if they contain prefixes
+    const cleanForm = formImage.includes(',') ? formImage.split(',')[1] : formImage;
+    const cleanPerson = personImage.includes(',') ? personImage.split(',')[1] : personImage;
+
+    const [formRes, personRes] = await Promise.all([
+      uploadToDrive(cleanForm, `${safeAccountNumber}_${timestamp}_FORM.jpg`),
+      uploadToDrive(cleanPerson, `${safeAccountNumber}_${timestamp}_PERSON.jpg`)
+    ]);
+
+    const formLink = `https://drive.google.com/uc?export=view&id=${formRes.id}`;
+    const personLink = `https://drive.google.com/uc?export=view&id=${personRes.id}`;
+
     const appendData = {
       values: [
-        [timestamp, safeAccountNumber, safeType, amountStr, runningBalanceStr, status]
+        [timestamp, safeAccountNumber, safeType, amountStr, runningBalanceStr, status, safeMethod, formLink, personLink]
       ]
     };
 
