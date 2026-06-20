@@ -244,8 +244,8 @@ export default function SearchGrid() {
       const pdfBase64Str = await html2pdf().from(pdfElement).set({
         margin: [0, 0, 0, 0],
         filename: `Aarthika_TX_${new Date().getTime()}.pdf`,
-        image: { type: 'jpeg', quality: 0.85 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
+        image: { type: 'jpeg', quality: 1.0 },
+        html2canvas: { scale: 3, useCORS: true, logging: false },
         jsPDF: { unit: 'px', format: [793, 1122], orientation: 'portrait', compress: true }
       }).toPdf().output('datauristring');
       
@@ -1102,7 +1102,7 @@ export default function SearchGrid() {
           </div>
 
           {/* MAIN BODY (Padding 40px) */}
-          <div style={{ padding: '40px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '40px', display: 'flex', flexDirection: 'column' }}>
             
             {/* HERO AMOUNT (140px) */}
             <div style={{ backgroundColor: '#f8fafc', borderRadius: '24px', padding: '24px 32px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', position: 'relative', overflow: 'hidden' }}>
@@ -1159,15 +1159,15 @@ export default function SearchGrid() {
               </div>
             </div>
 
-            {/* PHOTOS (Takes remaining height, approx 420px) */}
-            <div style={{ flex: 1, display: 'flex', gap: '24px' }}>
+            {/* PHOTOS (Fixed height 380px to prevent pushing footer out of bounds) */}
+            <div style={{ height: '380px', display: 'flex', gap: '24px' }}>
               
               <div style={{ flex: 1, backgroundColor: '#ffffff', borderRadius: '24px', border: '3px solid #f1f5f9', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ backgroundColor: '#0f172a', color: '#ffffff', fontSize: '10px', fontWeight: 900, padding: '12px 20px', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span>Customer Face Capture</span>
                   <svg style={{ width: '14px', height: '14px', color: '#4ade80' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                 </div>
-                <div style={{ flex: 1, backgroundColor: '#f8fafc', position: 'relative', padding: '8px' }}>
+                <div style={{ flex: 1, backgroundColor: '#f8fafc', position: 'relative', padding: '24px' }}>
                   {txPersonImage ? <img src={txPersonImage} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#94a3b8' }}>No Image Captured</div>}
                 </div>
               </div>
@@ -1177,7 +1177,7 @@ export default function SearchGrid() {
                   <span>Signed Form Capture</span>
                   <svg style={{ width: '14px', height: '14px', color: '#4ade80' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                 </div>
-                <div style={{ flex: 1, backgroundColor: '#f8fafc', position: 'relative', padding: '8px' }}>
+                <div style={{ flex: 1, backgroundColor: '#f8fafc', position: 'relative', padding: '24px' }}>
                   {txFormImage ? <img src={txFormImage} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#94a3b8' }}>No Form Captured</div>}
                 </div>
               </div>
