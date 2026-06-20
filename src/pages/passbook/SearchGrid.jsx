@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2pdf from 'html2pdf.js';
+import * as tf from '@tensorflow/tfjs';
+import * as tflite from '@tensorflow/tfjs-tflite';
 import logoIcon from '../../assets/4.png';
 import logoTextUrl from '../../assets/Aarthika (1).png';
 
@@ -125,7 +127,9 @@ export default function SearchGrid() {
   const [capturedImageBase64, setCapturedImageBase64] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
 
-  // --- INIT FACE-API ---
+  const [customFaceNet, setCustomFaceNet] = useState(null);
+
+  // --- INIT FACE-API & TFLITE ---
   useEffect(() => {
     const loadScript = async () => {
       if (!window.faceapi) {
@@ -139,12 +143,19 @@ export default function SearchGrid() {
         const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
         await Promise.all([
           window.faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
-          window.faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-          window.faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+          window.faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL)
         ]);
+      } catch (err) {
+        console.error("Failed to load face-api models", err);
+      }
+      
+      try {
+        tflite.setWasmPath('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/dist/');
+        const tfliteModel = await tflite.loadTFLiteModel('/facenet_512.tflite');
+        setCustomFaceNet(tfliteModel);
         setModelsLoaded(true);
       } catch (err) {
-        console.error("Failed to load models", err);
+        console.error("Failed to load custom TFLite FaceNet 512", err);
       }
     };
     loadScript();
@@ -324,9 +335,8 @@ export default function SearchGrid() {
       normalizedImg.onload = async () => {
         const options = new window.faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 });
         try {
-          const detection = await window.faceapi.detectSingleFace(normalizedImg, options)
-                                    .withFaceLandmarks()
-                                    .withFaceDescriptor();
+          // 1. Detect physical face bounding box
+          const detection = await window.faceapi.detectSingleFace(normalizedImg, options);
                                     
           if (!detection) {
             setBiometricStatus("");
@@ -334,17 +344,40 @@ export default function SearchGrid() {
             return;
           }
           
-          setBiometricStatus("MATCHING FACE IN DATABASE...");
-          const liveDescriptor = detection.descriptor;
+          setBiometricStatus("COMPUTING 512D TENSOR...");
+          
+          // 2. Crop face for custom TFLite model
+          const box = detection.box;
+          const faceCanvas = document.createElement('canvas');
+          faceCanvas.width = 160;
+          faceCanvas.height = 160;
+          const faceCtx = faceCanvas.getContext('2d');
+          faceCtx.drawImage(
+            normalizedImg,
+            box.x, box.y, box.width, box.height,
+            0, 0, 160, 160
+          );
+          
+          // 3. Extract 512-dimensional vector via TensorFlow
+          let tensor = tf.browser.fromPixels(faceCanvas);
+          tensor = tf.cast(tensor, 'float32').sub(127.5).div(127.5).expandDims(0);
+          const output = customFaceNet.predict(tensor);
+          const vectorArray = Array.from(output.dataSync());
+          tensor.dispose();
+          output.dispose();
+          
+          const liveDescriptor = new Float32Array(vectorArray);
+          
+          setBiometricStatus("MATCHING TENSOR IN DATABASE...");
           const matchedCustomers = [];
           
           customers.forEach(c => {
             if (c.faceVector && c.faceVector.includes(',')) {
               const storedArray = c.faceVector.split(',').map(Number);
-              if (storedArray.length === 128) {
+              if (storedArray.length === 512) {
                 const storedDescriptor = new Float32Array(storedArray);
                 const dist = window.faceapi.euclideanDistance(liveDescriptor, storedDescriptor);
-                if (dist < 0.60) {
+                if (dist < 1.0) { // 512D vectors are longer, Euclidean distance threshold is naturally higher
                   matchedCustomers.push({ ...c, faceDistance: dist });
                 }
               }
@@ -354,7 +387,7 @@ export default function SearchGrid() {
           if (matchedCustomers.length > 0) {
             matchedCustomers.sort((a, b) => a.faceDistance - b.faceDistance);
             setCustomers(matchedCustomers);
-            setBiometricStatus(`FOUND ${matchedCustomers.length} MATCHING PROFILES`);
+            setBiometricStatus(`FOUND ${matchedCustomers.length} HIGH-ACCURACY MATCHES (512D)`);
             setCurrentPage(1);
           } else {
             setBiometricStatus("");
@@ -410,25 +443,41 @@ export default function SearchGrid() {
         setBiometricStatus("COMPUTING BIOMETRIC VECTOR...");
         
         const normalizedImg = new Image();
-        normalizedImg.onload = () => {
+        normalizedImg.onload = async () => {
           const options = new window.faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 });
-          window.faceapi.detectSingleFace(normalizedImg, options)
-            .withFaceLandmarks()
-            .withFaceDescriptor()
-            .then(detection => {
-              if (!detection) {
-                setBiometricStatus("FACE NOT DETECTED. PLEASE RETRY.");
-                setCapturedVector('');
-              } else {
-                const vectorStr = Array.from(detection.descriptor).join(',');
-                setCapturedVector(vectorStr);
-                setBiometricStatus("FACE VECTOR LOCKED & SECURED.");
-              }
-            })
-            .catch(err => {
-              console.error(err);
-              setBiometricStatus("ERROR COMPUTING VECTOR.");
-            });
+          try {
+            const detection = await window.faceapi.detectSingleFace(normalizedImg, options);
+            if (!detection) {
+              setBiometricStatus("FACE NOT DETECTED. PLEASE RETRY.");
+              setCapturedVector('');
+              return;
+            }
+            
+            const box = detection.box;
+            const faceCanvas = document.createElement('canvas');
+            faceCanvas.width = 160;
+            faceCanvas.height = 160;
+            const faceCtx = faceCanvas.getContext('2d');
+            faceCtx.drawImage(
+              normalizedImg,
+              box.x, box.y, box.width, box.height,
+              0, 0, 160, 160
+            );
+            
+            let tensor = tf.browser.fromPixels(faceCanvas);
+            tensor = tf.cast(tensor, 'float32').sub(127.5).div(127.5).expandDims(0);
+            const output = customFaceNet.predict(tensor);
+            const vectorArray = Array.from(output.dataSync());
+            tensor.dispose();
+            output.dispose();
+            
+            const vectorStr = vectorArray.join(',');
+            setCapturedVector(vectorStr);
+            setBiometricStatus("512D FACE VECTOR LOCKED & SECURED.");
+          } catch (err) {
+            console.error(err);
+            setBiometricStatus("ERROR COMPUTING 512D VECTOR.");
+          }
         };
         normalizedImg.src = compressedBase64;
       } else {
