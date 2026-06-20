@@ -336,7 +336,7 @@ export default function SearchGrid() {
         
         if (modelsLoaded && window.faceapi) {
           setBiometricStatus("COMPUTING BIOMETRIC VECTOR...");
-          window.faceapi.detectSingleFace(canvas)
+          window.faceapi.detectSingleFace(img)
             .withFaceLandmarks()
             .withFaceDescriptor()
             .then(detection => {
