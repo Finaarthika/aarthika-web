@@ -336,23 +336,31 @@ export default function SearchGrid() {
         
         if (modelsLoaded && window.faceapi) {
           setBiometricStatus("COMPUTING BIOMETRIC VECTOR...");
-          window.faceapi.detectSingleFace(img)
-            .withFaceLandmarks()
-            .withFaceDescriptor()
-            .then(detection => {
-              if (!detection) {
-                setBiometricStatus("FACE NOT DETECTED. PLEASE RETRY.");
-                setCapturedVector('');
-              } else {
-                const vectorStr = Array.from(detection.descriptor).join(',');
-                setCapturedVector(vectorStr);
-                setBiometricStatus("FACE VECTOR LOCKED & SECURED.");
-              }
-            })
-            .catch(err => {
-              console.error(err);
-              setBiometricStatus("ERROR COMPUTING VECTOR.");
-            });
+          
+          // Create a perfectly normalized, clean image object from the compressed canvas output
+          // This bypasses any raw EXIF or detached DOM parsing bugs in face-api.js
+          const normalizedImg = new Image();
+          normalizedImg.onload = () => {
+            const options = new window.faceapi.SsdMobilenetv1Options({ minConfidence: 0.3 });
+            window.faceapi.detectSingleFace(normalizedImg, options)
+              .withFaceLandmarks()
+              .withFaceDescriptor()
+              .then(detection => {
+                if (!detection) {
+                  setBiometricStatus("FACE NOT DETECTED. PLEASE RETRY.");
+                  setCapturedVector('');
+                } else {
+                  const vectorStr = Array.from(detection.descriptor).join(',');
+                  setCapturedVector(vectorStr);
+                  setBiometricStatus("FACE VECTOR LOCKED & SECURED.");
+                }
+              })
+              .catch(err => {
+                console.error(err);
+                setBiometricStatus("ERROR COMPUTING VECTOR.");
+              });
+          };
+          normalizedImg.src = compressedBase64;
         } else {
           setBiometricStatus("MODELS NOT LOADED. PLEASE RETRY IN A MOMENT.");
         }
