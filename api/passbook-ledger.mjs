@@ -61,7 +61,7 @@ export default async (req, res) => {
     const accessToken = tokenData.access_token;
 
     const spreadsheetId = '14ujzie7cQjDxKVVXpmE5kKUJxNMBouf4c8F_I9AnlJw';
-    const range = 'TRANSACTION_LEDGER!A2:F';
+    const range = 'TRANSACTION_LEDGER!A2:I';
     const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}`;
 
     const sheetResponse = await fetch(sheetsUrl, {
@@ -93,7 +93,10 @@ export default async (req, res) => {
         type: row[2] ? String(row[2]).trim() : '',
         amount: row[3] ? String(row[3]).trim() : '',
         runningBalance: row[4] ? String(row[4]).trim() : '',
-        status: row[5] ? String(row[5]).trim() : ''
+        status: row[5] ? String(row[5]).trim() : '',
+        method: row[6] ? String(row[6]).trim() : 'CASH',
+        formLink: row[7] ? String(row[7]).trim() : '',
+        personLink: row[8] ? String(row[8]).trim() : ''
       };
     });
 

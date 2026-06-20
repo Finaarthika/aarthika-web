@@ -810,14 +810,14 @@ export default function SearchGrid() {
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {ledger.map((row, index) => {
-                    const date = row[0] || 'Unknown';
-                    const type = row[2] || '';
-                    const amount = row[3] || '0.00';
-                    const balance = row[4] || '0.00';
-                    const status = row[5] || 'PENDING';
-                    const method = row[6] || 'CASH';
-                    const formLink = row[7] || '';
-                    const personLink = row[8] || '';
+                    const date = row.timestamp || 'Unknown';
+                    const type = row.type || '';
+                    const amount = row.amount || '0.00';
+                    const balance = row.runningBalance || '0.00';
+                    const status = row.status || 'PENDING';
+                    const method = row.method || 'CASH';
+                    const formLink = row.formLink || '';
+                    const personLink = row.personLink || '';
 
                     return (
                       <tr key={index} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
