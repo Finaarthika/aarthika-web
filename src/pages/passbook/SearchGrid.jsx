@@ -1216,7 +1216,7 @@ export default function SearchGrid() {
                   </div>
                 )}
               </div>
-            </div>e>
+            </div>
               {Math.ceil(ledger.length / itemsPerPage) > 1 && (
                 <div className="bg-white px-8 py-4 border-t border-gray-100 flex items-center justify-between">
                   <span className="text-sm text-gray-500 font-medium">
