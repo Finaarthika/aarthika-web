@@ -290,9 +290,90 @@ export default function SearchGrid() {
     }
   };
 
-  // --- BIOMETRIC SEARCH TEMPORARILY DISABLED ---
-  const handleFaceScanSearch = async () => {
-    alert("Face scan search is temporarily disabled. Please use manual search.");
+  // --- BIOMETRIC SEARCH ---
+  const handleFaceScanSearch = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!modelsLoaded || !window.faceapi) {
+      alert("Biometric models are still loading. Please wait a moment.");
+      return;
+    }
+
+    setBiometricStatus("SCANNING BIOMETRICS...");
+    try {
+      const bmp = await window.createImageBitmap(file);
+      const MAX_WIDTH = 600;
+      const MAX_HEIGHT = 600;
+      let width = bmp.width;
+      let height = bmp.height;
+      if (width > height) {
+        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+      } else {
+        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(bmp, 0, 0, width, height);
+      
+      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+      
+      const normalizedImg = new Image();
+      normalizedImg.onload = async () => {
+        const options = new window.faceapi.TinyFaceDetectorOptions({ inputSize: 512, scoreThreshold: 0.2 });
+        try {
+          const detection = await window.faceapi.detectSingleFace(normalizedImg, options)
+                                    .withFaceLandmarks()
+                                    .withFaceDescriptor();
+                                    
+          if (!detection) {
+            setBiometricStatus("");
+            alert("No face detected in photo. Please try again.");
+            return;
+          }
+          
+          setBiometricStatus("MATCHING FACE IN DATABASE...");
+          const liveDescriptor = detection.descriptor;
+          let minDistance = 0.50; // High accuracy Euclidean threshold
+          let bestMatch = null;
+          
+          customers.forEach(c => {
+            if (c.faceVector && c.faceVector.includes(',')) {
+              const storedArray = c.faceVector.split(',').map(Number);
+              if (storedArray.length === 128) {
+                const storedDescriptor = new Float32Array(storedArray);
+                const dist = window.faceapi.euclideanDistance(liveDescriptor, storedDescriptor);
+                if (dist < minDistance) {
+                  minDistance = dist;
+                  bestMatch = c;
+                }
+              }
+            }
+          });
+          
+          if (bestMatch) {
+            setBiometricStatus(`MATCH FOUND: ${bestMatch.customerName}`);
+            openLedger(bestMatch);
+          } else {
+            setBiometricStatus("");
+            alert("ACCESS DENIED: Face not found in secure database.");
+          }
+        } catch (err) {
+          console.error(err);
+          setBiometricStatus("");
+          alert("Error analyzing face.");
+        }
+      };
+      normalizedImg.src = compressedBase64;
+    } catch (err) {
+      console.error(err);
+      setBiometricStatus("");
+      alert("Error processing camera image.");
+    }
+    
+    e.target.value = null; // Reset file input
   };
 
   // --- ACCOUNT CREATION ---
@@ -470,9 +551,16 @@ export default function SearchGrid() {
                   spellCheck="false"
                 />
               </div>
-              <button onClick={handleSearch} className="btn btn-primary px-8 py-4 sm:py-0 h-14 rounded-xl flex items-center justify-center gap-2 w-full sm:w-auto text-lg font-bold shadow-md hover:shadow-lg transition-all">
-                Search Records
-              </button>
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <button onClick={handleSearch} className="btn btn-primary px-8 py-4 sm:py-0 h-14 rounded-xl flex items-center justify-center gap-2 w-full sm:w-auto text-lg font-bold shadow-md hover:shadow-lg transition-all">
+                  Search Records
+                </button>
+                <input type="file" accept="image/*" capture="user" id="face-search-input" onChange={handleFaceScanSearch} style={{ display: 'none' }} />
+                <button onClick={() => document.getElementById('face-search-input').click()} className="bg-gradient-to-r from-gray-800 to-gray-900 text-white px-6 py-4 sm:py-0 h-14 rounded-xl flex items-center justify-center gap-2 w-full sm:w-auto text-lg font-bold shadow-md hover:shadow-lg transition-all border border-gray-700">
+                  <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  Face Scan
+                </button>
+              </div>
             </div>
           </div>
 
