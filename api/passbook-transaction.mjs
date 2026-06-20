@@ -47,7 +47,7 @@ export default async (req, res) => {
 
     // Create the JWT token payload exactly how Google expects it
     const jwt = await new jose.SignJWT({
-      scope: 'https://www.googleapis.com/auth/spreadsheets' // Full scope for writing
+      scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive' // Full scope for writing sheets and drive
     })
       .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
       .setIssuer(clientEmail)
