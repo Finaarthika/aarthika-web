@@ -96,15 +96,7 @@ export default function SearchGrid() {
     const saved = localStorage.getItem('aarthika_staff_auth');
     if (saved) {
       try {
-        const parsed = JSON.parse(saved);
-        if (parsed.loggedIn && parsed.loginTimestamp) {
-           const hoursElapsed = (Date.now() - parsed.loginTimestamp) / (1000 * 60 * 60);
-           if (hoursElapsed >= 8) {
-              localStorage.removeItem('aarthika_staff_auth');
-              return { loggedIn: false, userId: '', password: '', staffName: '' };
-           }
-        }
-        return parsed;
+        return JSON.parse(saved);
       } catch (e) {}
     }
     return { loggedIn: false, userId: '', password: '', staffName: '' };
@@ -117,20 +109,8 @@ export default function SearchGrid() {
   // The Sentinel
   const verifyAuthSentinel = async (currentAuth) => {
     if (!currentAuth.loggedIn) return false;
-    
-    // 1. Local 8-Hour Check
-    if (currentAuth.loginTimestamp) {
-      const hoursElapsed = (Date.now() - currentAuth.loginTimestamp) / (1000 * 60 * 60);
-      if (hoursElapsed >= 8) {
-        localStorage.removeItem('aarthika_staff_auth');
-        setStaffAuth({ loggedIn: false, userId: '', password: '', staffName: '' });
-        alert(`SECURITY ALERT: Session Expired (8 Hour Limit). Please log in again.`);
-        setView('SEARCH');
-        return false;
-      }
-    }
 
-    // 2. Hardware Binding & Revocation Check
+    // Hardware Binding & Revocation Check
     try {
       const deviceId = getDeviceId();
       const res = await fetch('/api/passbook-auth', {
@@ -183,8 +163,7 @@ export default function SearchGrid() {
           loggedIn: true, 
           userId: data.userId, 
           password: loginForm.password, 
-          staffName: data.staffName,
-          loginTimestamp: Date.now()
+          staffName: data.staffName
         };
         setStaffAuth(newAuth);
         localStorage.setItem('aarthika_staff_auth', JSON.stringify(newAuth));
