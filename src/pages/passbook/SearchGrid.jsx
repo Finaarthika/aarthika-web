@@ -1357,7 +1357,7 @@ export default function SearchGrid() {
               </button>
             </div>
             
-            <div className="print-receipt-container p-6 bg-white text-black font-mono text-sm print:p-0 print:w-[80mm] print:text-xs mx-auto">
+            <div id="thermal-receipt-content" className="print-receipt-container p-6 bg-white text-black font-mono text-sm print:p-0 print:w-[80mm] print:text-xs mx-auto w-[80mm]">
                <div className="text-center mb-4">
                  <img src={logoIcon} className="w-12 h-12 mx-auto grayscale mb-1" alt="Aarthika" />
                  <h2 className="font-bold text-lg leading-tight uppercase">Aarthika Bank</h2>
@@ -1394,9 +1394,22 @@ export default function SearchGrid() {
             </div>
             
             <div className="p-4 bg-gray-50 border-t flex gap-2 print:hidden">
-              <button onClick={() => window.print()} className="flex-1 bg-gray-800 text-white font-bold py-3 rounded-xl hover:bg-gray-900 flex items-center justify-center gap-2 shadow-lg transition-all">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                Print to Thermal
+              <button 
+                onClick={() => {
+                  const element = document.getElementById('thermal-receipt-content');
+                  const opt = {
+                    margin:       0,
+                    filename:     `Aarthika_Receipt_${printTransaction.timestamp}.pdf`,
+                    image:        { type: 'jpeg', quality: 1 },
+                    html2canvas:  { scale: 4, useCORS: true },
+                    jsPDF:        { unit: 'mm', format: [80, 200], orientation: 'portrait' }
+                  };
+                  html2pdf().set(opt).from(element).save();
+                }} 
+                className="flex-1 bg-gray-800 text-white font-bold py-3 rounded-xl hover:bg-gray-900 flex items-center justify-center gap-2 shadow-lg transition-all"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                Download 80mm PDF
               </button>
             </div>
           </div>
