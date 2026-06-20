@@ -138,7 +138,7 @@ export default function SearchGrid() {
       try {
         const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
         await Promise.all([
-          window.faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+          window.faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
           window.faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
           window.faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
         ]);
@@ -330,7 +330,7 @@ export default function SearchGrid() {
         
         const normalizedImg = new Image();
         normalizedImg.onload = () => {
-          const options = new window.faceapi.SsdMobilenetv1Options({ minConfidence: 0.3 });
+          const options = new window.faceapi.TinyFaceDetectorOptions({ inputSize: 512, scoreThreshold: 0.2 });
           window.faceapi.detectSingleFace(normalizedImg, options)
             .withFaceLandmarks()
             .withFaceDescriptor()
