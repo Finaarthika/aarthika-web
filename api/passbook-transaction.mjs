@@ -137,9 +137,9 @@ export default async (req, res) => {
     const appendRange = 'TRANSACTION_LEDGER!A:F';
     const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(appendRange)}:append?valueInputOption=USER_ENTERED`;
 
-    // Swedish locale produces 'YYYY-MM-DD HH:mm:ss' format
+    // Swedish locale produces 'YYYY-MM-DD HH:mm:ss' format, force to India Standard Time (IST)
     const now = new Date();
-    const timestamp = now.toLocaleString('sv-SE').replace('T', ' ');
+    const timestamp = now.toLocaleString('sv-SE', { timeZone: 'Asia/Kolkata' }).replace('T', ' ');
     const status = 'SUCCESS';
 
     // Prepare files for Google Drive
