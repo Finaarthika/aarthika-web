@@ -72,13 +72,17 @@ export default function SearchGrid() {
   // Global Escape Key Listener for Power Users
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && view !== 'SEARCH') {
-        setView('SEARCH');
+      if (e.key === 'Escape') {
+        if (zoomedImage) {
+          setZoomedImage(null);
+        } else if (view !== 'SEARCH') {
+          setView('SEARCH');
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [view]);
+  }, [view, zoomedImage]);
 
   // Auto-focus search bar when returning to SEARCH view
   useEffect(() => {
@@ -90,6 +94,7 @@ export default function SearchGrid() {
   // Biometrics State
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [biometricStatus, setBiometricStatus] = useState('');
+  const [zoomedImage, setZoomedImage] = useState(null);
 
   // Ledger state
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -620,7 +625,9 @@ export default function SearchGrid() {
               <img 
                 src={getSecurePhotoUrl(selectedCustomer.photoLink)} 
                 alt="Profile" 
-                className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover ring-4 ring-aarthikaBlue/10 shadow-md"
+                onClick={() => setZoomedImage(getSecurePhotoUrl(selectedCustomer.photoLink))}
+                className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover ring-4 ring-aarthikaBlue/10 shadow-md cursor-pointer hover:ring-aarthikaBlue transition-all hover:scale-105"
+                title="Click to enlarge"
               />
             ) : (
               <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 ring-4 ring-gray-50">
@@ -795,6 +802,29 @@ export default function SearchGrid() {
           )}
         </div>
       </div>
+
+      {/* Fullscreen Image Zoom Modal */}
+      {zoomedImage && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 cursor-zoom-out"
+          onClick={() => setZoomedImage(null)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center">
+            <button 
+              className="absolute top-4 right-4 text-white hover:text-gray-300 bg-black/50 hover:bg-black/80 rounded-full p-2 transition-colors"
+              onClick={(e) => { e.stopPropagation(); setZoomedImage(null); }}
+            >
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <img 
+              src={zoomedImage} 
+              alt="Zoomed Profile" 
+              className="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl ring-4 ring-white/20"
+              onClick={(e) => e.stopPropagation()} 
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
