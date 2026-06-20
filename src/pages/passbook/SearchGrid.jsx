@@ -1359,7 +1359,7 @@ export default function SearchGrid() {
             
             <div id="thermal-receipt-content" className="print-receipt-container p-6 bg-white text-black font-mono text-sm print:p-0 print:w-[80mm] print:text-xs mx-auto w-[80mm]">
                <div className="text-center mb-4">
-                 <img src={logoTextUrl} className="h-6 mx-auto grayscale mb-2 object-contain" alt="Aarthika" />
+                 <img src={logoTextUrl} className="h-16 mx-auto grayscale mb-1 object-contain" alt="Aarthika" />
                  <p className="text-xs text-gray-600 font-bold">Terminal: HQ-01</p>
                </div>
                <div className="border-t border-dashed border-gray-400 py-3 mb-2">
