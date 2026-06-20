@@ -15,15 +15,15 @@ export default async (req, res) => {
     const bodyStr = Buffer.concat(chunks).toString();
     const body = bodyStr ? JSON.parse(bodyStr) : {};
 
-    const { accountNumber, type, amount, method, pdfFile } = body;
+    const { accountNumber, type, amount, method, formImage, personImage } = body;
 
     if (!accountNumber || !type || !amount) {
       res.setHeader('Content-Type', 'application/json');
       return res.status(400).json({ error: 'Missing required fields' });
     }
-    if (!pdfFile) {
+    if (!formImage || !personImage) {
       res.setHeader('Content-Type', 'application/json');
-      return res.status(400).json({ error: 'Compliance Error: Transaction proof PDF is required.' });
+      return res.status(400).json({ error: 'Compliance Error: Both Form and Person photos are required.' });
     }
 
     let clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
@@ -143,14 +143,14 @@ export default async (req, res) => {
     const status = 'SUCCESS';
 
     // Prepare files for Google Drive
-    const uploadToDrive = async (base64Str, name, mimeType) => {
+    const uploadToDrive = async (base64Str, name) => {
       const metadata = { name: name, parents: ['1-n92zn1gQCxMU2Xi59dMRJLW4KNkS1sY'] };
       const form = new FormData();
       form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
       const byteCharacters = atob(base64Str);
       const byteArrays = [];
       for (let i = 0; i < byteCharacters.length; i++) byteArrays.push(byteCharacters.charCodeAt(i));
-      form.append('file', new Blob([new Uint8Array(byteArrays)], { type: mimeType }));
+      form.append('file', new Blob([new Uint8Array(byteArrays)], { type: 'image/jpeg' }));
 
       const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true', {
         method: 'POST',
@@ -161,14 +161,21 @@ export default async (req, res) => {
       return await res.json();
     };
 
-    const cleanPdf = pdfFile.includes(',') ? pdfFile.split(',')[1] : pdfFile;
+    // Clean base64 strings if they contain prefixes
+    const cleanForm = formImage.includes(',') ? formImage.split(',')[1] : formImage;
+    const cleanPerson = personImage.includes(',') ? personImage.split(',')[1] : personImage;
 
-    const pdfRes = await uploadToDrive(cleanPdf, `${safeAccountNumber}_${timestamp}_PROOF.pdf`, 'application/pdf');
-    const pdfLink = `https://drive.google.com/file/d/${pdfRes.id}/view`; // Use direct view link for PDF
+    const [formRes, personRes] = await Promise.all([
+      uploadToDrive(cleanForm, `${safeAccountNumber}_${timestamp}_FORM.jpg`),
+      uploadToDrive(cleanPerson, `${safeAccountNumber}_${timestamp}_PERSON.jpg`)
+    ]);
+
+    const formLink = `https://drive.google.com/uc?export=view&id=${formRes.id}`;
+    const personLink = `https://drive.google.com/uc?export=view&id=${personRes.id}`;
 
     const appendData = {
       values: [
-        [timestamp, safeAccountNumber, safeType, amountStr, runningBalanceStr, status, safeMethod, pdfLink]
+        [timestamp, safeAccountNumber, safeType, amountStr, runningBalanceStr, status, safeMethod, formLink, personLink]
       ]
     };
 
