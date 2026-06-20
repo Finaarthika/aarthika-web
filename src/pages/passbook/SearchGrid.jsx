@@ -140,7 +140,7 @@ export default function SearchGrid() {
       try {
         const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
         await Promise.all([
-          window.faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+          window.faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
           window.faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL)
         ]);
       } catch (err) {
@@ -344,7 +344,7 @@ export default function SearchGrid() {
       
       const normalizedImg = new Image();
       normalizedImg.onload = async () => {
-        const options = new window.faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 });
+        const options = new window.faceapi.TinyFaceDetectorOptions({ inputSize: 512, scoreThreshold: 0.2 });
         try {
           // 1. Detect physical face bounding box
           const detection = await window.faceapi.detectSingleFace(normalizedImg, options);
@@ -455,7 +455,7 @@ export default function SearchGrid() {
         
         const normalizedImg = new Image();
         normalizedImg.onload = async () => {
-          const options = new window.faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 });
+          const options = new window.faceapi.TinyFaceDetectorOptions({ inputSize: 512, scoreThreshold: 0.2 });
           try {
             const detection = await window.faceapi.detectSingleFace(normalizedImg, options);
             if (!detection) {
