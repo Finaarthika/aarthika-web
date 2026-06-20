@@ -742,57 +742,83 @@ export default function SearchGrid() {
   // --- RENDER SCREEN 0: LOGIN ---
   if (!staffAuth.loggedIn) {
     return (
-      <div className="bg-gradient-to-br from-gray-900 via-[#0d0d14] to-aarthikaDark min-h-screen flex items-center justify-center p-4">
-        <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-8 sm:p-12 rounded-3xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in-95 duration-500">
+      <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 overflow-hidden font-sans">
+        {/* Decorative background elements for premium feel */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+          <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-blue-100/40 blur-[100px]"></div>
+          <div className="absolute bottom-[0%] -right-[10%] w-[60%] h-[60%] rounded-full bg-indigo-100/40 blur-[120px]"></div>
+        </div>
+
+        <div className="relative z-10 bg-white/80 backdrop-blur-xl border border-white/60 p-8 sm:p-12 rounded-[2rem] shadow-2xl shadow-blue-900/10 w-full max-w-md animate-in fade-in zoom-in-95 duration-700">
           <div className="flex flex-col items-center mb-10">
-            <div className="w-20 h-20 bg-white rounded-full p-1 mb-4 shadow-[0_0_30px_rgba(255,255,255,0.1)]">
-              <img src={logoIcon} alt="Aarthika" className="w-full h-full object-cover rounded-full" />
+            <div className="w-20 h-20 bg-white rounded-full p-2 mb-6 shadow-md border border-gray-100 flex items-center justify-center">
+              <img src={logoIcon} alt="Aarthika" className="w-full h-full object-contain rounded-full" />
             </div>
-            <img src={logoTextUrl} alt="Aarthika" className="h-8 object-contain mb-2" style={{ filter: 'brightness(0) invert(1)' }} />
-            <div className="text-blue-300 tracking-[0.3em] text-xs font-bold uppercase opacity-80">Terminal Access</div>
+            <img src={logoTextUrl} alt="Aarthika" className="h-8 object-contain mb-3" />
+            <div className="text-aarthikaBlue tracking-[0.2em] text-xs font-bold uppercase opacity-90">Staff Authentication Portal</div>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-white/80 text-sm font-semibold mb-2">Authorized User ID</label>
-              <input 
-                type="text" 
-                className="w-full bg-black/30 border border-white/10 text-white placeholder-white/30 px-5 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-aarthikaBlue focus:border-transparent transition-all"
-                value={loginForm.userId}
-                onChange={e => setLoginForm({...loginForm, userId: e.target.value})}
-                placeholder="Enter Terminal ID"
-                required
-              />
+              <label className="block text-gray-700 text-sm font-bold mb-2">Staff ID Number</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                  </svg>
+                </div>
+                <input 
+                  type="text" 
+                  className="w-full bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 pl-11 pr-5 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-aarthikaBlue/50 focus:border-aarthikaBlue focus:bg-white transition-all font-medium shadow-sm"
+                  value={loginForm.userId}
+                  onChange={e => setLoginForm({...loginForm, userId: e.target.value})}
+                  placeholder="Enter your ID"
+                  required
+                />
+              </div>
             </div>
             <div>
-              <label className="block text-white/80 text-sm font-semibold mb-2">Secure Passkey</label>
-              <input 
-                type="password" 
-                className="w-full bg-black/30 border border-white/10 text-white placeholder-white/30 px-5 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-aarthikaBlue focus:border-transparent transition-all"
-                value={loginForm.password}
-                onChange={e => setLoginForm({...loginForm, password: e.target.value})}
-                placeholder="••••••••"
-                required
-              />
+              <label className="block text-gray-700 text-sm font-bold mb-2">Secure Password</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <input 
+                  type="password" 
+                  className="w-full bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 pl-11 pr-5 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-aarthikaBlue/50 focus:border-aarthikaBlue focus:bg-white transition-all font-medium shadow-sm"
+                  value={loginForm.password}
+                  onChange={e => setLoginForm({...loginForm, password: e.target.value})}
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
             </div>
 
-            {authError && <div className="text-red-400 text-sm font-semibold text-center bg-red-400/10 py-2 rounded-lg border border-red-400/20">{authError}</div>}
+            {authError && (
+              <div className="flex items-center gap-2 text-red-600 text-sm font-semibold bg-red-50 p-3 rounded-xl border border-red-100 animate-in slide-in-from-top-2">
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                {authError}
+              </div>
+            )}
 
             <button 
               type="submit" 
               disabled={authLoading}
-              className="w-full bg-aarthikaBlue hover:bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-aarthikaBlue/30 transition-all transform hover:-translate-y-1 disabled:opacity-50 disabled:transform-none flex justify-center items-center gap-2"
+              className="w-full bg-gradient-to-r from-aarthikaBlue to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:transform-none flex justify-center items-center gap-2 text-lg"
             >
               {authLoading ? (
                 <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
               ) : (
-                <><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg> Authenticate</>
+                <>Secure Login <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg></>
               )}
             </button>
           </form>
-          <div className="mt-8 text-center text-white/40 text-xs leading-relaxed">
-            Aarthika Secure Terminal Environment<br/>
-            Unregistered node activity is monitored and restricted.
+          
+          <div className="mt-8 pt-6 border-t border-gray-100 flex items-center justify-center gap-2 text-gray-400 text-xs font-medium">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+            256-bit Encrypted Connection
           </div>
         </div>
       </div>
