@@ -162,10 +162,6 @@ export default function SearchGrid() {
     await fetchLedger(customer.accountNumber);
   };
 
-  const [depositAmount, setDepositAmount] = useState('');
-  const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [transactionLoading, setTransactionLoading] = useState(false);
-  const [transactionMsg, setTransactionMsg] = useState({ type: '', text: '' });
 
   // Transaction Modal State
   const [txModalOpen, setTxModalOpen] = useState(false);
