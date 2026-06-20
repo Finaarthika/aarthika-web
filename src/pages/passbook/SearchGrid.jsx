@@ -236,9 +236,22 @@ export default function SearchGrid() {
     }
 
     setTransactionLoading(true);
-    setTransactionMsg({ type: '', text: 'Processing and uploading secure images... Please wait.' });
+    setTransactionMsg({ type: '', text: 'Generating secure PDF receipt...' });
 
     try {
+      const pdfElement = document.getElementById('tx-pdf-template');
+      const pdfBase64Str = await html2pdf().from(pdfElement).set({
+        margin: [0, 0, 0, 0],
+        filename: `Aarthika_TX_${new Date().getTime()}.pdf`,
+        image: { type: 'jpeg', quality: 0.7 },
+        html2canvas: { scale: 1.5, useCORS: true, logging: false },
+        jsPDF: { unit: 'px', format: [1122, 793], orientation: 'landscape' }
+      }).toPdf().output('datauristring');
+      
+      const cleanPdfBase64 = pdfBase64Str.split(',')[1];
+
+      setTransactionMsg({ type: '', text: 'Uploading PDF to secure vault...' });
+
       const res = await fetch('/api/passbook-transaction', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -247,8 +260,7 @@ export default function SearchGrid() {
           type: txType,
           amount: txAmount,
           method: txMethod,
-          formImage: txFormImage,
-          personImage: txPersonImage
+          pdfFile: cleanPdfBase64
         })
       });
       const body = await res.json();
@@ -816,8 +828,7 @@ export default function SearchGrid() {
                     const balance = row.runningBalance || '0.00';
                     const status = row.status || 'PENDING';
                     const method = row.method || 'CASH';
-                    const formLink = row.formLink || '';
-                    const personLink = row.personLink || '';
+                    const pdfLink = row.pdfLink || '';
 
                     return (
                       <tr key={index} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
@@ -838,17 +849,14 @@ export default function SearchGrid() {
                         <td className="py-4 px-8 text-sm font-bold text-gray-800">{balance}</td>
                         <td className="py-4 px-8">
                           <div className="flex gap-2">
-                            {formLink && (
-                              <button onClick={() => setZoomedImage(getSecurePhotoUrl(formLink))} className="w-8 h-8 rounded bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 hover:scale-110 transition-all" title="View Form">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                              </button>
+                            {pdfLink ? (
+                              <a href={pdfLink} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors font-bold text-xs border border-red-100" title="View PDF Receipt">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                RECEIPT
+                              </a>
+                            ) : (
+                              <span className="text-xs text-gray-300">-</span>
                             )}
-                            {personLink && (
-                              <button onClick={() => setZoomedImage(getSecurePhotoUrl(personLink))} className="w-8 h-8 rounded bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-100 hover:scale-110 transition-all" title="View Customer">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                              </button>
-                            )}
-                            {!formLink && !personLink && <span className="text-xs text-gray-300">-</span>}
                           </div>
                         </td>
                         <td className="py-4 px-8 text-right">
@@ -1066,6 +1074,72 @@ export default function SearchGrid() {
           </div>
         </div>
       )}
+
+      {/* Hidden PDF Template for Transactions */}
+      <div className="fixed top-[-9999px] left-[-9999px] pointer-events-none z-[-1]">
+        <div id="tx-pdf-template" className="w-[1122px] h-[793px] bg-white text-gray-900 p-12 flex flex-col font-sans border-8 border-gray-100 box-border relative">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-bl-full opacity-50"></div>
+          
+          <div className="flex justify-between items-start border-b-2 border-gray-100 pb-8 mb-8 relative z-10">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-3xl shadow-lg">ā</div>
+              <div>
+                <h1 className="text-4xl font-extrabold text-gray-800 tracking-tight">aarthikā</h1>
+                <p className="text-gray-500 font-bold tracking-widest text-sm uppercase mt-1">Official Transaction Receipt</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-3xl font-black text-gray-800 uppercase tracking-wider">{txType}</div>
+              <div className="text-gray-500 font-mono mt-2 text-lg">TXN-{new Date().getTime().toString().slice(-6)}</div>
+            </div>
+          </div>
+
+          <div className="flex-1 flex gap-12 relative z-10">
+            <div className="flex-1 flex flex-col gap-8">
+              <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Account Details</h2>
+                <div className="grid grid-cols-2 gap-y-4 gap-x-8">
+                  <div><span className="text-xs text-gray-500 block mb-1">Customer Name</span><strong className="text-xl text-gray-800">{selectedCustomer?.customerName}</strong></div>
+                  <div><span className="text-xs text-gray-500 block mb-1">Account Number</span><strong className="text-xl text-aarthikaBlue font-mono">{selectedCustomer?.accountNumber}</strong></div>
+                  <div><span className="text-xs text-gray-500 block mb-1">Father's Name</span><strong className="text-lg text-gray-800">{selectedCustomer?.fathersName || 'N/A'}</strong></div>
+                  <div><span className="text-xs text-gray-500 block mb-1">Date & Time</span><strong className="text-lg text-gray-800">{new Date().toLocaleString()}</strong></div>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100 mt-auto">
+                <h2 className="text-sm font-bold text-blue-400 uppercase tracking-widest mb-4">Transaction Details</h2>
+                <div className="flex justify-between items-end">
+                  <div>
+                    <span className="text-xs text-blue-500 block mb-1 font-bold">Payment Method</span>
+                    <strong className="text-2xl text-blue-900 bg-white px-4 py-1 rounded-lg border border-blue-200 inline-block">{txMethod}</strong>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs text-blue-500 block mb-1 font-bold">Final Amount</span>
+                    <strong className="text-5xl font-black text-blue-600">₹{parseFloat(txAmount || 0).toFixed(2)}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="w-[450px] flex flex-col gap-6">
+              <div className="flex-1 bg-gray-50 rounded-2xl border border-gray-200 overflow-hidden relative shadow-sm">
+                <div className="absolute top-0 left-0 bg-black/60 text-white text-xs font-bold px-3 py-1 rounded-br-lg z-10 backdrop-blur-sm">CUSTOMER FACE</div>
+                {txPersonImage && <img src={txPersonImage} className="w-full h-full object-cover" />}
+              </div>
+              <div className="flex-1 bg-gray-50 rounded-2xl border border-gray-200 overflow-hidden relative shadow-sm">
+                <div className="absolute top-0 left-0 bg-black/60 text-white text-xs font-bold px-3 py-1 rounded-br-lg z-10 backdrop-blur-sm">FORM / DOCUMENT</div>
+                {txFormImage && <img src={txFormImage} className="w-full h-full object-cover" />}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-gray-200 flex justify-between items-center text-xs font-bold text-gray-400">
+            <div>Aarthika Core Banking System</div>
+            <div>Secure Node HQ-Terminal-01</div>
+            <div>{new Date().toISOString()}</div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
