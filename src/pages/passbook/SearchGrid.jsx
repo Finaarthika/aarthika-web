@@ -71,6 +71,10 @@ export default function SearchGrid() {
   const [view, setView] = useState('SEARCH'); // 'SEARCH' | 'LEDGER' | 'CREATE'
   const [searchQuery, setSearchQuery] = useState('');
   const [customers, setCustomers] = useState([]);
+  const [showScanner, setShowScanner] = useState(false);
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const fullDatabaseRef = useRef([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const searchInputRef = useRef(null);
@@ -244,7 +248,11 @@ export default function SearchGrid() {
       const res = await fetch(`/api/passbook-search?search=${encodeURIComponent(query)}`);
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
-      setCustomers(body.data || []);
+      const data = body.data || [];
+      setCustomers(data);
+      if (query === '') {
+        fullDatabaseRef.current = data;
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -447,7 +455,9 @@ export default function SearchGrid() {
           setBiometricStatus("MATCHING NORMALIZED TENSOR IN DATABASE...");
           const matchedCustomers = [];
           
-          customers.forEach(c => {
+          const databaseToSearch = fullDatabaseRef.current.length > 0 ? fullDatabaseRef.current : customers;
+          
+          databaseToSearch.forEach(c => {
             if (c.faceVector && c.faceVector.includes(',')) {
               const storedArray = c.faceVector.split(',').map(Number);
               if (storedArray.length === 512) {
