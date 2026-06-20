@@ -245,8 +245,8 @@ export default function SearchGrid() {
         margin: [0, 0, 0, 0],
         filename: `Aarthika_TX_${new Date().getTime()}.pdf`,
         image: { type: 'jpeg', quality: 1.0 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait', compress: true }
+        html2canvas: { scale: 3, useCORS: true, logging: false },
+        jsPDF: { unit: 'px', format: [1200, 1697], orientation: 'portrait', compress: true }
       }).toPdf().output('datauristring');
       
       const cleanPdfBase64 = pdfBase64Str.split(',')[1];
