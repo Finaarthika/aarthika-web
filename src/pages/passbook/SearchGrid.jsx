@@ -125,8 +125,30 @@ export default function SearchGrid() {
   const [capturedImageBase64, setCapturedImageBase64] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
 
-  // --- Biometrics Temporarily Disabled ---
-
+  // --- INIT FACE-API ---
+  useEffect(() => {
+    const loadScript = async () => {
+      if (!window.faceapi) {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js';
+        script.async = true;
+        document.body.appendChild(script);
+        await new Promise((resolve) => { script.onload = resolve; });
+      }
+      try {
+        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+        await Promise.all([
+          window.faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+          window.faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+          window.faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+        ]);
+        setModelsLoaded(true);
+      } catch (err) {
+        console.error("Failed to load models", err);
+      }
+    };
+    loadScript();
+  }, []);
   // --- API LOGIC ---
   useEffect(() => {
     if (view === 'SEARCH') {
@@ -311,7 +333,29 @@ export default function SearchGrid() {
         // Compress aggressively: JPEG at 60% quality
         const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
         setCapturedImageBase64(compressedBase64);
-        setBiometricStatus("PHOTO LOCKED. READY TO SUBMIT.");
+        
+        if (modelsLoaded && window.faceapi) {
+          setBiometricStatus("COMPUTING BIOMETRIC VECTOR...");
+          window.faceapi.detectSingleFace(canvas)
+            .withFaceLandmarks()
+            .withFaceDescriptor()
+            .then(detection => {
+              if (!detection) {
+                setBiometricStatus("FACE NOT DETECTED. PLEASE RETRY.");
+                setCapturedVector('');
+              } else {
+                const vectorStr = Array.from(detection.descriptor).join(',');
+                setCapturedVector(vectorStr);
+                setBiometricStatus("FACE VECTOR LOCKED & SECURED.");
+              }
+            })
+            .catch(err => {
+              console.error(err);
+              setBiometricStatus("ERROR COMPUTING VECTOR.");
+            });
+        } else {
+          setBiometricStatus("MODELS NOT LOADED. PLEASE RETRY IN A MOMENT.");
+        }
       };
       img.src = event.target.result;
     };
@@ -345,7 +389,7 @@ export default function SearchGrid() {
           fathersName: newCustomer.fathersName,
           village: newCustomer.village,
           phone: newCustomer.phone,
-          faceVector: '', 
+          faceVector: capturedVector, 
           aadharId: newCustomer.aadharId,
           pdfFile: cleanBase64,
           photoFile: capturedImageBase64.split(',')[1]
