@@ -25,7 +25,7 @@ const StaffHeader = ({ staffName, onLogout }) => (
       
       <div className="flex items-center gap-4 sm:gap-6 z-10">
         <div className="flex flex-col items-end hidden sm:flex">
-          <div className="text-white/60 text-xs font-medium tracking-wider uppercase">Active Staff</div>
+          <div className="text-white/60 text-xs font-medium tracking-wider uppercase">Active Officer</div>
           <div className="text-white/90 text-sm font-semibold">{staffName || 'System'}</div>
         </div>
         <div className="hidden sm:block h-8 w-px bg-white/20"></div>
@@ -106,7 +106,7 @@ export default function SearchGrid() {
     setTimeout(() => setToast({ visible: false, message: '', type: 'success' }), 4000);
   };
 
-  const [view, setView] = useState('SEARCH'); // 'SEARCH' | 'LEDGER' | 'CREATE'
+  const [view, setView] = useState(() => sessionStorage.getItem('aarthika_view') || 'SEARCH'); // 'SEARCH' | 'LEDGER' | 'CREATE'
   const [searchQuery, setSearchQuery] = useState('');
   const [customers, setCustomers] = useState([]);
   const [showScanner, setShowScanner] = useState(false);
@@ -245,7 +245,19 @@ export default function SearchGrid() {
   const [biometricStatus, setBiometricStatus] = useState('');
 
   // Ledger state
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedCustomer, setSelectedCustomer] = useState(() => {
+    const saved = sessionStorage.getItem('aarthika_selected_customer');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem('aarthika_view', view);
+    if (selectedCustomer) {
+      sessionStorage.setItem('aarthika_selected_customer', JSON.stringify(selectedCustomer));
+    } else {
+      sessionStorage.removeItem('aarthika_selected_customer');
+    }
+  }, [view, selectedCustomer]);
   const [ledger, setLedger] = useState([]);
   const [netBalance, setNetBalance] = useState('0.00');
   const [ledgerLoading, setLedgerLoading] = useState(false);
@@ -446,6 +458,12 @@ export default function SearchGrid() {
       setLedgerLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (view === 'LEDGER' && selectedCustomer) {
+      fetchLedger(selectedCustomer.accountNumber);
+    }
+  }, []);
 
   const handleTxCameraCapture = async (e, setBase64Str) => {
     const file = e.target.files[0];
@@ -795,7 +813,6 @@ export default function SearchGrid() {
       setNewCustomer({ customerName: '', fathersName: '', village: '', phone: '', aadharId: '' });
       setCapturedVector('');
       setCapturedImageBase64('');
-      setView('SEARCH');
 
     } catch (err) {
       showToast("Error creating account: " + err.message, "error");
@@ -836,12 +853,12 @@ export default function SearchGrid() {
               <img src={logoIcon} alt="Aarthika" className="w-full h-full object-contain rounded-full" />
             </div>
             <img src={logoTextUrl} alt="Aarthika" className="h-8 object-contain mb-3" />
-            <div className="text-aarthikaBlue tracking-[0.2em] text-xs font-bold uppercase opacity-90">Staff Authentication Portal</div>
+            <div className="text-aarthikaBlue tracking-[0.2em] text-xs font-bold uppercase opacity-90">Officer Authentication Portal</div>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-gray-700 text-sm font-bold mb-2">Staff ID Number</label>
+              <label className="block text-gray-700 text-sm font-bold mb-2">Officer ID Number</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
