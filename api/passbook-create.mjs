@@ -91,9 +91,10 @@ export default async (req, res) => {
     const newAccountNumber = `ACC-${nextAccNum}`;
 
     // Append the new row
-    const appendRange = 'CUSTOMER_PROFILES!A:H';
+    const appendRange = 'CUSTOMER_PROFILES!A:I';
     const appendUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(appendRange)}:append?valueInputOption=USER_ENTERED`;
 
+    let pdfLink = '';
     // Upload PDF to Google Drive if provided
     if (pdfFile) {
       const boundary = 'foo_bar_baz_boundary';
@@ -115,7 +116,7 @@ export default async (req, res) => {
       
       const multipartBody = Buffer.concat([headerBuffer, pdfBuffer, footerBuffer]);
       
-      await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      const pdfDriveRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -123,6 +124,14 @@ export default async (req, res) => {
         },
         body: multipartBody
       });
+      
+      if (pdfDriveRes.ok) {
+        const driveDataPdf = await pdfDriveRes.json();
+        pdfLink = `https://drive.google.com/file/d/${driveDataPdf.id}/view?usp=sharing`;
+      } else {
+        const driveErrPdf = await pdfDriveRes.text();
+        console.error('Drive PDF upload failed:', driveErrPdf);
+      }
     }
 
     // Upload Raw Profile Photo to Google Drive
@@ -176,7 +185,8 @@ export default async (req, res) => {
           String(phone || '').trim(),
           photoLink,
           String(faceVector || '').trim(),
-          String(aadharId || '').trim()
+          String(aadharId || '').trim(),
+          pdfLink
         ]
       ]
     };
