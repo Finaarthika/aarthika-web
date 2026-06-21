@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import html2pdf from 'html2pdf.js';
 import logoIcon from '../../assets/4.png';
 import logoTextUrl from '../../assets/Aarthika (1).png';
@@ -100,6 +100,12 @@ const formatDateTime = (dateStr) => {
 };
 
 export default function SearchGrid() {
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
+  const showToast = (message, type = 'success') => {
+    setToast({ visible: true, message, type });
+    setTimeout(() => setToast({ visible: false, message: '', type: 'success' }), 4000);
+  };
+
   const [view, setView] = useState('SEARCH'); // 'SEARCH' | 'LEDGER' | 'CREATE'
   const [searchQuery, setSearchQuery] = useState('');
   const [customers, setCustomers] = useState([]);
@@ -155,7 +161,7 @@ export default function SearchGrid() {
       if (!res.ok || !data.authorized) {
         localStorage.removeItem('aarthika_staff_auth');
         setStaffAuth({ loggedIn: false, userId: '', password: '', staffName: '' });
-        alert(`SECURITY ALERT: ${data.reason || 'Access Revoked'}. You have been forcibly logged out.`);
+        showToast(`SECURITY ALERT: ${data.reason || 'Access Revoked'}. You have been forcibly logged out.`, 'error');
         setView('SEARCH'); 
         return false;
       }
@@ -375,18 +381,26 @@ export default function SearchGrid() {
     }
   }, [view]);
 
-  const fetchCustomers = async (query) => {
+  const filteredCustomers = useMemo(() => {
+    if (!searchQuery) return fullDatabaseRef.current;
+    const q = searchQuery.toLowerCase();
+    return fullDatabaseRef.current.filter(c => 
+      (c.customerName && c.customerName.toLowerCase().includes(q)) ||
+      (c.phone && c.phone.includes(q)) ||
+      (c.accountNumber && c.accountNumber.toLowerCase().includes(q)) ||
+      (c.aadharId && c.aadharId.toLowerCase().includes(q))
+    );
+  }, [searchQuery, fullDatabaseRef.current]);
+
+  const fetchCustomers = async (query = '') => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/passbook-search?search=${encodeURIComponent(query)}`);
+      const res = await fetch(`/api/passbook-search`);
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
       const data = body.data || [];
-      setCustomers(data);
-      if (query === '') {
-        fullDatabaseRef.current = data;
-      }
+      fullDatabaseRef.current = data;
     } catch (err) {
       setError(err.message);
     } finally {
@@ -396,7 +410,6 @@ export default function SearchGrid() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    fetchCustomers(searchQuery);
   };
 
   const openLedger = async (customer) => {
@@ -454,7 +467,7 @@ export default function SearchGrid() {
       setBase64Str(compressedBase64);
     } catch (err) {
       console.error("Camera Capture Error:", err);
-      alert("Error processing camera image.");
+      showToast("Error processing camera image.", "error");
     }
   };
 
@@ -519,7 +532,7 @@ export default function SearchGrid() {
     if (!file) return;
 
     if (!modelsLoaded || !window.faceapi) {
-      alert("Biometric models are still loading. Please wait a moment.");
+      showToast("Biometric models are still loading. Please wait a moment.", "error");
       return;
     }
 
@@ -552,7 +565,7 @@ export default function SearchGrid() {
                                     
           if (!detection) {
             setBiometricStatus("");
-            alert("No face detected in photo. Please try again.");
+            showToast("No face detected in photo. Please try again.", "error");
             return;
           }
           
@@ -611,19 +624,19 @@ export default function SearchGrid() {
             setCurrentPage(1);
           } else {
             setBiometricStatus("");
-            alert("No matching profiles found in secure database.");
+            showToast("No matching profiles found in secure database.", "error");
           }
         } catch (err) {
           console.error(err);
           setBiometricStatus("");
-          alert("Error analyzing face.");
+          showToast("Error analyzing face.", "error");
         }
       };
       normalizedImg.src = compressedBase64;
     } catch (err) {
       console.error(err);
       setBiometricStatus("");
-      alert("Error processing camera image.");
+      showToast("Error processing camera image.", "error");
     }
     
     e.target.value = null; // Reset file input
@@ -716,8 +729,8 @@ export default function SearchGrid() {
   };
 
   const submitNewAccount = async () => {
-    if (!newCustomer.customerName || !newCustomer.phone) return alert("Name and Phone are required.");
-    if (!capturedImageBase64) return alert("You must capture a photo first.");
+    if (!newCustomer.customerName || !newCustomer.phone) return showToast("Name and Phone are required.", "error");
+    if (!capturedImageBase64) return showToast("You must capture a photo first.", "error");
 
     setCreateLoading(true);
     try {
@@ -760,7 +773,7 @@ export default function SearchGrid() {
         throw new Error(body.message || body.error || `HTTP ${res.status}`);
       }
 
-      alert(`Account Created Successfully: ${body.accountNumber}. Opening PDF Receipt...`);
+      showToast(`Account Created Successfully: ${body.accountNumber}. Opening PDF Receipt...`, "success");
       
       // 3. Print the final local copy with the actual account number
       document.getElementById('pdf-acc-no').innerText = body.accountNumber;
@@ -782,10 +795,24 @@ export default function SearchGrid() {
       setView('SEARCH');
 
     } catch (err) {
-      alert("Error creating account: " + err.message);
+      showToast("Error creating account: " + err.message, "error");
     } finally {
       setCreateLoading(false);
     }
+  };
+
+  const ToastComponent = () => {
+    if (!toast.visible) return null;
+    return (
+      <div className={`fixed top-6 left-1/2 transform -translate-x-1/2 z-[9999] px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-5 duration-300 font-medium tracking-wide text-sm ${toast.type === 'error' ? 'bg-red-600 text-white shadow-red-900/30' : 'bg-[#10b981] text-white shadow-emerald-900/30'}`}>
+        {toast.type === 'error' ? (
+          <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        ) : (
+          <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+        )}
+        {toast.message}
+      </div>
+    );
   };
 
 
@@ -793,6 +820,7 @@ export default function SearchGrid() {
   if (!staffAuth.loggedIn) {
     return (
       <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 overflow-hidden font-sans">
+        <ToastComponent />
         {/* Decorative background elements for premium feel */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
           <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-blue-100/40 blur-[100px]"></div>
@@ -878,7 +906,8 @@ export default function SearchGrid() {
   // --- RENDER SCREEN 1: SEARCH ---
   if (view === 'SEARCH') {
     return (
-      <div className="bg-gradient-to-b from-gray-50 to-gray-100/50 min-h-screen font-sans pb-16">
+      <div className="bg-gray-50 min-h-screen flex flex-col font-sans text-gray-900">
+        <ToastComponent />
         <StaffHeader staffName={staffAuth.staffName} onLogout={handleLogout} />
         
         <div className="premium-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
@@ -948,7 +977,7 @@ export default function SearchGrid() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 bg-white">
-                    {customers.map((c, i) => (
+                    {filteredCustomers.map((c, i) => (
                       <tr 
                         key={c.accountNumber || i} 
                         className="hover:bg-blue-50/60 transition-colors group cursor-pointer focus:outline-none focus:bg-blue-50/60" 
@@ -1194,7 +1223,14 @@ export default function SearchGrid() {
           
           <div className="flex-1 w-full">
             <h2 className="text-2xl font-bold text-gray-800 mb-6 pb-4 border-b border-gray-100 flex items-center justify-between">
-              Customer Profile
+              <div className="flex items-center gap-3">
+                Customer Profile
+                {selectedCustomer?.pdfLink && (
+                  <a href={selectedCustomer.pdfLink} target="_blank" rel="noopener noreferrer" className="text-red-500 hover:text-red-600 transition-colors bg-red-50 hover:bg-red-100 p-2 rounded-lg border border-red-100 shadow-sm flex items-center justify-center" title="View Account Opening Form">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9h1.5m1.5 0H15m-6 4h6m-6 4h6" /></svg>
+                  </a>
+                )}
+              </div>
               <span className="text-sm font-semibold bg-blue-50 text-aarthikaBlue px-3 py-1 rounded-md border border-blue-100">
                 {selectedCustomer?.accountNumber}
               </span>

@@ -55,7 +55,7 @@ export default async (req, res) => {
     const accessToken = tokenData.access_token;
 
     const sheetId = '14ujzie7cQjDxKVVXpmE5kKUJxNMBouf4c8F_I9AnlJw';
-    const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/CUSTOMER_PROFILES!A2:H`;
+    const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/CUSTOMER_PROFILES!A2:I`;
 
     const sheetResponse = await fetch(sheetsUrl, {
       headers: {
@@ -84,13 +84,10 @@ export default async (req, res) => {
         photoLink: row[5] ? String(row[5]).trim() : '',
         faceVector: row[6] ? String(row[6]).trim() : '',
         aadharId: row[7] ? String(row[7]).trim() : '',
+        pdfLink: row[8] ? String(row[8]).trim() : ''
       };
     }).filter(c => {
-      if (c.accountNumber === '' && c.customerName === '') return false;
-      if (searchQuery) {
-        return c.customerName.toLowerCase().includes(searchQuery);
-      }
-      return true;
+      return c.accountNumber !== '' || c.customerName !== '';
     });
 
     res.setHeader('Content-Type', 'application/json');
