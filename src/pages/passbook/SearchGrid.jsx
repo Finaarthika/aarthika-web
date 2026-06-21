@@ -70,6 +70,35 @@ const getSecurePhotoUrl = (link) => {
   }
 };
 
+const formatDateTime = (dateStr) => {
+  if (!dateStr || dateStr === 'Unknown') return 'Unknown';
+  try {
+    const parts = dateStr.split(' ');
+    if (parts.length !== 2) return dateStr;
+    const dateParts = parts[0].split('-');
+    if (dateParts.length !== 3) return dateStr;
+    
+    // Convert YYYY-MM-DD to DD-MM-YYYY
+    const formattedDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+    
+    const timeParts = parts[1].split(':');
+    if (timeParts.length < 2) return dateStr;
+    
+    let hours = parseInt(timeParts[0], 10);
+    const minutes = timeParts[1];
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // 0 becomes 12
+    const strHours = hours < 10 ? '0' + hours : hours;
+    
+    const formattedTime = `${strHours}:${minutes} ${ampm}`;
+    
+    return `${formattedDate} ${formattedTime}`;
+  } catch (e) {
+    return dateStr;
+  }
+};
+
 export default function SearchGrid() {
   const [view, setView] = useState('SEARCH'); // 'SEARCH' | 'LEDGER' | 'CREATE'
   const [searchQuery, setSearchQuery] = useState('');
@@ -1277,7 +1306,7 @@ export default function SearchGrid() {
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {ledger.map((row, index) => {
-                      const date = row.timestamp || 'Unknown';
+                      const date = formatDateTime(row.timestamp || 'Unknown');
                       const type = row.type || '';
                       const amount = row.amount || '0.00';
                       const balance = row.runningBalance || '0.00';
@@ -1345,7 +1374,7 @@ export default function SearchGrid() {
               {/* MOBILE VIEW (CARDS) */}
               <div className="block md:hidden divide-y divide-gray-100 bg-white">
                 {ledger.map((row, index) => {
-                  const date = row.timestamp || 'Unknown';
+                  const date = formatDateTime(row.timestamp || 'Unknown');
                   const type = row.type || '';
                   const amount = row.amount || '0.00';
                   const balance = row.runningBalance || '0.00';
@@ -1656,7 +1685,7 @@ export default function SearchGrid() {
                   const element = document.getElementById('thermal-receipt-content');
                   const opt = {
                     margin:       0,
-                    filename:     `Aarthika_Receipt_${printTransaction.timestamp}.pdf`,
+                    filename:     `Aarthika_Receipt_${(printTransaction.timestamp || '').replace(/[\s:]/g, '_')}.pdf`,
                     image:        { type: 'jpeg', quality: 1 },
                     html2canvas:  { scale: 4, useCORS: true },
                     jsPDF:        { unit: 'mm', format: [80, 200], orientation: 'portrait' }
