@@ -382,15 +382,18 @@ export default function SearchGrid() {
   }, [view]);
 
   const filteredCustomers = useMemo(() => {
-    if (!searchQuery) return fullDatabaseRef.current;
-    const q = searchQuery.toLowerCase();
-    return fullDatabaseRef.current.filter(c => 
-      (c.customerName && c.customerName.toLowerCase().includes(q)) ||
-      (c.phone && c.phone.includes(q)) ||
-      (c.accountNumber && c.accountNumber.toLowerCase().includes(q)) ||
-      (c.aadharId && c.aadharId.toLowerCase().includes(q))
-    );
-  }, [searchQuery, fullDatabaseRef.current]);
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      return fullDatabaseRef.current.filter(c => 
+        (c.customerName && c.customerName.toLowerCase().includes(q)) ||
+        (c.phone && c.phone.includes(q)) ||
+        (c.accountNumber && c.accountNumber.toLowerCase().includes(q)) ||
+        (c.aadharId && c.aadharId.toLowerCase().includes(q))
+      );
+    }
+    if (customers.length > 0) return customers;
+    return fullDatabaseRef.current;
+  }, [searchQuery, customers, fullDatabaseRef.current]);
 
   const fetchCustomers = async (query = '') => {
     setLoading(true);
@@ -934,7 +937,11 @@ export default function SearchGrid() {
                   ref={searchInputRef}
                   className="w-full text-lg sm:text-xl py-4 pl-14 pr-4 bg-transparent border-none focus:ring-0 text-gray-800 placeholder-gray-400 font-medium outline-none" 
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    if (customers.length > 0) setCustomers([]);
+                    if (e.target.value && biometricStatus) setBiometricStatus('');
+                  }}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
                   placeholder="Enter customer name, ID, or phone number..."
                   autoComplete="off"
