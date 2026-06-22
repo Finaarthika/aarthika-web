@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import premiumLogo from '../../assets/3.png';
+import qrCodeImage from '../../assets/WhatsApp Image 2026-06-22 at 3.46.26 PM.jpeg';
 
 export default function InvoicePrint() {
   const [data, setData] = useState(null);
@@ -23,13 +24,13 @@ export default function InvoicePrint() {
   return (
     <div className="bg-white text-black w-full" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>
       
-      {/* Import requested fonts */}
+      {/* Import requested fonts and set Landscape A4 */}
       <style>
         {`
-          @import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700&family=Niramit:wght@400;600;700&display=swap');
+          @import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700&display=swap');
           
           @media print {
-            @page { size: A4 portrait; margin: 0; }
+            @page { size: A4 landscape; margin: 0; }
             body { 
               -webkit-print-color-adjust: exact !important; 
               print-color-adjust: exact !important; 
@@ -46,30 +47,33 @@ export default function InvoicePrint() {
               box-shadow: none !important;
             }
           }
+          
+          .font-nirand { font-family: "Nirand", sans-serif; }
+          .font-redhat { font-family: "Red Hat Display", sans-serif; }
         `}
       </style>
 
       {/* Control Panel (Hidden during print) */}
       <div className="no-print bg-gray-900 text-white p-4 flex justify-between items-center fixed top-0 w-full z-50 shadow-md">
-        <div className="text-sm">Native PDF Generation Active</div>
+        <div className="text-sm">Landscape Native PDF Generation</div>
         <button onClick={() => window.print()} className="bg-amber-600 hover:bg-amber-500 px-4 py-2 rounded text-sm font-bold tracking-widest uppercase font-sans">
           Print / Save as PDF
         </button>
       </div>
 
-      {/* Invoice Canvas (A4 Size approximately 794px width for screen viewing) */}
-      <div className="print-container max-w-[794px] mx-auto bg-white pt-20 no-print:mt-16 no-print:shadow-2xl relative min-h-[1123px] flex flex-col">
+      {/* Invoice Canvas (A4 Landscape is approximately 1123px wide and 794px high) */}
+      <div className="print-container max-w-[1123px] mx-auto bg-white pt-20 no-print:mt-16 no-print:shadow-2xl relative min-h-[794px] flex flex-col">
         
         {/* Inner Padding Wrapper */}
-        <div className="px-12 pt-8 flex-grow">
+        <div className="px-12 pt-6 flex-grow flex flex-col">
           
           {/* Header Section */}
           <div className="flex justify-between items-start mb-4">
             <div>
-              <h1 className="text-[32px] font-normal tracking-wide" style={{ color: '#3A2E8A', fontFamily: '"Red Hat Display", sans-serif' }}>MISHRA JEWELER'S</h1>
-              <p className="text-[12px] font-bold tracking-widest mt-1" style={{ color: '#3A2E8A', fontFamily: '"Niramit", sans-serif' }}>GOLD & SILVER</p>
+              <h1 className="text-[32px] font-normal tracking-wide font-redhat" style={{ color: '#3A2E8A' }}>MISHRA JEWELER'S</h1>
+              <p className="text-[12px] font-bold tracking-widest mt-1 font-nirand" style={{ color: '#3A2E8A' }}>GOLD & SILVER</p>
             </div>
-            <div className="text-[12px] text-gray-700 space-y-2 text-right">
+            <div className="text-[11px] text-gray-700 space-y-1.5 text-right">
               <div className="flex items-center justify-end gap-2">
                 <svg className="w-3 h-3 text-[#3A2E8A]" fill="currentColor" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path></svg>
                 <span>+91-06205168541</span>
@@ -81,21 +85,21 @@ export default function InvoicePrint() {
             </div>
           </div>
 
-          <div className="w-full border-t mb-8" style={{ borderColor: '#E5E5E5' }}></div>
+          <div className="w-full border-t mb-6" style={{ borderColor: '#E5E5E5' }}></div>
 
           {/* Title and Meta */}
-          <div className="flex justify-between items-start mb-8">
+          <div className="flex justify-between items-start mb-6">
             <div>
-              <h2 className="text-[42px] text-black mb-4 uppercase" style={{ fontFamily: '"Niramit", sans-serif' }}>INVOICE</h2>
-              <div className="grid grid-cols-[110px_1fr] gap-x-2 gap-y-1 text-[13px] text-black">
-                <span className="font-semibold">Invoice date:</span>
+              <h2 className="text-[36px] text-black mb-3 uppercase font-nirand">INVOICE</h2>
+              <div className="grid grid-cols-[110px_1fr] gap-x-2 gap-y-1 text-[12px] text-black">
+                <span className="font-semibold font-nirand">Invoice date:</span>
                 <span>{data.date}</span>
-                <span className="font-semibold">Invoice Number:</span>
+                <span className="font-semibold font-nirand">Invoice Number:</span>
                 <span>{data.invoiceNo}</span>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-[12px] font-bold text-gray-500 tracking-wide mb-1 uppercase" style={{ fontFamily: '"Niramit", sans-serif' }}>INVOICE TO</div>
+              <div className="text-[12px] font-bold text-gray-500 tracking-wide mb-1 uppercase font-nirand">INVOICE TO</div>
               <div className="text-[16px] font-bold text-black">{data.customerName || 'Customer'}</div>
               <div className="text-[13px] text-black mt-1">+91-{data.customerPhone}</div>
               {data.customerVillage && <div className="text-[13px] text-black w-48 text-right ml-auto leading-tight mt-1">{data.customerVillage}</div>}
@@ -103,19 +107,19 @@ export default function InvoicePrint() {
           </div>
 
           {/* Table */}
-          <div className="w-full mb-12">
-            <div className="grid grid-cols-[3fr_1fr_1fr_1fr_1.5fr] gap-2 bg-[#F3F4F6] py-3 px-4 text-[11px] font-bold text-black border-y border-gray-200" style={{ fontFamily: '"Niramit", sans-serif' }}>
+          <div className="w-full mb-6">
+            <div className="grid grid-cols-[3fr_1fr_1fr_1fr_1.5fr] gap-2 bg-[#F3F4F6] py-2 px-4 text-[11px] font-bold text-black border-y border-gray-200 font-nirand">
               <div>DESCRIPTIONS</div>
-              <div className="text-center">GROSS<br/>WEIGHT</div>
-              <div className="text-center">NET<br/>WEIGHT</div>
-              <div className="text-center">RATE<br/>₹</div>
-              <div className="text-right">AMOUNT<br/>₹</div>
+              <div className="text-center">GROSS WEIGHT</div>
+              <div className="text-center">NET WEIGHT</div>
+              <div className="text-center">RATE ₹</div>
+              <div className="text-right">AMOUNT ₹</div>
             </div>
             
-            <div className="grid grid-cols-[3fr_1fr_1fr_1fr_1.5fr] gap-2 py-6 px-4 text-[13px] text-black border-b border-gray-200 items-center">
+            <div className="grid grid-cols-[3fr_1fr_1fr_1fr_1.5fr] gap-2 py-4 px-4 text-[13px] text-black border-b border-gray-200 items-center">
               <div>
-                <div className="font-bold uppercase mb-1">{data.metalType}</div>
-                <div className="text-gray-600 uppercase">{data.itemCategory} ({data.purity})</div>
+                <div className="font-bold uppercase mb-1 font-nirand">{data.metalType}</div>
+                <div className="text-gray-600 uppercase font-nirand">{data.itemCategory} ({data.purity})</div>
               </div>
               <div className="text-center">{data.netWeight}</div>
               <div className="text-center">{data.netWeight}</div>
@@ -124,87 +128,116 @@ export default function InvoicePrint() {
             </div>
           </div>
 
-          {/* Totals Section */}
-          <div className="w-full flex justify-end mb-12 px-4">
-            <div className="w-[320px]">
-              <div className="flex justify-between py-1.5 text-[13px] font-bold text-black">
-                <span>TOTAL AMOUNT</span>
-                <span>{formatINR(data.metalValue)}</span>
-              </div>
-              <div className="flex justify-between py-1.5 text-[13px] text-gray-700">
-                <span>Making Charges</span>
-                <span>{formatINR(data.makingCharges)}</span>
-              </div>
-              {data.discount > 0 && (
-                <div className="flex justify-between py-1.5 text-[13px] text-gray-700">
-                  <span>Discount</span>
-                  <span>-{formatINR(data.discount)}</span>
-                </div>
-              )}
-              {data.gstAmount > 0 && (
-                <div className="flex justify-between py-1.5 text-[13px] text-gray-700">
-                  <span>GST (3%)</span>
-                  <span>{formatINR(data.gstAmount)}</span>
-                </div>
-              )}
-              
-              <div className="flex justify-between items-center py-4 mt-3 border-t border-b border-gray-200 font-bold text-[14px] text-black">
-                <span>GRAND TOTAL AMOUNT</span>
-                <span>₹ {formatINR(data.grandTotal)}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Payment Details */}
-          <div className="px-4 mb-12">
-            <div className="text-[12px] font-bold text-black mb-3">PAYMENT DETAILS</div>
-            <div className="grid grid-cols-[110px_1fr] gap-2 text-[13px] text-black mb-5">
-              <span>Advance UPI :</span>
-              <span>₹ 0 /-</span>
-              <span>Date Paid :</span>
-              <span>{data.date}</span>
-            </div>
+          {/* Bottom Split Section (Landscape mode shines here) */}
+          <div className="flex gap-12 flex-grow">
             
-            <div className="flex items-center gap-12 text-[14px] font-bold text-black">
-              <div className="flex gap-4">
-                <span>Paid</span>
-                <span>: ₹ {formatINR(data.grandTotal)} /-</span>
+            {/* Left Column: Bank, Payment, T&C */}
+            <div className="flex-1">
+              
+              {/* Payment Details */}
+              <div className="mb-6">
+                <div className="text-[11px] font-bold text-black mb-2 uppercase font-nirand">Payment Details</div>
+                <div className="grid grid-cols-[100px_1fr] gap-1 text-[12px] text-black mb-2">
+                  <span>Advance UPI :</span>
+                  <span>₹ 0 /-</span>
+                  <span>Date Paid :</span>
+                  <span>{data.date}</span>
+                </div>
+                
+                <div className="flex items-center gap-10 text-[13px] font-bold text-black bg-gray-50 py-2 px-3 rounded border border-gray-100 w-fit">
+                  <div className="flex gap-2">
+                    <span>Paid :</span>
+                    <span>₹ {formatINR(data.grandTotal)} /-</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <span>Total Paid :</span>
+                    <span>₹ {formatINR(data.grandTotal)} /-</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex gap-4">
-                <span>Total Paid</span>
-                <span>: ₹ {formatINR(data.grandTotal)} /-</span>
-              </div>
-            </div>
-          </div>
 
-          {/* Terms */}
-          <div className="px-4 mb-10 text-[9px] text-gray-700 text-justify leading-relaxed">
-            <div className="font-bold text-black mb-2 text-[11px] uppercase">Terms and Conditions for Jewelry Sale</div>
-            <ol className="list-decimal pl-4 space-y-1">
-              <li>Sale and Purchase Agreement: By purchasing jewelry from us, you agree to these terms and conditions. The sale is considered final once the purchase is completed, and no cancellations will be accepted post transaction.</li>
-              <li>Payment of Remaining Due Amount: Any remaining balance due on the purchased jewelry must be settled within the agreed payment period. Failure to do so may result in interest charges of 2% per month or cancellation of the order.</li>
-              <li>Exchange of Old Jewelry: Customers have the option to exchange old jewelry for new pieces. The value of the old jewelry will be assessed based on current market rates, considering factors such as metal weight and quality.</li>
-              <li>Subtraction of Charges Upon Sale: When reselling jewelry bought from us, deductions will be made for making charges, any impurities, and the value of stones. The final resale value will be calculated after these adjustments.</li>
-              <li>Future Exchange Conditions: Jewelry can be exchanged in the future under the condition that it remains in good condition. Any damage or significant wear may affect the resale or exchange value. Regular maintenance is advised to ensure the longevity and quality of the ornaments.</li>
-              <li>Custom Orders: We offer customization services to create unique pieces tailored to your preferences. A non-refundable deposit is required to initiate the design process, and the final price will depend on the materials and complexity of the design.</li>
-              <li>Privacy and Data Protection: We are committed to protecting your personal information. All data collected during transactions is securely stored and will not be shared with third parties without your consent, except as required by law.</li>
-              <li>Dispute Resolution: In the event of any disputes arising from these terms and conditions, we encourage resolving matters amicably through direct communication. If necessary, disputes will be settled under the jurisdiction of the courts in Uttar Dinajpur, West Bengal.</li>
-            </ol>
+              {/* Terms */}
+              <div className="text-[8px] text-gray-700 text-justify leading-relaxed pr-8">
+                <div className="font-bold text-black mb-1.5 text-[10px] uppercase font-nirand">Terms and Conditions for Jewelry Sale</div>
+                <ol className="list-decimal pl-4 space-y-0.5">
+                  <li>Sale and Purchase Agreement: By purchasing jewelry from us, you agree to these terms and conditions. The sale is considered final once the purchase is completed, and no cancellations will be accepted post transaction.</li>
+                  <li>Payment of Remaining Due Amount: Any remaining balance due on the purchased jewelry must be settled within the agreed payment period. Failure to do so may result in interest charges of 2% per month or cancellation of the order.</li>
+                  <li>Exchange of Old Jewelry: Customers have the option to exchange old jewelry for new pieces. The value of the old jewelry will be assessed based on current market rates, considering factors such as metal weight and quality.</li>
+                  <li>Subtraction of Charges Upon Sale: When reselling jewelry bought from us, deductions will be made for making charges, any impurities, and the value of stones. The final resale value will be calculated after these adjustments.</li>
+                  <li>Future Exchange Conditions: Jewelry can be exchanged in the future under the condition that it remains in good condition. Any damage or significant wear may affect the resale or exchange value. Regular maintenance is advised to ensure the longevity and quality of the ornaments.</li>
+                  <li>Custom Orders: We offer customization services to create unique pieces tailored to your preferences. A non-refundable deposit is required to initiate the design process, and the final price will depend on the materials and complexity of the design.</li>
+                  <li>Privacy and Data Protection: We are committed to protecting your personal information. All data collected during transactions is securely stored and will not be shared with third parties without your consent, except as required by law.</li>
+                  <li>Dispute Resolution: In the event of any disputes arising from these terms and conditions, we encourage resolving matters amicably through direct communication. If necessary, disputes will be settled under the jurisdiction of the courts in Uttar Dinajpur, West Bengal.</li>
+                </ol>
+              </div>
+
+            </div>
+
+            {/* Right Column: Bank QR, Image, Totals */}
+            <div className="w-[320px] flex flex-col justify-start">
+              
+              {/* QR and Image Flex Row */}
+              <div className="flex justify-between items-end mb-6">
+                <div className="text-center">
+                  <img src={qrCodeImage} alt="QR Code" className="w-20 h-20 border border-gray-300 p-1 rounded mb-1 object-cover" />
+                  <div className="text-[8px] font-bold text-gray-500 uppercase font-nirand">Scan to Pay</div>
+                </div>
+
+                {data.jewelleryPhoto && (
+                  <div className="text-center">
+                    <div className="w-24 h-24 bg-red-600 rounded-xl overflow-hidden shadow-inner border border-gray-200">
+                      <img src={data.jewelleryPhoto} alt="Jewellery" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="text-[8px] font-bold text-[#3A2E8A] uppercase mt-1 font-nirand">Jewellery Image</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Totals Section */}
+              <div className="bg-[#F9FAFB] p-4 rounded border border-gray-100">
+                <div className="flex justify-between py-1.5 text-[12px] font-bold text-black">
+                  <span className="font-nirand">TOTAL AMOUNT</span>
+                  <span>{formatINR(data.metalValue)}</span>
+                </div>
+                <div className="flex justify-between py-1.5 text-[12px] text-gray-700">
+                  <span className="font-nirand">Making Charges</span>
+                  <span>{formatINR(data.makingCharges)}</span>
+                </div>
+                {data.discount > 0 && (
+                  <div className="flex justify-between py-1.5 text-[12px] text-gray-700">
+                    <span className="font-nirand">Discount</span>
+                    <span>-{formatINR(data.discount)}</span>
+                  </div>
+                )}
+                {data.gstAmount > 0 && (
+                  <div className="flex justify-between py-1.5 text-[12px] text-gray-700">
+                    <span className="font-nirand">GST (3%)</span>
+                    <span>{formatINR(data.gstAmount)}</span>
+                  </div>
+                )}
+                
+                <div className="flex justify-between items-center py-3 mt-2 border-t border-b border-gray-300 font-bold text-[14px] text-black">
+                  <span className="font-nirand">GRAND TOTAL AMOUNT</span>
+                  <span>₹ {formatINR(data.grandTotal)}</span>
+                </div>
+              </div>
+
+            </div>
           </div>
           
         </div>
 
         {/* Huge Black Footer */}
-        <div className="bg-[#1A1A1A] w-full text-white px-12 py-6 flex justify-between items-center mt-auto">
+        <div className="bg-[#1A1A1A] w-full text-white px-12 py-5 flex justify-between items-center mt-6">
           <div className="flex items-center gap-3">
-            <span className="text-[11px] font-bold tracking-widest text-gray-400">FINANCE PARTNER</span>
+            <span className="text-[11px] font-bold tracking-widest text-gray-400 font-nirand">FINANCE PARTNER</span>
             <div className="flex flex-col">
-              <img src={premiumLogo} alt="aarthika" className="h-7 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
-              <span className="text-[9px] tracking-widest ml-1 mt-1 text-center">finance</span>
+              <img src={premiumLogo} alt="aarthika" className="h-6 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+              <span className="text-[8px] tracking-widest ml-1 mt-0.5 text-center">finance</span>
             </div>
           </div>
           
-          <div className="text-[11px] text-gray-300 text-right space-y-1.5">
+          <div className="text-[10px] text-gray-300 text-right space-y-1">
             <div className="flex items-center justify-end gap-2">
               <span>Contact : info@aarthikafinance.com | 0203 68541</span>
             </div>
