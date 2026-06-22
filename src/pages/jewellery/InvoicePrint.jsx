@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import premiumLogo from '../../assets/3.png';
 import qrCodeImage from '../../assets/qr-code.jpeg';
 import watermarkImg from '../../assets/watermark.png';
+import aarthikaLogo from '../../assets/Aarthika (1).png';
 
 export default function InvoicePrint() {
   const [data, setData] = useState(null);
@@ -71,20 +72,20 @@ export default function InvoicePrint() {
         <div className="px-10 flex-grow flex flex-col relative z-10">
           
           {/* TOP STRIP: EXACTLY LIKE IMAGE 2 */}
-          <div className="flex justify-between items-center py-5 border-b-[2.5px] border-gray-200">
+          <div className="flex justify-between items-center py-5 border-b-[2px] border-gray-300">
             
             {/* Column 1: Logo */}
-            <div className="w-[30%] pl-2">
-              <h1 className="text-[34px] font-normal tracking-wide font-redhat leading-tight" style={{ color: '#1B1464' }}>
+            <div className="flex-shrink-0 pl-2">
+              <h1 className="text-[42px] font-normal tracking-wide font-redhat leading-none whitespace-nowrap" style={{ color: '#1B1464' }}>
                 MISHRA JEWELER'S
               </h1>
-              <p className="text-[13px] font-normal tracking-[0.1em] mt-0.5 uppercase" style={{ color: '#1B1464', fontFamily: '"Arial Nova", Arial, sans-serif' }}>
+              <p className="text-[14px] font-normal tracking-[0.1em] mt-1 uppercase whitespace-nowrap" style={{ color: '#1B1464', fontFamily: '"Arial Nova", Arial, sans-serif' }}>
                 GOLD & SILVER
               </p>
             </div>
 
             {/* Column 2: Contact Info */}
-            <div className="w-[33%] flex items-center border-l-[3.5px] border-black pl-5 py-1">
+            <div className="flex items-center border-l-[3.5px] border-black pl-5 py-2 ml-8 mr-auto">
               <div className="flex flex-col gap-1.5" style={{ color: '#1B1464', fontFamily: '"Arial Nova", Arial, sans-serif' }}>
                 <div className="flex items-center gap-2.5">
                   <svg className="w-[18px] h-[18px] text-black" fill="currentColor" viewBox="0 0 20 20">
@@ -106,9 +107,9 @@ export default function InvoicePrint() {
             </div>
 
             {/* Column 3: Finance Partner */}
-            <div className="w-[37%] flex justify-end items-center gap-3 pr-2">
-              <span className="text-[13px] tracking-[0.1em] font-normal" style={{ color: '#1B1464', fontFamily: '"Arial Nova", Arial, sans-serif' }}>FINANCE PARTNER</span>
-              <img src={watermarkImg} alt="Aarthika" className="h-[28px] object-contain" />
+            <div className="flex justify-end items-center gap-4 pr-2 flex-shrink-0">
+              <span className="text-[14px] tracking-[0.1em] font-normal" style={{ color: '#1B1464', fontFamily: '"Arial Nova", Arial, sans-serif' }}>FINANCE PARTNER</span>
+              <img src={aarthikaLogo} alt="Aarthika" className="h-[55px] object-contain" />
             </div>
 
           </div>
