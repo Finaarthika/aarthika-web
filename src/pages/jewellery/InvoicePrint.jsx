@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import premiumLogo from '../../assets/3.png';
 import qrCodeImage from '../../assets/qr-code.jpeg';
+import watermarkImg from '../../assets/Aarthika (1).png'; // Note: The user attached "Aarthika (600 x 200 px) (1).png", but in the assets folder it's named "Aarthika (1).png" based on the ls output.
 
 export default function InvoicePrint() {
   const [data, setData] = useState(null);
@@ -22,7 +23,7 @@ export default function InvoicePrint() {
   const formatINR = (amount) => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(amount);
 
   return (
-    <div className="bg-white text-black w-full" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>
+    <div className="bg-white text-black w-full relative" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>
       
       {/* Import requested fonts and set Landscape A4 */}
       <style>
@@ -62,10 +63,15 @@ export default function InvoicePrint() {
       </div>
 
       {/* Invoice Canvas (A4 Landscape is approximately 1123px wide and 794px high) */}
-      <div className="print-container max-w-[1123px] mx-auto bg-white pt-20 no-print:mt-16 no-print:shadow-2xl relative min-h-[794px] flex flex-col">
+      <div className="print-container max-w-[1123px] mx-auto bg-white pt-20 no-print:mt-16 no-print:shadow-2xl relative min-h-[794px] flex flex-col overflow-hidden">
         
+        {/* Watermark */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none z-0">
+          <img src={watermarkImg} alt="Watermark" className="w-[600px] object-contain" />
+        </div>
+
         {/* Inner Padding Wrapper */}
-        <div className="px-12 pt-6 flex-grow flex flex-col">
+        <div className="px-12 pt-6 flex-grow flex flex-col relative z-10">
           
           {/* Header Section */}
           <div className="flex justify-between items-start mb-4">
@@ -106,95 +112,36 @@ export default function InvoicePrint() {
             </div>
           </div>
 
-          {/* Table */}
-          <div className="w-full mb-6">
-            <div className="grid grid-cols-[3fr_1fr_1fr_1fr_1.5fr] gap-2 bg-[#F3F4F6] py-2 px-4 text-[11px] font-bold text-black border-y border-gray-200 font-nirand">
-              <div>DESCRIPTIONS</div>
-              <div className="text-center">GROSS WEIGHT</div>
-              <div className="text-center">NET WEIGHT</div>
-              <div className="text-center">RATE ₹</div>
-              <div className="text-right">AMOUNT ₹</div>
-            </div>
+          {/* Main Content Split: Left (Jewellery Table/Totals) vs Right (T&C, Payment, QR) */}
+          <div className="flex gap-10 flex-grow mt-4">
             
-            <div className="grid grid-cols-[3fr_1fr_1fr_1fr_1.5fr] gap-2 py-4 px-4 text-[13px] text-black border-b border-gray-200 items-center">
-              <div>
-                <div className="font-bold uppercase mb-1 font-nirand">{data.metalType}</div>
-                <div className="text-gray-600 uppercase font-nirand">{data.itemCategory} ({data.purity})</div>
-              </div>
-              <div className="text-center">{data.netWeight}</div>
-              <div className="text-center">{data.netWeight}</div>
-              <div className="text-center">{formatINR(data.ratePerGram)}</div>
-              <div className="text-right">{formatINR(data.metalValue)}</div>
-            </div>
-          </div>
-
-          {/* Bottom Split Section (Landscape mode shines here) */}
-          <div className="flex gap-12 flex-grow">
-            
-            {/* Left Column: Bank, Payment, T&C */}
-            <div className="flex-1">
+            {/* LEFT COLUMN: Jewellery Details & Totals */}
+            <div className="w-[55%] flex flex-col">
               
-              {/* Payment Details */}
-              <div className="mb-6">
-                <div className="text-[11px] font-bold text-black mb-2 uppercase font-nirand">Payment Details</div>
-                <div className="grid grid-cols-[100px_1fr] gap-1 text-[12px] text-black mb-2">
-                  <span>Advance UPI :</span>
-                  <span>₹ 0 /-</span>
-                  <span>Date Paid :</span>
-                  <span>{data.date}</span>
+              {/* Table */}
+              <div className="w-full mb-6 border border-gray-200 rounded overflow-hidden">
+                <div className="grid grid-cols-[3fr_1.5fr_1.5fr_1.5fr_2fr] gap-2 bg-[#F3F4F6] py-2 px-3 text-[10px] font-bold text-black border-b border-gray-200 font-nirand">
+                  <div>DESCRIPTIONS</div>
+                  <div className="text-center">GROSS WT.</div>
+                  <div className="text-center">NET WT.</div>
+                  <div className="text-center">RATE ₹</div>
+                  <div className="text-right">AMOUNT ₹</div>
                 </div>
                 
-                <div className="flex items-center gap-10 text-[13px] font-bold text-black bg-gray-50 py-2 px-3 rounded border border-gray-100 w-fit">
-                  <div className="flex gap-2">
-                    <span>Paid :</span>
-                    <span>₹ {formatINR(data.grandTotal)} /-</span>
+                <div className="grid grid-cols-[3fr_1.5fr_1.5fr_1.5fr_2fr] gap-2 py-4 px-3 text-[12px] text-black items-center min-h-[120px]">
+                  <div>
+                    <div className="font-bold uppercase mb-1 font-nirand">{data.metalType}</div>
+                    <div className="text-gray-600 uppercase font-nirand">{data.itemCategory} ({data.purity})</div>
                   </div>
-                  <div className="flex gap-2">
-                    <span>Total Paid :</span>
-                    <span>₹ {formatINR(data.grandTotal)} /-</span>
-                  </div>
+                  <div className="text-center">{data.netWeight}</div>
+                  <div className="text-center">{data.netWeight}</div>
+                  <div className="text-center">{formatINR(data.ratePerGram)}</div>
+                  <div className="text-right font-semibold">{formatINR(data.metalValue)}</div>
                 </div>
-              </div>
-
-              {/* Terms */}
-              <div className="text-[8px] text-gray-700 text-justify leading-relaxed pr-8">
-                <div className="font-bold text-black mb-1.5 text-[10px] uppercase font-nirand">Terms and Conditions for Jewelry Sale</div>
-                <ol className="list-decimal pl-4 space-y-0.5">
-                  <li>Sale and Purchase Agreement: By purchasing jewelry from us, you agree to these terms and conditions. The sale is considered final once the purchase is completed, and no cancellations will be accepted post transaction.</li>
-                  <li>Payment of Remaining Due Amount: Any remaining balance due on the purchased jewelry must be settled within the agreed payment period. Failure to do so may result in interest charges of 2% per month or cancellation of the order.</li>
-                  <li>Exchange of Old Jewelry: Customers have the option to exchange old jewelry for new pieces. The value of the old jewelry will be assessed based on current market rates, considering factors such as metal weight and quality.</li>
-                  <li>Subtraction of Charges Upon Sale: When reselling jewelry bought from us, deductions will be made for making charges, any impurities, and the value of stones. The final resale value will be calculated after these adjustments.</li>
-                  <li>Future Exchange Conditions: Jewelry can be exchanged in the future under the condition that it remains in good condition. Any damage or significant wear may affect the resale or exchange value. Regular maintenance is advised to ensure the longevity and quality of the ornaments.</li>
-                  <li>Custom Orders: We offer customization services to create unique pieces tailored to your preferences. A non-refundable deposit is required to initiate the design process, and the final price will depend on the materials and complexity of the design.</li>
-                  <li>Privacy and Data Protection: We are committed to protecting your personal information. All data collected during transactions is securely stored and will not be shared with third parties without your consent, except as required by law.</li>
-                  <li>Dispute Resolution: In the event of any disputes arising from these terms and conditions, we encourage resolving matters amicably through direct communication. If necessary, disputes will be settled under the jurisdiction of the courts in Uttar Dinajpur, West Bengal.</li>
-                </ol>
-              </div>
-
-            </div>
-
-            {/* Right Column: Bank QR, Image, Totals */}
-            <div className="w-[320px] flex flex-col justify-start">
-              
-              {/* QR and Image Flex Row */}
-              <div className="flex justify-between items-end mb-6">
-                <div className="text-center">
-                  <img src={qrCodeImage} alt="QR Code" className="w-20 h-20 border border-gray-300 p-1 rounded mb-1 object-cover" />
-                  <div className="text-[8px] font-bold text-gray-500 uppercase font-nirand">Scan to Pay</div>
-                </div>
-
-                {data.jewelleryPhoto && (
-                  <div className="text-center">
-                    <div className="w-24 h-24 bg-red-600 rounded-xl overflow-hidden shadow-inner border border-gray-200">
-                      <img src={data.jewelleryPhoto} alt="Jewellery" className="w-full h-full object-cover" />
-                    </div>
-                    <div className="text-[8px] font-bold text-[#3A2E8A] uppercase mt-1 font-nirand">Jewellery Image</div>
-                  </div>
-                )}
               </div>
 
               {/* Totals Section */}
-              <div className="bg-[#F9FAFB] p-4 rounded border border-gray-100">
+              <div className="bg-[#F9FAFB] p-4 rounded border border-gray-200 ml-auto w-[85%]">
                 <div className="flex justify-between py-1.5 text-[12px] font-bold text-black">
                   <span className="font-nirand">TOTAL AMOUNT</span>
                   <span>{formatINR(data.metalValue)}</span>
@@ -221,6 +168,60 @@ export default function InvoicePrint() {
                   <span>₹ {formatINR(data.grandTotal)}</span>
                 </div>
               </div>
+              
+            </div>
+
+
+            {/* RIGHT COLUMN: Terms, Payment, QR */}
+            <div className="w-[45%] flex flex-col justify-start">
+              
+              {/* Terms & Conditions */}
+              <div className="text-[8px] text-gray-700 text-justify leading-snug mb-6 pr-2">
+                <div className="font-bold text-black mb-1.5 text-[10px] uppercase font-nirand">Terms and Conditions for Jewelry Sale</div>
+                <ol className="list-decimal pl-4 space-y-1">
+                  <li>Sale and Purchase Agreement: By purchasing jewelry from us, you agree to these terms and conditions. The sale is considered final once the purchase is completed, and no cancellations will be accepted post transaction.</li>
+                  <li>Payment of Remaining Due Amount: Any remaining balance due on the purchased jewelry must be settled within the agreed payment period. Failure to do so may result in interest charges of 2% per month or cancellation of the order.</li>
+                  <li>Exchange of Old Jewelry: Customers have the option to exchange old jewelry for new pieces. The value of the old jewelry will be assessed based on current market rates, considering factors such as metal weight and quality.</li>
+                  <li>Subtraction of Charges Upon Sale: When reselling jewelry bought from us, deductions will be made for making charges, any impurities, and the value of stones. The final resale value will be calculated after these adjustments.</li>
+                  <li>Future Exchange Conditions: Jewelry can be exchanged in the future under the condition that it remains in good condition. Any damage or significant wear may affect the resale or exchange value. Regular maintenance is advised to ensure the longevity and quality of the ornaments.</li>
+                  <li>Custom Orders: We offer customization services to create unique pieces tailored to your preferences. A non-refundable deposit is required to initiate the design process, and the final price will depend on the materials and complexity of the design.</li>
+                  <li>Privacy and Data Protection: We are committed to protecting your personal information. All data collected during transactions is securely stored and will not be shared with third parties without your consent, except as required by law.</li>
+                  <li>Dispute Resolution: In the event of any disputes arising from these terms and conditions, we encourage resolving matters amicably through direct communication. If necessary, disputes will be settled under the jurisdiction of the courts in Uttar Dinajpur, West Bengal.</li>
+                </ol>
+              </div>
+
+              {/* Payment Details and QR row */}
+              <div className="flex gap-6 items-end mt-auto mb-4 bg-gray-50 p-3 border border-gray-100 rounded">
+                
+                {/* Payment Info */}
+                <div className="flex-1">
+                  <div className="text-[11px] font-bold text-black mb-2 uppercase font-nirand">Payment Details</div>
+                  <div className="grid grid-cols-[90px_1fr] gap-1 text-[11px] text-black mb-3">
+                    <span>Advance UPI :</span>
+                    <span>₹ 0 /-</span>
+                    <span>Date Paid :</span>
+                    <span>{data.date}</span>
+                  </div>
+                  
+                  <div className="flex flex-col gap-1 text-[12px] font-bold text-black">
+                    <div className="flex justify-between border-b border-gray-200 pb-1">
+                      <span>Paid:</span>
+                      <span>₹ {formatINR(data.grandTotal)} /-</span>
+                    </div>
+                    <div className="flex justify-between pt-1">
+                      <span>Total Paid:</span>
+                      <span style={{ color: '#3A2E8A' }}>₹ {formatINR(data.grandTotal)} /-</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* QR Code embedded on the right */}
+                <div className="text-center flex-shrink-0">
+                  <img src={qrCodeImage} alt="QR Code" className="w-20 h-20 border border-gray-300 p-1 rounded mb-1 object-cover bg-white" />
+                  <div className="text-[8px] font-bold text-gray-500 uppercase font-nirand tracking-wide">Scan to Pay</div>
+                </div>
+
+              </div>
 
             </div>
           </div>
@@ -228,7 +229,7 @@ export default function InvoicePrint() {
         </div>
 
         {/* Huge Black Footer */}
-        <div className="bg-[#1A1A1A] w-full text-white px-12 py-5 flex justify-between items-center mt-6">
+        <div className="bg-[#1A1A1A] w-full text-white px-12 py-5 flex justify-between items-center mt-6 z-10 relative">
           <div className="flex items-center gap-3">
             <span className="text-[11px] font-bold tracking-widest text-gray-400 font-nirand">FINANCE PARTNER</span>
             <div className="flex flex-col">
