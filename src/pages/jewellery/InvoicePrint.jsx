@@ -19,12 +19,6 @@ export default function InvoicePrint() {
       setData(JSON.parse(rawData));
     }
     const savedBank = localStorage.getItem('aarthika_bank_settings');
-  useEffect(() => {
-    const rawData = localStorage.getItem('aarthika_current_invoice');
-    if (rawData) {
-      setData(JSON.parse(rawData));
-    }
-    const savedBank = localStorage.getItem('aarthika_bank_settings');
     if (savedBank) {
       setBankDetails(JSON.parse(savedBank));
     }
