@@ -204,10 +204,8 @@ export default function JewellerySalesTerminal() {
       const randHex = Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
       const invoiceNo = `JS-${ymdStr}-${randHex}`;
       
-      // We inject it into the DOM directly for the PDF to pick up immediately
+      // We inject it into the DOM directly for the Vault PDF to pick up immediately
       document.getElementById('vault-inv-display').innerText = invoiceNo;
-      document.getElementById('customer-inv-display').innerText = invoiceNo;
-      document.getElementById('customer-inv-display-2').innerText = invoiceNo;
 
       // 2. Generate the Internal Vault Record (A4)
       const vaultElement = document.getElementById('vault-pdf-template');
