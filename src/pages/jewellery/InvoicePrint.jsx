@@ -51,21 +51,33 @@ export default function InvoicePrint() {
           @media print {
             @page {
               size: A4 landscape;
-              margin: 5mm;
+              margin: 0;
             }
+            html, body {
+              height: 100vh !important;
+              width: 100vw !important;
+              overflow: hidden !important;
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+            ::-webkit-scrollbar { display: none !important; }
             body * { visibility: visible !important; }
             .no-print { display: none !important; }
             body { 
               background: white !important; 
               -webkit-print-color-adjust: exact !important; 
               print-color-adjust: exact !important; 
-              margin: 0 !important;
-              padding: 0 !important;
             }
             .print-container {
+              width: 100vw !important;
+              height: 100vh !important;
               margin: 0 !important;
+              padding: 0 !important;
               box-shadow: none !important;
-              overflow: visible !important;
+              overflow: hidden !important;
+              page-break-inside: avoid !important;
+              page-break-after: avoid !important;
+              page-break-before: avoid !important;
             }
           }
           
@@ -86,7 +98,7 @@ export default function InvoicePrint() {
       </div>
 
       {/* Invoice Canvas */}
-      <div id="actual-receipt-content" className="print-container w-[1123px] bg-white pt-2 relative min-h-[794px] print:h-[195mm] flex flex-col shadow-2xl print:shadow-none my-24 print:my-0 mx-auto print:mx-0 overflow-hidden print:overflow-hidden">
+      <div id="actual-receipt-content" className="print-container w-[1123px] bg-white pt-2 relative min-h-[794px] print:h-screen print:w-screen flex flex-col shadow-2xl print:shadow-none my-24 print:my-0 mx-auto print:mx-0 overflow-hidden print:overflow-hidden box-border">
         
         {/* Massive Watermark Center */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none z-0">
@@ -332,7 +344,7 @@ export default function InvoicePrint() {
         </div>
 
         {/* Footer */}
-        <div className="bg-[#1B1464] w-full text-white px-8 py-3 flex justify-between items-center z-10 mt-2 relative h-[50px] flex-shrink-0">
+        <div className="bg-[#1B1464] w-full text-white px-8 py-3 flex justify-between items-center z-10 relative h-[50px] shrink-0 mt-auto">
           <div className="flex items-center gap-2">
             <span className="text-[12px] font-medium tracking-widest text-gray-300">Contact :</span>
             <span className="text-[12px] text-white">info@aarthikafinance.com | 0203 68541</span>
