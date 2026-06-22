@@ -14,7 +14,7 @@ export default function InvoicePrint() {
   });
 
   useEffect(() => {
-    const rawData = sessionStorage.getItem('aarthika_current_invoice');
+    const rawData = localStorage.getItem('aarthika_current_invoice');
     if (rawData) {
       setData(JSON.parse(rawData));
     }

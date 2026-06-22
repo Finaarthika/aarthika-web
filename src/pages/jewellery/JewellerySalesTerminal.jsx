@@ -296,7 +296,7 @@ export default function JewellerySalesTerminal() {
         jewelleryPhoto: jewelleryPhoto // Passed as base64 or object URL (Base64 preferred for storage)
       };
       
-      sessionStorage.setItem('aarthika_current_invoice', JSON.stringify(printData));
+      localStorage.setItem('aarthika_current_invoice', JSON.stringify(printData));
 
       // Redirect the tab we opened earlier to the native print page
       if (newTab) {
