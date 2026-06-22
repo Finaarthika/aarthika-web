@@ -45,13 +45,14 @@ export default function InvoicePrint() {
     const width = element.offsetWidth;
     const height = element.offsetHeight;
 
-    const opt = {
-      margin: 0,
-      filename: `Invoice_${data?.invoiceNo || 'Aarthika'}.pdf`,
-      image: { type: 'jpeg', quality: 1.0 },
-      html2canvas: { scale: 2, useCORS: true, allowTaint: true, logging: false },
-      jsPDF: { unit: 'px', format: [width, height], orientation: 'landscape' }
-    };
+      const opt = {
+        margin: 0,
+        filename: `Invoice_${data?.invoiceNo || 'Aarthika'}.pdf`,
+        image: { type: 'jpeg', quality: 1.0 },
+        html2canvas: { scale: 2, useCORS: true, allowTaint: true, logging: false },
+        // Add a buffer to the height so it physically cannot trigger html2pdf pagination limits!
+        jsPDF: { unit: 'px', format: [width + 20, height + 50], orientation: 'landscape' }
+      };
 
     try {
       const pdfBlobUrl = await html2pdf().from(element).set(opt).output('bloburl');
@@ -89,7 +90,6 @@ export default function InvoicePrint() {
           @import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700;800&display=swap');
           
           @media print {
-            @page { margin: 5mm; }
             .no-print { display: none !important; }
             body { 
               background: white !important; 
@@ -360,7 +360,7 @@ export default function InvoicePrint() {
                     
                     <div className="text-center">
                       <div className="bg-white p-1.5 rounded-xl border border-gray-200 mb-1.5 inline-block shadow-sm">
-                        <img src={qrCodeImage} alt="QR Code" className="w-[75px] h-[75px] object-cover rounded-lg" />
+                        <img src={qrCodeImage} alt="QR Code" className="w-[75px] h-[75px] object-cover rounded-none" />
                       </div>
                     </div>
                   </div>
