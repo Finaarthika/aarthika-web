@@ -86,7 +86,7 @@ export default function InvoicePrint() {
       </div>
 
       {/* Invoice Canvas */}
-      <div id="actual-receipt-content" className="print-container w-[1123px] bg-white pt-4 relative min-h-[794px] print:min-h-0 flex flex-col shadow-2xl print:shadow-none my-24 print:my-0 mx-auto print:mx-0 overflow-hidden print:overflow-visible">
+      <div id="actual-receipt-content" className="print-container w-[1123px] bg-white pt-2 relative min-h-[794px] print:h-[195mm] flex flex-col shadow-2xl print:shadow-none my-24 print:my-0 mx-auto print:mx-0 overflow-hidden print:overflow-hidden">
         
         {/* Massive Watermark Center */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none z-0">
@@ -94,10 +94,10 @@ export default function InvoicePrint() {
         </div>
 
         {/* Content Wrapper */}
-        <div className="px-10 flex-grow flex flex-col relative z-10">
+        <div className="px-8 flex-grow flex flex-col relative z-10 justify-between">
           
-          {/* TOP STRIP: EXACTLY LIKE IMAGE 2 */}
-          <div className="flex justify-between items-center py-3 border-b-[2px] border-gray-300">
+          {/* TOP STRIP */}
+          <div className="flex justify-between items-center py-2 border-b-[2px] border-gray-300">
             
             {/* Column 1: Logo */}
             <div className="flex-shrink-0 pl-2">
@@ -140,13 +140,13 @@ export default function InvoicePrint() {
           </div>
 
           {/* MAIN CONTENT SPLIT */}
-          <div className="flex gap-16 mt-4 px-2">
+          <div className="flex gap-12 mt-2 px-2 flex-grow">
             
             {/* LEFT AREA (50% width) */}
             <div className="w-[50%] flex flex-col pr-2">
               
               {/* Meta Info Row */}
-              <div className="flex justify-between items-start mb-6">
+              <div className="flex justify-between items-start mb-4">
                 {/* INVOICE */}
                 <div>
                   <h2 className="text-[40px] mb-3 font-normal font-nirand leading-none tracking-wide" style={{ color: '#1B1464' }}>INVOICE</h2>
@@ -282,9 +282,9 @@ export default function InvoicePrint() {
             <div className="w-[50%] flex flex-col pl-2">
               
               {/* Terms and Conditions */}
-              <div className="text-[9.5px] text-gray-700 text-justify leading-relaxed mb-6">
-                <div className="font-bold text-black mb-3 text-[14px] text-center tracking-wide" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>Terms and Conditions for Jewelry Sale</div>
-                <ol className="list-decimal pl-4 space-y-1">
+              <div className="text-[9.5px] text-gray-700 text-justify leading-snug mb-3">
+                <div className="font-bold text-black mb-2 text-[14px] text-center tracking-wide" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>Terms and Conditions for Jewelry Sale</div>
+                <ol className="list-decimal pl-4 space-y-0.5">
                   <li>Sale and Purchase Agreement: By purchasing jewelry from us, you agree to these terms and conditions. The sale is considered final once the purchase is completed, and no cancellations will be accepted post transaction.</li>
                   <li>Payment of Remaining Due Amount: Any remaining balance due on the purchased jewelry must be settled within the agreed payment period. Failure to do so may result in interest charges of 2% per month or cancellation of the order.</li>
                   <li>Exchange of Old Jewelry: Customers have the option to exchange old jewelry for new pieces. The value of the old jewelry will be assessed based on current market rates, considering factors such as metal weight and quality.</li>
@@ -297,8 +297,8 @@ export default function InvoicePrint() {
               </div>
 
               {/* Bank Details & QR (Right Side) */}
-              <div className="mt-auto flex flex-col px-2 pb-4">
-                <div className="font-bold text-black mb-4 text-[13px] text-center tracking-wide" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>Payment Instructions</div>
+              <div className="mt-auto flex flex-col px-2 pb-2">
+                <div className="font-bold text-black mb-2 text-[13px] text-center tracking-wide" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>Payment Instructions</div>
                 
                 <div className="flex justify-between items-start">
                   {/* Bank Info */}
@@ -315,8 +315,8 @@ export default function InvoicePrint() {
                     <div className="flex gap-2 justify-end mb-4"><span className="text-gray-500">UPI ID:</span> <span className="font-bold">{bankDetails.upiId}</span></div>
                     
                     <div className="text-center">
-                      <div className="bg-white p-1.5 rounded-xl border border-gray-200 mb-1.5 inline-block shadow-sm">
-                        <img src={qrCodeImage} alt="QR Code" className="w-[75px] h-[75px] object-cover rounded-none" />
+                      <div className="bg-white p-1 rounded-xl border border-gray-200 mb-1 inline-block shadow-sm">
+                        <img src={qrCodeImage} alt="QR Code" className="w-[65px] h-[65px] object-cover rounded-none" />
                       </div>
                     </div>
                   </div>
@@ -326,13 +326,13 @@ export default function InvoicePrint() {
 
           </div>
           
-          <div className="text-center mt-6 text-[18px] text-gray-800 font-nirand tracking-wide font-medium">
+          <div className="text-center mt-2 text-[18px] text-gray-800 font-nirand tracking-wide font-medium">
             Hamara bill, Hamari Zimmedaari.
           </div>
         </div>
 
         {/* Footer */}
-        <div className="bg-[#1B1464] w-full text-white px-10 py-4 flex justify-between items-center z-10 mt-6 relative h-[60px]">
+        <div className="bg-[#1B1464] w-full text-white px-8 py-3 flex justify-between items-center z-10 mt-2 relative h-[50px] flex-shrink-0">
           <div className="flex items-center gap-2">
             <span className="text-[12px] font-medium tracking-widest text-gray-300">Contact :</span>
             <span className="text-[12px] text-white">info@aarthikafinance.com | 0203 68541</span>
