@@ -55,11 +55,17 @@ export default function InvoicePrint() {
             }
             .no-print { display: none !important; }
             .print-container { 
-              padding: 0 !important; 
-              margin: 0 !important; 
               width: 100% !important; 
-              max-width: none !important;
+              height: auto !important;
+              max-height: none !important;
+              padding: 0 !important; 
+              margin: 0 auto !important; 
               box-shadow: none !important;
+              overflow: visible !important;
+              page-break-after: avoid !important;
+              page-break-before: avoid !important;
+              page-break-inside: avoid !important;
+              zoom: 0.85;
             }
           }
           
@@ -77,7 +83,7 @@ export default function InvoicePrint() {
       </div>
 
       {/* Invoice Canvas */}
-      <div className="print-container w-[1123px] bg-white pt-6 relative min-h-[794px] flex flex-col overflow-hidden shadow-2xl no-print:my-20">
+      <div className="print-container w-[1123px] bg-white pt-6 relative min-h-[794px] print:min-h-[auto] flex flex-col shadow-2xl my-10 print:my-0 mx-auto">
         
         {/* Massive Watermark Center */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none z-0">
