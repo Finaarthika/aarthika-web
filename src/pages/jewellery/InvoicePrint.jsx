@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import html2pdf from 'html2pdf.js';
 import premiumLogo from '../../assets/3.png';
 import qrCodeImage from '../../assets/qr-code.jpeg';
 import watermarkImg from '../../assets/watermark.png';
@@ -7,7 +6,6 @@ import aarthikaLogo from '../../assets/Aarthika (1).png';
 
 export default function InvoicePrint() {
   const [data, setData] = useState(null);
-  const [generating, setGenerating] = useState(false);
   const [bankDetails, setBankDetails] = useState({
     bankName: 'State Bank Of India',
     accountNumber: '43017839721',
@@ -24,84 +22,9 @@ export default function InvoicePrint() {
     if (savedBank) {
       setBankDetails(JSON.parse(savedBank));
     }
+    // Trigger Chrome native print dialog after DOM is ready
+    setTimeout(() => window.print(), 800);
   }, []);
-
-  // Fetch-based base64 converter - works reliably for all same-origin assets (no CORS canvas issues)
-  const toBase64 = async (url) => {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-    } catch (e) {
-      return url; // fallback to original if fetch fails
-    }
-  };
-
-  const generatePDF = async () => {
-    if (generating) return;
-    setGenerating(true);
-    
-    const newTab = window.open('', '_blank');
-    if (newTab) {
-      newTab.document.write('<div style="font-family:sans-serif; text-align:center; margin-top:50px;"><h2>Generating Flawless PDF...</h2><p>Please wait...</p></div>');
-    }
-
-    const element = document.getElementById('actual-receipt-content');
-    
-    // TEMPORARY CSS OVERRIDES FOR PERFECT CAPTURE
-    element.classList.remove('my-24', 'shadow-2xl');
-    element.classList.add('my-0', 'shadow-none');
-
-    // PRE-CONVERT ALL IMAGES TO BASE64 SO html2canvas CAN RENDER THEM
-    const allImgs = element.querySelectorAll('img');
-    const originalSrcs = [];
-    await Promise.all(Array.from(allImgs).map(async (img, i) => {
-      originalSrcs[i] = img.src;
-      try {
-        const b64 = await toBase64(img.src);
-        img.src = b64;
-      } catch(e) {
-        // keep original if it fails
-      }
-    }));
-    
-    // FORCE 1 PAGE BY MATCHING EXACT PIXEL DIMENSIONS
-    const width = element.offsetWidth;
-    const height = element.offsetHeight;
-
-    const opt = {
-      margin: 0,
-      filename: `Invoice_${data?.invoiceNo || 'Aarthika'}.pdf`,
-      image: { type: 'png', quality: 1.0 },
-      html2canvas: { scale: 2, useCORS: true, allowTaint: true, logging: false, imageTimeout: 0 },
-      // Add a buffer so it physically cannot trigger html2pdf pagination
-      jsPDF: { unit: 'px', format: [width + 20, height + 50], orientation: 'landscape' }
-    };
-
-    try {
-      const pdfBlobUrl = await html2pdf().from(element).set(opt).output('bloburl');
-      if (newTab) {
-        newTab.location.href = pdfBlobUrl;
-      } else {
-        window.location.href = pdfBlobUrl;
-      }
-    } catch (e) {
-      console.error(e);
-      if (newTab) newTab.close();
-      alert("Failed to generate PDF.");
-    }
-
-    // RESTORE ORIGINAL SRCS AND CLASSES
-    Array.from(allImgs).forEach((img, i) => { img.src = originalSrcs[i]; });
-    element.classList.add('my-24', 'shadow-2xl');
-    element.classList.remove('my-0', 'shadow-none');
-    setGenerating(false);
-  };
 
   if (!data) return <div className="p-10 text-center font-sans text-gray-500">No invoice data found in session.</div>;
 
@@ -120,15 +43,22 @@ export default function InvoicePrint() {
           @import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700;800&display=swap');
           
           @media print {
+            @page {
+              size: A4 landscape;
+              margin: 5mm;
+            }
             .no-print { display: none !important; }
             body { 
               background: white !important; 
               -webkit-print-color-adjust: exact !important; 
               print-color-adjust: exact !important; 
+              margin: 0 !important;
+              padding: 0 !important;
             }
             .print-container {
-               margin: 0 !important;
-               transform-origin: top left !important;
+              margin: 0 !important;
+              box-shadow: none !important;
+              overflow: visible !important;
             }
           }
           
@@ -137,26 +67,15 @@ export default function InvoicePrint() {
         `}
       </style>
 
-      {/* Control Panel */}
+      {/* Control Panel - hidden during print */}
       <div className="no-print bg-gray-900 text-white p-4 flex justify-between items-center fixed top-0 w-full z-50 shadow-md">
-        <div className="text-sm font-semibold tracking-wide flex items-center gap-3">
-          <span>Receipt Layout Mode</span>
-        </div>
-        <div className="flex gap-4">
-          <button 
-            onClick={() => window.print()} 
-            className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2.5 rounded text-sm font-bold tracking-widest uppercase shadow-lg transition-all"
-          >
-            PRINT NATIVE
-          </button>
-          <button 
-            onClick={generatePDF} 
-            disabled={generating}
-            className="bg-amber-500 hover:bg-amber-400 text-black px-6 py-2.5 rounded text-sm font-bold tracking-widest uppercase shadow-lg transition-all flex items-center gap-2 disabled:opacity-50"
-          >
-            {generating ? 'GENERATING...' : '1-PAGE PDF (GUARANTEED)'}
-          </button>
-        </div>
+        <div className="text-sm font-semibold tracking-wide">Receipt Preview</div>
+        <button 
+          onClick={() => window.print()} 
+          className="bg-[#1B1464] hover:bg-[#2d22a0] text-white px-8 py-2.5 rounded text-sm font-bold tracking-widest uppercase shadow-lg transition-all"
+        >
+          PRINT / SAVE AS PDF
+        </button>
       </div>
 
       {/* Invoice Canvas */}
