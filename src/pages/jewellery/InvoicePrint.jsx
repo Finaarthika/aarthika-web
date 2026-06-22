@@ -6,15 +6,26 @@ import aarthikaLogo from '../../assets/Aarthika (1).png';
 
 export default function InvoicePrint() {
   const [data, setData] = useState(null);
+  const [bankDetails, setBankDetails] = useState({
+    bankName: 'State Bank Of India',
+    accountNumber: '43017839721',
+    ifsc: 'S B I N 0 0 0 0 1 1 7',
+    upiId: 'shriyanshumishrakne-1@oksbi'
+  });
 
   useEffect(() => {
     const rawData = sessionStorage.getItem('aarthika_current_invoice');
     if (rawData) {
       setData(JSON.parse(rawData));
-      setTimeout(() => {
-        window.print();
-      }, 1500);
     }
+    const savedBank = localStorage.getItem('aarthika_bank_settings');
+    if (savedBank) {
+      setBankDetails(JSON.parse(savedBank));
+    }
+    
+    setTimeout(() => {
+      window.print();
+    }, 1500);
   }, []);
 
   if (!data) return <div className="p-10 text-center font-sans text-gray-500">No invoice data found in session.</div>;
@@ -166,25 +177,29 @@ export default function InvoicePrint() {
                 </div>
               </div>
 
-              {/* Payment Details */}
-              <div className="mb-4">
-                <div className="text-[12px] font-bold tracking-widest mb-3 uppercase font-nirand" style={{ color: '#1B1464' }}>PAYMENT DETAILS</div>
-                <div className="grid grid-cols-[100px_1fr] gap-x-4 gap-y-2 text-[11px] text-black mb-4 pl-1">
-                  <span className="font-bold text-gray-500">Advance UPI:</span>
-                  <span className="font-bold">₹ 0 /-</span>
-                  <span className="font-bold text-gray-500">Date Paid:</span>
-                  <span className="font-bold">{data.date}</span>
-                </div>
+              {/* Bank Details & QR (Left Side) */}
+              <div className="mt-4 flex flex-col px-2">
+                <div className="font-bold text-black mb-4 text-[13px] text-center tracking-wide" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>Payment Instructions</div>
                 
-                <div className="flex items-center gap-12 bg-white py-3 px-5 rounded-md border border-gray-200 w-fit">
-                  <div className="text-[12px]">
-                    <span className="font-bold text-gray-500 uppercase mr-3">Paid:</span>
-                    <span className="font-extrabold text-black">₹ {formatINR(data.grandTotal)} /-</span>
+                <div className="flex justify-between items-start">
+                  {/* Bank Info */}
+                  <div className="text-[10px] space-y-2 text-gray-800">
+                    <div className="flex gap-2"><span className="text-gray-500 w-[100px]">Payment Method:</span> <span className="font-bold">Bank Transfer</span></div>
+                    <div className="flex gap-2"><span className="text-gray-500 w-[100px]">Bank Name:</span> <span className="font-bold">{bankDetails.bankName}</span></div>
+                    <div className="flex gap-2"><span className="text-gray-500 w-[100px]">Account Number:</span> <span className="font-bold">{bankDetails.accountNumber}</span></div>
+                    <div className="flex gap-2"><span className="text-gray-500 w-[100px]">IFSC:</span> <span className="font-bold tracking-widest">{bankDetails.ifsc}</span></div>
                   </div>
-                  <div className="h-4 w-px bg-gray-300"></div>
-                  <div className="text-[12px]">
-                    <span className="font-bold text-gray-500 uppercase mr-3">Total Paid:</span>
-                    <span className="font-extrabold" style={{ color: '#1B1464' }}>₹ {formatINR(data.grandTotal)} /-</span>
+                  
+                  {/* UPI Info & QR */}
+                  <div className="text-[10px] flex flex-col items-end">
+                    <div className="flex gap-2 justify-end mb-2"><span className="text-gray-500">Payment Method:</span> <span className="font-bold">UPI</span></div>
+                    <div className="flex gap-2 justify-end mb-4"><span className="text-gray-500">UPI ID:</span> <span className="font-bold">{bankDetails.upiId}</span></div>
+                    
+                    <div className="text-center">
+                      <div className="bg-white p-1.5 rounded-xl border border-gray-200 mb-1.5 inline-block shadow-sm">
+                        <img src={qrCodeImage} alt="QR Code" className="w-[75px] h-[75px] object-cover rounded-lg" />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -208,37 +223,27 @@ export default function InvoicePrint() {
                 </ol>
               </div>
 
-              {/* Totals & QR */}
-              <div className="mt-auto flex justify-between gap-4 items-end pb-4">
-                
-                {/* QR Code */}
-                <div className="text-center w-[120px]">
-                  <div className="bg-white p-1.5 rounded-xl border border-gray-200 mb-2 inline-block">
-                    <img src={qrCodeImage} alt="QR Code" className="w-[85px] h-[85px] object-cover rounded-lg" />
-                  </div>
-                  <div className="text-[9px] font-bold text-[#1B1464] uppercase font-nirand tracking-[0.1em]">SCAN TO PAY</div>
-                </div>
-
-                {/* Totals Box */}
-                <div className="bg-[#F8F9FA] p-5 rounded-lg border border-gray-200 flex-grow shadow-sm">
+              {/* Totals Section */}
+              <div className="mt-auto pb-4">
+                <div className="bg-[#F8F9FA] p-5 rounded-xl border border-gray-200 shadow-sm mb-4">
                   <div className="flex justify-between py-1.5 text-[12px] font-bold text-black border-b border-gray-200 pb-2 mb-2">
                     <span className="font-nirand uppercase tracking-wide text-gray-500">TOTAL AMOUNT</span>
                     <span className="font-extrabold">{formatINR(data.metalValue)}</span>
                   </div>
                   
                   <div className="space-y-1.5">
-                    <div className="flex justify-between text-[11.5px]">
+                    <div className="flex justify-between text-[11px]">
                       <span className="font-nirand text-gray-600 font-semibold">Making Charges</span>
                       <span className="font-bold text-black">{formatINR(data.makingCharges)}</span>
                     </div>
                     {data.discount > 0 && (
-                      <div className="flex justify-between text-[11.5px]">
+                      <div className="flex justify-between text-[11px]">
                         <span className="font-nirand text-gray-600 font-semibold">Discount</span>
                         <span className="font-bold text-green-600">-{formatINR(data.discount)}</span>
                       </div>
                     )}
                     {data.gstAmount > 0 && (
-                      <div className="flex justify-between text-[11.5px]">
+                      <div className="flex justify-between text-[11px]">
                         <span className="font-nirand text-gray-600 font-semibold">GST (3%)</span>
                         <span className="font-bold text-black">{formatINR(data.gstAmount)}</span>
                       </div>
@@ -251,14 +256,40 @@ export default function InvoicePrint() {
                   </div>
                 </div>
 
+                {/* Payment Tracking */}
+                <div className="border border-gray-200 rounded-lg py-3 px-5 bg-white flex justify-between items-center">
+                  <div className="text-[11px] flex items-center gap-2">
+                    <span className="text-gray-500 font-bold uppercase tracking-wider">Paid:</span> 
+                    <span className="font-extrabold text-black">₹ {formatINR(data.grandTotal)} /-</span>
+                  </div>
+                  <div className="h-4 w-px bg-gray-300"></div>
+                  <div className="text-[12px] flex items-center gap-2 text-[#1B1464]">
+                    <span className="font-bold uppercase tracking-wider">Total Paid:</span> 
+                    <span className="font-extrabold">₹ {formatINR(data.grandTotal)} /-</span>
+                  </div>
+                </div>
               </div>
             </div>
 
           </div>
+          
+          <div className="text-center mt-6 text-[18px] text-gray-800 font-nirand tracking-wide font-medium">
+            Hamara bill, Hamari Zimmedaari.
+          </div>
         </div>
 
-        {/* Removed massive black footer because it is not present in Image 2. The Finance partner is in the top header. */}
-        <div className="h-6 w-full bg-[#1B1464] mt-4 z-10"></div>
+        {/* Footer */}
+        <div className="bg-[#1B1464] w-full text-white px-10 py-4 flex justify-between items-center z-10 mt-6 relative h-[60px]">
+          <div className="flex items-center gap-2">
+            <span className="text-[12px] font-medium tracking-widest text-gray-300">Contact :</span>
+            <span className="text-[12px] text-white">info@aarthikafinance.com | 0203 68541</span>
+          </div>
+          
+          <div className="flex items-center justify-end gap-3">
+            <img src={premiumLogo} alt="aarthika" className="h-5 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+            <span className="text-[12px] text-white">www.aarthikafinance.com</span>
+          </div>
+        </div>
       </div>
     </div>
   );
