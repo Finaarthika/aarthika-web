@@ -175,6 +175,10 @@ export default function JewellerySalesTerminal() {
     ...goldItems.map(i => ({ ...i, metalType: 'Gold' }))
   ];
 
+  const formatINR = (amount) => {
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(amount);
+  };
+
   const handleCameraCapture = async (e, setter) => {
     const file = e.target.files[0];
     if (!file) return;
