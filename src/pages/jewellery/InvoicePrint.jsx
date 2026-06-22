@@ -54,13 +54,9 @@ export default function InvoicePrint() {
             }
             .no-print { display: none !important; }
             .print-container { 
-              width: 100% !important; 
-              height: auto !important;
-              max-height: none !important;
               padding: 0 !important; 
-              margin: 0 !important; 
+              margin: 0 auto !important; 
               box-shadow: none !important;
-              overflow: visible !important;
             }
           }
           
@@ -78,7 +74,7 @@ export default function InvoicePrint() {
       </div>
 
       {/* Invoice Canvas */}
-      <div className="print-container w-[1123px] print:w-full bg-white pt-6 relative min-h-[794px] print:min-h-0 flex flex-col shadow-2xl print:shadow-none my-10 print:my-0 mx-auto print:mx-0">
+      <div className="print-container w-[1123px] bg-white pt-4 relative min-h-[794px] flex flex-col shadow-2xl my-10 print:my-0 mx-auto print:mx-0 overflow-hidden">
         
         {/* Massive Watermark Center */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none z-0">
@@ -89,7 +85,7 @@ export default function InvoicePrint() {
         <div className="px-10 flex-grow flex flex-col relative z-10">
           
           {/* TOP STRIP: EXACTLY LIKE IMAGE 2 */}
-          <div className="flex justify-between items-center py-5 border-b-[2px] border-gray-300">
+          <div className="flex justify-between items-center py-3 border-b-[2px] border-gray-300">
             
             {/* Column 1: Logo */}
             <div className="flex-shrink-0 pl-2">
@@ -132,7 +128,7 @@ export default function InvoicePrint() {
           </div>
 
           {/* MAIN CONTENT SPLIT */}
-          <div className="flex gap-16 mt-6 px-2">
+          <div className="flex gap-16 mt-4 px-2">
             
             {/* LEFT AREA (50% width) */}
             <div className="w-[50%] flex flex-col pr-2">
@@ -154,13 +150,13 @@ export default function InvoicePrint() {
                 <div className="flex flex-col items-center pt-2">
                   <div className="text-[10px] font-bold text-gray-500 uppercase mb-1 tracking-widest text-center">INVOICE TO</div>
                   <div className="text-[14px] font-bold text-gray-800 tracking-wide uppercase text-center">{data.customerName || 'Customer'}</div>
-                  <div className="text-[11px] text-gray-500 font-bold mt-1 text-center">+91-{data.customerPhone}</div>
+                  <div className="text-[12px] text-gray-500 font-bold leading-relaxed space-y-1.5">+91-{data.customerPhone}</div>
                   {data.customerVillage && <div className="text-[11px] text-gray-500 font-bold mt-0.5 text-center">{data.customerVillage}</div>}
                 </div>
               </div>
 
               {/* Table */}
-              <div className="w-full mb-8 border border-gray-200">
+              <div className="w-full mb-4 border border-gray-200">
                 {/* Table Header */}
                 <div className="grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] bg-[#F8F9FA] py-2 px-3 border-b border-gray-200">
                   <div className="text-[10px] font-bold text-gray-600 uppercase font-nirand">Descriptions</div>
@@ -215,8 +211,8 @@ export default function InvoicePrint() {
               </div>
 
               {/* Totals Section (Left Side) */}
-              <div className="mt-4 pb-4">
-                <div className="bg-[#F8F9FA] p-5 rounded-xl border border-gray-200 shadow-sm mb-4">
+              <div className="mt-2 pb-2">
+                <div className="bg-[#F8F9FA] px-4 py-3 rounded-xl border border-gray-200 shadow-sm">
                   <div className="flex justify-between py-1.5 text-[12px] font-bold text-black border-b border-gray-200 pb-2 mb-2">
                     <span className="font-nirand uppercase tracking-wide text-gray-500">TOTAL AMOUNT</span>
                     <span className="font-extrabold">{formatINR(data.metalValue)}</span>
