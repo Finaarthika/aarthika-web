@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import premiumLogo from '../../assets/3.png';
-import qrCodeImage from '../../assets/WhatsApp Image 2026-06-22 at 3.46.26 PM.jpeg';
+import qrCodeImage from '../../assets/qr-code.jpeg';
 
 export default function InvoicePrint() {
   const [data, setData] = useState(null);
