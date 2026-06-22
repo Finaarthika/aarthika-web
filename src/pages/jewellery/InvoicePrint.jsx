@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import html2pdf from 'html2pdf.js';
 import premiumLogo from '../../assets/3.png';
 import qrCodeImage from '../../assets/qr-code.jpeg';
 import watermarkImg from '../../assets/watermark.png';
@@ -6,6 +7,7 @@ import aarthikaLogo from '../../assets/Aarthika (1).png';
 
 export default function InvoicePrint() {
   const [data, setData] = useState(null);
+  const [generating, setGenerating] = useState(false);
   const [bankDetails, setBankDetails] = useState({
     bankName: 'State Bank Of India',
     accountNumber: '43017839721',
@@ -22,11 +24,42 @@ export default function InvoicePrint() {
     if (savedBank) {
       setBankDetails(JSON.parse(savedBank));
     }
-    
-    setTimeout(() => {
-      window.print();
-    }, 1500);
   }, []);
+
+  const generatePDF = async () => {
+    if (generating) return;
+    setGenerating(true);
+    
+    // Open tab immediately to bypass popup blocker
+    const newTab = window.open('', '_blank');
+    if (newTab) {
+      newTab.document.write('<div style="font-family:sans-serif; text-align:center; margin-top:50px;"><h2>Generating High-Quality PDF...</h2><p>Please wait...</p></div>');
+    }
+
+    const element = document.getElementById('actual-receipt-content');
+    const opt = {
+      margin: 0,
+      filename: `Invoice_${data?.invoiceNo || 'Aarthika'}.pdf`,
+      image: { type: 'jpeg', quality: 1.0 },
+      html2canvas: { scale: 3, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    };
+
+    try {
+      const pdfBlobUrl = await html2pdf().from(element).set(opt).output('bloburl');
+      if (newTab) {
+        newTab.location.href = pdfBlobUrl;
+      } else {
+        // Fallback
+        window.location.href = pdfBlobUrl;
+      }
+    } catch (e) {
+      console.error(e);
+      if (newTab) newTab.close();
+      alert("Failed to generate PDF.");
+    }
+    setGenerating(false);
+  };
 
   if (!data) return <div className="p-10 text-center font-sans text-gray-500">No invoice data found in session.</div>;
 
@@ -45,20 +78,8 @@ export default function InvoicePrint() {
           @import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700;800&display=swap');
           
           @media print {
-            body { 
-              -webkit-print-color-adjust: exact !important; 
-              print-color-adjust: exact !important; 
-              background-color: white !important; 
-              margin: 0 !important;
-              padding: 0 !important;
-            }
             .no-print { display: none !important; }
-            .print-container { 
-              padding: 0 !important; 
-              margin: 0 auto !important; 
-              box-shadow: none !important;
-              overflow: visible !important;
-            }
+            body { background: white !important; }
           }
           
           .font-nirand { font-family: "Nirand", "Red Hat Display", sans-serif; }
@@ -66,16 +87,23 @@ export default function InvoicePrint() {
         `}
       </style>
 
-      {/* Control Panel (Hidden during print) */}
+      {/* Control Panel */}
       <div className="no-print bg-gray-900 text-white p-4 flex justify-between items-center fixed top-0 w-full z-50 shadow-md">
-        <div className="text-sm font-semibold tracking-wide">Strip 1 & 2 Layout Mode</div>
-        <button onClick={() => window.print()} className="bg-[#1B1464] hover:bg-[#120d45] px-5 py-2.5 rounded text-sm font-bold tracking-widest uppercase shadow-lg transition-all">
-          Print / Save as PDF
+        <div className="text-sm font-semibold tracking-wide flex items-center gap-3">
+          <span>Receipt Layout Mode</span>
+          <span className="text-amber-400 text-xs px-2 py-1 bg-amber-400/10 rounded-full">Perfect Render</span>
+        </div>
+        <button 
+          onClick={generatePDF} 
+          disabled={generating}
+          className="bg-amber-500 hover:bg-amber-400 text-black px-6 py-2.5 rounded text-sm font-bold tracking-widest uppercase shadow-lg transition-all flex items-center gap-2 disabled:opacity-50"
+        >
+          {generating ? 'GENERATING...' : 'GENERATE PDF'}
         </button>
       </div>
 
       {/* Invoice Canvas */}
-      <div className="print-container w-[1123px] bg-white pt-4 relative min-h-[794px] print:min-h-0 flex flex-col shadow-2xl my-10 print:my-0 mx-auto print:mx-0 overflow-hidden print:overflow-visible">
+      <div id="actual-receipt-content" className="print-container w-[1123px] bg-white pt-4 relative min-h-[794px] flex flex-col shadow-2xl my-24 mx-auto overflow-hidden">
         
         {/* Massive Watermark Center */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none z-0">
