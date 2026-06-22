@@ -264,7 +264,8 @@ export default function JewellerySalesTerminal() {
         makingCharges: makingNum,
         discount: discountNum,
         gstAmount: gstAmount,
-        grandTotal: grandTotal
+        grandTotal: grandTotal,
+        jewelleryPhoto: jewelleryPhoto // Passed as base64 or object URL (Base64 preferred for storage)
       };
       
       sessionStorage.setItem('aarthika_current_invoice', JSON.stringify(printData));
