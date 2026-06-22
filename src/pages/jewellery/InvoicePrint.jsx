@@ -53,6 +53,7 @@ export default function InvoicePrint() {
               size: A4 landscape;
               margin: 5mm;
             }
+            body * { visibility: visible !important; }
             .no-print { display: none !important; }
             body { 
               background: white !important; 
