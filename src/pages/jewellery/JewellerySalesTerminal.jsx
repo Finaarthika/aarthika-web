@@ -132,15 +132,14 @@ export default function JewellerySalesTerminal() {
     customerName: '',
     customerPhone: '',
     customerVillage: '',
-    itemCategory: 'Ring',
-    metalType: 'Gold',
-    purity: '22k',
-    netWeight: '',
-    ratePerGram: '',
-    makingCharges: '',
+    goldMakingCharges: '',
+    silverMakingCharges: '',
     discount: '',
     applyGst: false
   });
+
+  const [silverItems, setSilverItems] = useState([]);
+  const [goldItems, setGoldItems] = useState([]);
 
   const [customerPhoto, setCustomerPhoto] = useState('');
   const [jewelleryPhoto, setJewelleryPhoto] = useState('');
@@ -148,16 +147,34 @@ export default function JewellerySalesTerminal() {
   const [currentInvoiceNo, setCurrentInvoiceNo] = useState('');
 
   // Calculations
-  const netWeightNum = parseFloat(saleData.netWeight) || 0;
-  const rateNum = parseFloat(saleData.ratePerGram) || 0;
-  const makingNum = parseFloat(saleData.makingCharges) || 0;
+  const calculateItemValue = (item) => {
+    const w = parseFloat(item.netWeight) || 0;
+    const r = parseFloat(item.rate) || 0;
+    return w * r;
+  };
+
+  const getSilverValue = () => silverItems.reduce((acc, item) => acc + calculateItemValue(item), 0);
+  const getGoldValue = () => goldItems.reduce((acc, item) => acc + calculateItemValue(item), 0);
+
+  const metalValue = getSilverValue() + getGoldValue();
+  
+  let totalNetWeight = 0;
+  silverItems.forEach(i => totalNetWeight += (parseFloat(i.netWeight) || 0));
+  goldItems.forEach(i => totalNetWeight += (parseFloat(i.netWeight) || 0));
+
+  const goldMakingNum = parseFloat(saleData.goldMakingCharges) || 0;
+  const silverMakingNum = parseFloat(saleData.silverMakingCharges) || 0;
   const discountNum = parseFloat(saleData.discount) || 0;
 
-  const metalValue = netWeightNum * rateNum;
-  let subtotal = metalValue + makingNum - discountNum;
+  let subtotal = metalValue + goldMakingNum + silverMakingNum - discountNum;
   if (subtotal < 0) subtotal = 0;
   const gstAmount = saleData.applyGst ? (subtotal * 0.03) : 0;
   const grandTotal = subtotal + gstAmount;
+
+  const allItems = [
+    ...silverItems.map(i => ({ ...i, metalType: 'Silver' })),
+    ...goldItems.map(i => ({ ...i, metalType: 'Gold' }))
+  ];
 
   // Format Currency
   const formatINR = (amount) => {
@@ -182,9 +199,20 @@ export default function JewellerySalesTerminal() {
   };
 
   const submitSaleAndGenerateBills = async () => {
-    if (!saleData.customerName || !saleData.customerPhone || !saleData.netWeight || !saleData.ratePerGram) {
-      return showToast("Please fill all core billing details (Name, Phone, Weight, Rate).", "error");
+    if (!saleData.customerName || !saleData.customerPhone) {
+      return showToast("Please fill Customer Name and Phone.", "error");
     }
+    if (allItems.length === 0) {
+      return showToast("Please add at least one jewellery item.", "error");
+    }
+    
+    // Validate items
+    for (const item of allItems) {
+      if (!item.netWeight || !item.rate) {
+        return showToast("Please fill weight and rate for all items.", "error");
+      }
+    }
+
     if (!customerPhoto || !jewelleryPhoto) {
       return showToast("Both Customer and Jewellery photos are required for the Vault Record.", "error");
     }
@@ -222,6 +250,9 @@ export default function JewellerySalesTerminal() {
       const vaultCleanBase64 = vaultPdfBase64Str.split(',')[1];
 
       // 3. Send Vault PDF and 14 Columns Data to API
+      const itemDescriptions = allItems.map(i => `${i.purity} ${i.metalType} ${i.category}`).join(', ');
+      const firstRate = allItems.length > 0 ? (parseFloat(allItems[0].rate) || 0) : 0;
+
       const payload = {
         invoiceNo,
         date: dateObj.toLocaleDateString('en-GB'),
@@ -229,11 +260,11 @@ export default function JewellerySalesTerminal() {
         officerName: officerAuth.staffName,
         customerName: saleData.customerName,
         customerPhone: saleData.customerPhone,
-        itemDescription: `${saleData.purity} ${saleData.metalType} ${saleData.itemCategory}`,
-        netWeight: netWeightNum,
-        ratePerGram: rateNum,
+        itemDescription: itemDescriptions,
+        netWeight: totalNetWeight,
+        ratePerGram: firstRate, // Use first rate to prevent string distortion in Sheets
         metalValue: metalValue,
-        makingCharges: makingNum,
+        makingCharges: goldMakingNum + silverMakingNum,
         gstAmount: gstAmount,
         discount: discountNum,
         grandTotal: grandTotal,
@@ -255,13 +286,10 @@ export default function JewellerySalesTerminal() {
         customerName: saleData.customerName,
         customerPhone: saleData.customerPhone,
         customerVillage: saleData.customerVillage,
-        itemCategory: saleData.itemCategory,
-        metalType: saleData.metalType,
-        purity: saleData.purity,
-        netWeight: netWeightNum,
-        ratePerGram: rateNum,
+        items: allItems,
         metalValue: metalValue,
-        makingCharges: makingNum,
+        goldMakingCharges: goldMakingNum,
+        silverMakingCharges: silverMakingNum,
         discount: discountNum,
         gstAmount: gstAmount,
         grandTotal: grandTotal,
@@ -283,9 +311,10 @@ export default function JewellerySalesTerminal() {
       // Clear form
       setSaleData({
         customerName: '', customerPhone: '', customerVillage: '',
-        itemCategory: 'Ring', metalType: 'Gold', purity: '22k',
-        netWeight: '', ratePerGram: '', makingCharges: '', discount: '', applyGst: false
+        goldMakingCharges: '', silverMakingCharges: '', discount: '', applyGst: false
       });
+      setSilverItems([]);
+      setGoldItems([]);
       setCustomerPhoto('');
       setJewelleryPhoto('');
 
@@ -363,59 +392,109 @@ export default function JewellerySalesTerminal() {
               </div>
             </div>
 
-            {/* Section 2: Jewellery Details */}
+            {/* Section 2: Silver Particulars */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8">
-              <h2 className="text-sm tracking-widest text-amber-600 font-bold uppercase mb-6 flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
-                Jewellery Particulars
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                <div className="col-span-2 sm:col-span-2">
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Item Category</label>
-                  <select className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-800 bg-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none" value={saleData.itemCategory} onChange={e => setSaleData({...saleData, itemCategory: e.target.value})}>
-                    <option>Ring</option>
-                    <option>Chain</option>
-                    <option>Necklace</option>
-                    <option>Earrings</option>
-                    <option>Bangles</option>
-                    <option>Coin</option>
-                    <option>Other</option>
-                  </select>
-                </div>
-                <div className="col-span-1">
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Metal</label>
-                  <select className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-800 bg-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none" value={saleData.metalType} onChange={e => setSaleData({...saleData, metalType: e.target.value})}>
-                    <option>Gold</option>
-                    <option>Silver</option>
-                  </select>
-                </div>
-                <div className="col-span-1">
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Purity</label>
-                  <select className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-800 bg-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none" value={saleData.purity} onChange={e => setSaleData({...saleData, purity: e.target.value})}>
-                    <option>24k</option>
-                    <option>22k</option>
-                    <option>18k</option>
-                    <option>92.5 (Silver)</option>
-                  </select>
-                </div>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-sm tracking-widest text-gray-500 font-bold uppercase flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-gray-300"></span>
+                  Silver Items
+                </h2>
+                <button 
+                  onClick={() => {
+                    if (allItems.length >= 6) return showToast("Maximum 6 items allowed.", "error");
+                    setSilverItems([...silverItems, { category: 'Payal', purity: '75%', grossWeight: '', netWeight: '', rate: '' }]);
+                  }}
+                  className="text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                  Add Silver
+                </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 border-t border-gray-100 pt-6">
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Net Weight (grams)</label>
-                  <div className="relative">
-                    <input type="number" step="0.01" className="w-full border border-gray-300 rounded-lg pl-4 pr-8 py-3 text-gray-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none" value={saleData.netWeight} onChange={e => setSaleData({...saleData, netWeight: e.target.value})} placeholder="0.00" />
-                    <span className="absolute right-4 top-3.5 text-gray-400 font-bold">g</span>
+              {silverItems.map((item, index) => (
+                <div key={index} className="grid grid-cols-12 gap-3 mb-4 items-end bg-gray-50 p-3 rounded-xl border border-gray-100 relative group">
+                  <div className="col-span-3">
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Category</label>
+                    <input type="text" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:border-amber-500" value={item.category} onChange={e => { const newItems = [...silverItems]; newItems[index].category = e.target.value; setSilverItems(newItems); }} placeholder="e.g. Payal" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Purity</label>
+                    <select className="w-full border border-gray-300 rounded-lg px-2 py-2 text-sm text-gray-800 bg-white outline-none focus:border-amber-500" value={item.purity} onChange={e => { const newItems = [...silverItems]; newItems[index].purity = e.target.value; setSilverItems(newItems); }}>
+                      {['75%', '80%', '85%', '90%', '100%'].map(p => <option key={p} value={p}>{p}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Gross (g)</label>
+                    <input type="number" step="0.01" className="w-full border border-gray-300 rounded-lg px-2 py-2 text-sm text-gray-800 outline-none focus:border-amber-500" value={item.grossWeight} onChange={e => { const newItems = [...silverItems]; newItems[index].grossWeight = e.target.value; setSilverItems(newItems); }} placeholder="0" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Net (g)</label>
+                    <input type="number" step="0.01" className="w-full border border-gray-300 rounded-lg px-2 py-2 text-sm text-gray-800 outline-none focus:border-amber-500" value={item.netWeight} onChange={e => { const newItems = [...silverItems]; newItems[index].netWeight = e.target.value; setSilverItems(newItems); }} placeholder="0" />
+                  </div>
+                  <div className="col-span-3 relative">
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Rate/g (₹)</label>
+                    <input type="number" className="w-full border border-gray-300 rounded-lg pl-3 pr-8 py-2 text-sm text-gray-800 outline-none focus:border-amber-500" value={item.rate} onChange={e => { const newItems = [...silverItems]; newItems[index].rate = e.target.value; setSilverItems(newItems); }} placeholder="0" />
+                    
+                    <button onClick={() => { const newItems = [...silverItems]; newItems.splice(index, 1); setSilverItems(newItems); }} className="absolute right-2 top-[26px] text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
                   </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Rate per gram (₹)</label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-3.5 text-gray-400 font-bold">₹</span>
-                    <input type="number" className="w-full border border-gray-300 rounded-lg pl-8 pr-4 py-3 text-gray-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none" value={saleData.ratePerGram} onChange={e => setSaleData({...saleData, ratePerGram: e.target.value})} placeholder="0.00" />
-                  </div>
-                </div>
+              ))}
+              {silverItems.length === 0 && <div className="text-center text-sm text-gray-400 py-4 italic">No Silver items added.</div>}
+            </div>
+
+            {/* Section 2.5: Gold Particulars */}
+            <div className="bg-white rounded-2xl shadow-sm border border-yellow-200 p-6 sm:p-8 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-yellow-100 to-transparent opacity-50 pointer-events-none"></div>
+              <div className="flex justify-between items-center mb-6 relative z-10">
+                <h2 className="text-sm tracking-widest text-yellow-600 font-bold uppercase flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.6)]"></span>
+                  Gold Items
+                </h2>
+                <button 
+                  onClick={() => {
+                    if (allItems.length >= 6) return showToast("Maximum 6 items allowed.", "error");
+                    setGoldItems([...goldItems, { category: 'Ring', purity: '22K', grossWeight: '', netWeight: '', rate: '' }]);
+                  }}
+                  className="text-xs font-bold bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 text-yellow-700 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 shadow-sm"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                  Add Gold
+                </button>
               </div>
+
+              {goldItems.map((item, index) => (
+                <div key={index} className="grid grid-cols-12 gap-3 mb-4 items-end bg-yellow-50/30 p-3 rounded-xl border border-yellow-100 relative group z-10">
+                  <div className="col-span-3">
+                    <label className="block text-[10px] font-bold text-yellow-700/60 uppercase mb-1">Category</label>
+                    <input type="text" className="w-full border border-yellow-200 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:border-amber-500" value={item.category} onChange={e => { const newItems = [...goldItems]; newItems[index].category = e.target.value; setGoldItems(newItems); }} placeholder="e.g. Ring" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-[10px] font-bold text-yellow-700/60 uppercase mb-1">Purity</label>
+                    <select className="w-full border border-yellow-200 rounded-lg px-2 py-2 text-sm text-gray-800 bg-white outline-none focus:border-amber-500" value={item.purity} onChange={e => { const newItems = [...goldItems]; newItems[index].purity = e.target.value; setGoldItems(newItems); }}>
+                      {['18K', '20K', '22K', '24K'].map(p => <option key={p} value={p}>{p}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-[10px] font-bold text-yellow-700/60 uppercase mb-1">Gross (g)</label>
+                    <input type="number" step="0.01" className="w-full border border-yellow-200 rounded-lg px-2 py-2 text-sm text-gray-800 outline-none focus:border-amber-500" value={item.grossWeight} onChange={e => { const newItems = [...goldItems]; newItems[index].grossWeight = e.target.value; setGoldItems(newItems); }} placeholder="0" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-[10px] font-bold text-yellow-700/60 uppercase mb-1">Net (g)</label>
+                    <input type="number" step="0.01" className="w-full border border-yellow-200 rounded-lg px-2 py-2 text-sm text-gray-800 outline-none focus:border-amber-500" value={item.netWeight} onChange={e => { const newItems = [...goldItems]; newItems[index].netWeight = e.target.value; setGoldItems(newItems); }} placeholder="0" />
+                  </div>
+                  <div className="col-span-3 relative">
+                    <label className="block text-[10px] font-bold text-yellow-700/60 uppercase mb-1">Rate/g (₹)</label>
+                    <input type="number" className="w-full border border-yellow-200 rounded-lg pl-3 pr-8 py-2 text-sm text-gray-800 outline-none focus:border-amber-500" value={item.rate} onChange={e => { const newItems = [...goldItems]; newItems[index].rate = e.target.value; setGoldItems(newItems); }} placeholder="0" />
+                    
+                    <button onClick={() => { const newItems = [...goldItems]; newItems.splice(index, 1); setGoldItems(newItems); }} className="absolute right-2 top-[26px] text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {goldItems.length === 0 && <div className="text-center text-sm text-yellow-700/50 py-4 italic relative z-10">No Gold items added.</div>}
             </div>
 
             {/* Section 3: Photos (Mandatory for Vault) */}
@@ -458,10 +537,18 @@ export default function JewellerySalesTerminal() {
                 </div>
                 
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Making Charges (+)</label>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Silver Making Charges (+)</label>
                   <div className="relative">
                     <span className="absolute left-3 top-2.5 text-gray-500 font-bold text-sm">₹</span>
-                    <input type="number" className="w-full bg-gray-800 border border-gray-700 rounded-lg pl-7 pr-3 py-2 text-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none text-sm" value={saleData.makingCharges} onChange={e => setSaleData({...saleData, makingCharges: e.target.value})} placeholder="0.00" />
+                    <input type="number" className="w-full bg-gray-800 border border-gray-700 rounded-lg pl-7 pr-3 py-2 text-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none text-sm" value={saleData.silverMakingCharges} onChange={e => setSaleData({...saleData, silverMakingCharges: e.target.value})} placeholder="0.00" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Gold Making & Hallmarking (+)</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2.5 text-gray-500 font-bold text-sm">₹</span>
+                    <input type="number" className="w-full bg-gray-800 border border-gray-700 rounded-lg pl-7 pr-3 py-2 text-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none text-sm" value={saleData.goldMakingCharges} onChange={e => setSaleData({...saleData, goldMakingCharges: e.target.value})} placeholder="0.00" />
                   </div>
                 </div>
 
@@ -550,10 +637,15 @@ export default function JewellerySalesTerminal() {
             </div>
           </div>
           <div style={{ flex: 1, border: '1px solid #ccc', padding: '15px' }}>
-            <h3 style={{ fontSize: '14px', margin: '0 0 10px 0', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>JEWELLERY ITEM</h3>
-            <p style={{ margin: '5px 0', fontSize: '13px' }}><strong>Desc:</strong> {saleData.purity} {saleData.metalType} {saleData.itemCategory}</p>
-            <p style={{ margin: '5px 0', fontSize: '13px' }}><strong>Weight:</strong> {saleData.netWeight}g</p>
-            <div style={{ marginTop: '35px', height: '200px', backgroundColor: '#f9f9f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <h3 style={{ fontSize: '14px', margin: '0 0 10px 0', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>JEWELLERY ITEMS</h3>
+            {allItems.map((item, idx) => (
+              <p key={idx} style={{ margin: '3px 0', fontSize: '12px' }}>
+                • {item.purity} {item.metalType} {item.category} ({item.netWeight}g)
+              </p>
+            ))}
+            {allItems.length === 0 && <p style={{ fontSize: '12px', color: '#999' }}>No items</p>}
+            
+            <div style={{ marginTop: '15px', height: '200px', backgroundColor: '#f9f9f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {jewelleryPhoto && <img src={jewelleryPhoto} style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />}
             </div>
           </div>
@@ -568,12 +660,16 @@ export default function JewellerySalesTerminal() {
           </thead>
           <tbody>
             <tr>
-              <td style={{ padding: '8px', border: '1px solid #ccc' }}>Metal Value ({saleData.netWeight}g @ {saleData.ratePerGram}/g)</td>
+              <td style={{ padding: '8px', border: '1px solid #ccc' }}>Metal Value (Combined weight {totalNetWeight}g)</td>
               <td style={{ padding: '8px', border: '1px solid #ccc', textAlign: 'right' }}>{metalValue.toFixed(2)}</td>
             </tr>
             <tr>
-              <td style={{ padding: '8px', border: '1px solid #ccc' }}>Making Charges</td>
-              <td style={{ padding: '8px', border: '1px solid #ccc', textAlign: 'right' }}>{makingNum.toFixed(2)}</td>
+              <td style={{ padding: '8px', border: '1px solid #ccc' }}>Silver Making Charges</td>
+              <td style={{ padding: '8px', border: '1px solid #ccc', textAlign: 'right' }}>{silverMakingNum.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style={{ padding: '8px', border: '1px solid #ccc' }}>Gold Making & Hallmarking</td>
+              <td style={{ padding: '8px', border: '1px solid #ccc', textAlign: 'right' }}>{goldMakingNum.toFixed(2)}</td>
             </tr>
             <tr>
               <td style={{ padding: '8px', border: '1px solid #ccc' }}>Discount</td>

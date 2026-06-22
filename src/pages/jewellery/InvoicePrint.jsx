@@ -30,8 +30,13 @@ export default function InvoicePrint() {
 
   if (!data) return <div className="p-10 text-center font-sans text-gray-500">No invoice data found in session.</div>;
 
-  const formatINR = (amount) => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(amount);
+  const formatINR = (amount) => {
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
+  };
 
+  const silverItems = data.items?.filter(i => i.metalType === 'Silver') || [];
+  const goldItems = data.items?.filter(i => i.metalType === 'Gold') || []; 
+  
   return (
     <div className="bg-[#F8F9FA] text-black w-full min-h-screen relative flex items-center justify-center" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>
       
@@ -164,16 +169,47 @@ export default function InvoicePrint() {
                   <div className="text-[10px] font-bold text-gray-600 uppercase font-nirand text-right">Amount ₹</div>
                 </div>
                 
-                {/* Table Row */}
-                <div className="grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] py-4 px-3 bg-white items-center min-h-[90px]">
-                  <div>
-                    <div className="text-[12px] font-bold text-black uppercase font-nirand tracking-wide">{data.metalType}</div>
-                    <div className="text-[11px] font-semibold text-gray-500 uppercase mt-0.5">{data.itemCategory} ({data.purity})</div>
-                  </div>
-                  <div className="text-[12px] font-bold text-black text-center">{data.netWeight} g</div>
-                  <div className="text-[12px] font-bold text-black text-center">{data.netWeight} g</div>
-                  <div className="text-[12px] font-bold text-black text-center">{formatINR(data.ratePerGram)}</div>
-                  <div className="text-[13px] font-extrabold text-black text-right">{formatINR(data.metalValue)}</div>
+                {/* Table Body */}
+                <div className="flex flex-col min-h-[140px] bg-white pb-4">
+                  {/* Silver Section */}
+                  {silverItems.length > 0 && (
+                    <div className="mb-3">
+                      <div className="text-[11px] font-bold text-[#1B1464] uppercase px-3 pt-3 pb-1 font-nirand tracking-widest">SILVER</div>
+                      {silverItems.map((item, idx) => {
+                        const netW = parseFloat(item.netWeight) || 0;
+                        const rate = parseFloat(item.rate) || 0;
+                        return (
+                          <div key={`s-${idx}`} className="grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] py-1.5 px-3 items-center">
+                            <div className="text-[10.5px] font-bold text-gray-800 uppercase">{item.category} ({item.purity})</div>
+                            <div className="text-[10.5px] font-bold text-gray-800 text-center">{item.grossWeight || item.netWeight} g</div>
+                            <div className="text-[10.5px] font-bold text-gray-800 text-center">{item.netWeight} g</div>
+                            <div className="text-[10.5px] font-bold text-gray-800 text-center">{formatINR(rate).replace('₹', '').trim()}</div>
+                            <div className="text-[11.5px] font-extrabold text-black text-right">{formatINR(netW * rate).replace('₹', '').trim()}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Gold Section */}
+                  {goldItems.length > 0 && (
+                    <div className="mb-1">
+                      <div className="text-[11px] font-bold text-[#1B1464] uppercase px-3 pt-3 pb-1 font-nirand tracking-widest">GOLD</div>
+                      {goldItems.map((item, idx) => {
+                        const netW = parseFloat(item.netWeight) || 0;
+                        const rate = parseFloat(item.rate) || 0;
+                        return (
+                          <div key={`g-${idx}`} className="grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] py-1.5 px-3 items-center">
+                            <div className="text-[10.5px] font-bold text-gray-800 uppercase">{item.category} ({item.purity})</div>
+                            <div className="text-[10.5px] font-bold text-gray-800 text-center">{item.grossWeight || item.netWeight} g</div>
+                            <div className="text-[10.5px] font-bold text-gray-800 text-center">{item.netWeight} g</div>
+                            <div className="text-[10.5px] font-bold text-gray-800 text-center">{formatINR(rate).replace('₹', '').trim()}</div>
+                            <div className="text-[11.5px] font-extrabold text-black text-right">{formatINR(netW * rate).replace('₹', '').trim()}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -186,11 +222,19 @@ export default function InvoicePrint() {
                   </div>
                   
                   <div className="space-y-1.5">
-                    <div className="flex justify-between text-[11px]">
-                      <span className="font-nirand text-gray-600 font-semibold">Making Charges</span>
-                      <span className="font-bold text-black">{formatINR(data.makingCharges)}</span>
-                    </div>
-                    {data.discount > 0 && (
+                    {parseFloat(data.silverMakingCharges) > 0 && (
+                      <div className="flex justify-between text-[11px]">
+                        <span className="font-nirand text-gray-600 font-semibold">Silver Making Charges</span>
+                        <span className="font-bold text-black">{formatINR(data.silverMakingCharges)}</span>
+                      </div>
+                    )}
+                    {parseFloat(data.goldMakingCharges) > 0 && (
+                      <div className="flex justify-between text-[11px]">
+                        <span className="font-nirand text-gray-600 font-semibold">Gold Making & Hallmarking</span>
+                        <span className="font-bold text-black">{formatINR(data.goldMakingCharges)}</span>
+                      </div>
+                    )}
+                    {parseFloat(data.discount) > 0 && (
                       <div className="flex justify-between text-[11px]">
                         <span className="font-nirand text-gray-600 font-semibold">Discount</span>
                         <span className="font-bold text-green-600">-{formatINR(data.discount)}</span>
