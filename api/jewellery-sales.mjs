@@ -8,17 +8,25 @@ export default async (req, res) => {
 
   try {
     const {
+      invoiceNo,
+      date,
+      branchName,
+      officerName,
       customerName,
       customerPhone,
       itemDescription,
-      totalValue,
-      branchName,
-      officerName,
-      customerPhoto
+      netWeight,
+      ratePerGram,
+      metalValue,
+      makingCharges,
+      gstAmount,
+      discount,
+      grandTotal,
+      vaultPdfFile
     } = req.body || {};
 
-    if (!customerName || !totalValue) {
-      return res.status(400).json({ error: 'Customer Name and Total Value are required.' });
+    if (!invoiceNo || !customerName) {
+      return res.status(400).json({ error: 'Invoice No and Customer Name are required.' });
     }
 
     let clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
@@ -64,22 +72,15 @@ export default async (req, res) => {
     const SHEET_ID = '1G1Q-OcKpk3iQ_yHi8Ec0sKYApqxquffSD4oS-e6Mvmo';
     const SHEET_NAME = 'JEWELLERY_SALES';
 
-    // Generate Invoice No (JS-YYYYMMDD-RandomHex)
-    const dateObj = new Date();
-    const dateStr = dateObj.toLocaleDateString('en-GB'); // DD/MM/YYYY
-    const ymdStr = dateObj.toISOString().slice(0, 10).replace(/-/g, '');
-    const randHex = Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
-    const invoiceNo = `JS-${ymdStr}-${randHex}`;
+    let vaultPdfLink = '';
 
-    let photoLink = '';
-
-    // Upload Photo if present
-    if (customerPhoto) {
-      const boundary = 'foo_bar_baz';
+    // Upload Vault PDF to Google Drive
+    if (vaultPdfFile) {
+      const boundary = 'foo_bar_baz_pdf';
       const metadata = {
-        name: `${invoiceNo}_Photo.jpg`,
+        name: `${invoiceNo}_Vault_Record.pdf`,
         parents: [DRIVE_FOLDER_ID],
-        mimeType: 'image/jpeg'
+        mimeType: 'application/pdf'
       };
       
       const headerBuffer = Buffer.from(
@@ -87,13 +88,13 @@ export default async (req, res) => {
         `Content-Type: application/json; charset=UTF-8\r\n\r\n` +
         JSON.stringify(metadata) + `\r\n` +
         `--${boundary}\r\n` +
-        `Content-Type: image/jpeg\r\n\r\n`
+        `Content-Type: application/pdf\r\n\r\n`
       );
       
-      const imageBuffer = Buffer.from(customerPhoto, 'base64');
+      const pdfBuffer = Buffer.from(vaultPdfFile, 'base64');
       const footerBuffer = Buffer.from(`\r\n--${boundary}--`);
       
-      const multipartBody = Buffer.concat([headerBuffer, imageBuffer, footerBuffer]);
+      const multipartBody = Buffer.concat([headerBuffer, pdfBuffer, footerBuffer]);
       
       const driveRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
         method: 'POST',
@@ -106,27 +107,33 @@ export default async (req, res) => {
       
       if (driveRes.ok) {
         const driveData = await driveRes.json();
-        photoLink = `https://drive.google.com/uc?export=view&id=${driveData.id}`;
+        // Since it's a PDF, we store the direct webViewLink or use the same ID format
+        vaultPdfLink = `https://drive.google.com/file/d/${driveData.id}/view`;
       } else {
-        console.error('Drive Photo upload failed:', await driveRes.text());
+        console.error('Drive PDF upload failed:', await driveRes.text());
       }
     }
 
-    // Append to Google Sheets
+    // Append 14 Columns to Google Sheets
     const appendUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/'${SHEET_NAME}'!A:A:append?valueInputOption=USER_ENTERED`;
     
     const appendData = {
       values: [
         [
           invoiceNo,
-          dateStr,
-          String(branchName || 'Main Branch'),
+          date,
           String(officerName || 'System'),
           String(customerName || '').trim(),
           String(customerPhone || '').trim(),
           String(itemDescription || '').trim(),
-          String(totalValue || '0').trim(),
-          photoLink
+          String(netWeight || '0').trim(),
+          String(ratePerGram || '0').trim(),
+          String(metalValue || '0').trim(),
+          String(makingCharges || '0').trim(),
+          String(gstAmount || '0').trim(),
+          String(discount || '0').trim(),
+          String(grandTotal || '0').trim(),
+          vaultPdfLink
         ]
       ]
     };
@@ -145,7 +152,7 @@ export default async (req, res) => {
       throw new Error(`Sheets Append Failed: ${sheetResponse.status} - ${errText}`);
     }
 
-    return res.status(200).json({ success: true, invoiceNo, message: 'Sale Recorded' });
+    return res.status(200).json({ success: true, invoiceNo, message: 'Sale Recorded & PDF Vaulted' });
 
   } catch (error) {
     console.error('Jewellery Sales Error:', error);
