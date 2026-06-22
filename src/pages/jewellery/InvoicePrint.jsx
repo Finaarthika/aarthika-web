@@ -26,6 +26,21 @@ export default function InvoicePrint() {
     }
   }, []);
 
+  // Convert image to base64 so html2canvas can render it without CORS blocking
+  const toBase64 = (url) => new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = reject;
+    img.src = url + '?t=' + Date.now();
+  });
+
   const generatePDF = async () => {
     if (generating) return;
     setGenerating(true);
@@ -40,19 +55,32 @@ export default function InvoicePrint() {
     // TEMPORARY CSS OVERRIDES FOR PERFECT CAPTURE
     element.classList.remove('my-24', 'shadow-2xl');
     element.classList.add('my-0', 'shadow-none');
+
+    // PRE-CONVERT ALL IMAGES TO BASE64 SO html2canvas CAN RENDER THEM
+    const allImgs = element.querySelectorAll('img');
+    const originalSrcs = [];
+    await Promise.all(Array.from(allImgs).map(async (img, i) => {
+      originalSrcs[i] = img.src;
+      try {
+        const b64 = await toBase64(img.src);
+        img.src = b64;
+      } catch(e) {
+        // keep original if it fails
+      }
+    }));
     
     // FORCE 1 PAGE BY MATCHING EXACT PIXEL DIMENSIONS
     const width = element.offsetWidth;
     const height = element.offsetHeight;
 
-      const opt = {
-        margin: 0,
-        filename: `Invoice_${data?.invoiceNo || 'Aarthika'}.pdf`,
-        image: { type: 'jpeg', quality: 1.0 },
-        html2canvas: { scale: 2, useCORS: true, allowTaint: true, logging: false },
-        // Add a buffer to the height so it physically cannot trigger html2pdf pagination limits!
-        jsPDF: { unit: 'px', format: [width + 20, height + 50], orientation: 'landscape' }
-      };
+    const opt = {
+      margin: 0,
+      filename: `Invoice_${data?.invoiceNo || 'Aarthika'}.pdf`,
+      image: { type: 'png', quality: 1.0 },
+      html2canvas: { scale: 2, useCORS: true, allowTaint: true, logging: false, imageTimeout: 0 },
+      // Add a buffer so it physically cannot trigger html2pdf pagination
+      jsPDF: { unit: 'px', format: [width + 20, height + 50], orientation: 'landscape' }
+    };
 
     try {
       const pdfBlobUrl = await html2pdf().from(element).set(opt).output('bloburl');
@@ -67,7 +95,8 @@ export default function InvoicePrint() {
       alert("Failed to generate PDF.");
     }
 
-    // RESTORE CLASSES
+    // RESTORE ORIGINAL SRCS AND CLASSES
+    Array.from(allImgs).forEach((img, i) => { img.src = originalSrcs[i]; });
     element.classList.add('my-24', 'shadow-2xl');
     element.classList.remove('my-0', 'shadow-none');
     setGenerating(false);
