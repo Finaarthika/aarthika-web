@@ -38,14 +38,13 @@ export default function InvoicePrint() {
   const goldItems = data.items?.filter(i => i.metalType === 'Gold') || []; 
   
   return (
-    <div className="bg-[#F8F9FA] text-black w-full min-h-screen relative flex items-center justify-center" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>
+    <div className="bg-[#F8F9FA] text-black w-full min-h-screen print:min-h-0 relative flex print:block items-center justify-center print:p-0 print:m-0" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>
       
       <style>
         {`
           @import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700;800&display=swap');
           
           @media print {
-            @page { size: A4 landscape; margin: 0; }
             body { 
               -webkit-print-color-adjust: exact !important; 
               print-color-adjust: exact !important; 
@@ -59,13 +58,9 @@ export default function InvoicePrint() {
               height: auto !important;
               max-height: none !important;
               padding: 0 !important; 
-              margin: 0 auto !important; 
+              margin: 0 !important; 
               box-shadow: none !important;
               overflow: visible !important;
-              page-break-after: avoid !important;
-              page-break-before: avoid !important;
-              page-break-inside: avoid !important;
-              zoom: 0.85;
             }
           }
           
@@ -83,7 +78,7 @@ export default function InvoicePrint() {
       </div>
 
       {/* Invoice Canvas */}
-      <div className="print-container w-[1123px] bg-white pt-6 relative min-h-[794px] print:min-h-[auto] flex flex-col shadow-2xl my-10 print:my-0 mx-auto">
+      <div className="print-container w-[1123px] print:w-full bg-white pt-6 relative min-h-[794px] print:min-h-0 flex flex-col shadow-2xl print:shadow-none my-10 print:my-0 mx-auto print:mx-0">
         
         {/* Massive Watermark Center */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none z-0">
