@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import html2pdf from 'html2pdf.js';
 import logoIcon from '../../assets/4.png';
 import logoTextUrl from '../../assets/Aarthika (1).png';
 import premiumLogo from '../../assets/3.png';
+import InvoicePrint from './InvoicePrint';
 
 const OfficerHeader = ({ officerName, onLogout }) => (
   <div className="sticky top-0 z-50 w-full bg-gradient-to-r from-[#0d0d14] via-aarthikaDark to-amber-900 py-3 sm:py-4 px-4 sm:px-8 shadow-2xl border-b border-white/10 overflow-hidden backdrop-blur-md">
@@ -34,6 +35,7 @@ const OfficerHeader = ({ officerName, onLogout }) => (
 
 export default function JewellerySalesTerminal() {
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
+  const [showPrint, setShowPrint] = useState(false);
   const showToast = (message, type = 'success') => {
     setToast({ visible: true, message, type });
     setTimeout(() => setToast({ visible: false, message: '', type: 'success' }), 4000);
@@ -127,7 +129,6 @@ export default function JewellerySalesTerminal() {
     setOfficerAuth({ loggedIn: false, userId: '', password: '', staffName: '' });
   };
 
-  // Sales Form State
   const [saleData, setSaleData] = useState({
     customerName: '',
     customerPhone: '',
@@ -144,9 +145,7 @@ export default function JewellerySalesTerminal() {
   const [customerPhoto, setCustomerPhoto] = useState('');
   const [jewelleryPhoto, setJewelleryPhoto] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
-  const [currentInvoiceNo, setCurrentInvoiceNo] = useState('');
 
-  // Calculations
   const calculateItemValue = (item) => {
     const w = parseFloat(item.netWeight) || 0;
     const r = parseFloat(item.rate) || 0;
@@ -158,10 +157,6 @@ export default function JewellerySalesTerminal() {
 
   const metalValue = getSilverValue() + getGoldValue();
   
-  let totalNetWeight = 0;
-  silverItems.forEach(i => totalNetWeight += (parseFloat(i.netWeight) || 0));
-  goldItems.forEach(i => totalNetWeight += (parseFloat(i.netWeight) || 0));
-
   const goldMakingNum = parseFloat(saleData.goldMakingCharges) || 0;
   const silverMakingNum = parseFloat(saleData.silverMakingCharges) || 0;
   const discountNum = parseFloat(saleData.discount) || 0;
@@ -175,11 +170,6 @@ export default function JewellerySalesTerminal() {
     ...silverItems.map(i => ({ ...i, metalType: 'Silver' })),
     ...goldItems.map(i => ({ ...i, metalType: 'Gold' }))
   ];
-
-  // Format Currency
-  const formatINR = (amount) => {
-    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(amount);
-  };
 
   const handleCameraCapture = async (e, setter) => {
     const file = e.target.files[0];
@@ -206,7 +196,6 @@ export default function JewellerySalesTerminal() {
       return showToast("Please add at least one jewellery item.", "error");
     }
     
-    // Validate items
     for (const item of allItems) {
       if (!item.netWeight || !item.rate) {
         return showToast("Please fill weight and rate for all items.", "error");
@@ -214,72 +203,17 @@ export default function JewellerySalesTerminal() {
     }
 
     if (!customerPhoto || !jewelleryPhoto) {
-      return showToast("Both Customer and Jewellery photos are required for the Vault Record.", "error");
+      return showToast("Both Customer and Jewellery photos are required.", "error");
     }
 
     setCreateLoading(true);
-    
-    // Open a new tab synchronously to bypass popup blockers
-    const newTab = window.open('about:blank', '_blank');
-    if (newTab) {
-      newTab.document.write('<div style="font-family:sans-serif; text-align:center; margin-top:50px;"><h2>Processing Sale & Generating Secured Bill...</h2><p>Please wait, do not close this tab.</p></div>');
-    }
 
     try {
-      // 1. Generate Invoice Number dynamically
       const dateObj = new Date();
       const ymdStr = dateObj.toISOString().slice(0, 10).replace(/-/g, '');
       const randHex = Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
       const invoiceNo = `JS-${ymdStr}-${randHex}`;
       
-      // We inject it into the DOM directly for the Vault PDF to pick up immediately
-      document.getElementById('vault-inv-display').innerText = invoiceNo;
-
-      // 2. Generate the Internal Vault Record (A4)
-      const vaultElement = document.getElementById('vault-pdf-template');
-      vaultElement.style.display = 'block'; // Ensure visible for generation
-      const vaultPdfBase64Str = await html2pdf().from(vaultElement).set({
-        margin: [10, 10, 10, 10],
-        filename: `${invoiceNo}_Vault_Record.pdf`,
-        image: { type: 'jpeg', quality: 0.95 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      }).toPdf().output('datauristring');
-      vaultElement.style.display = 'none';
-
-      const vaultCleanBase64 = vaultPdfBase64Str.split(',')[1];
-
-      // 3. Send Vault PDF and 14 Columns Data to API
-      const itemDescriptions = allItems.map(i => `${i.purity} ${i.metalType} ${i.category}`).join(', ');
-      const firstRate = allItems.length > 0 ? (parseFloat(allItems[0].rate) || 0) : 0;
-
-      const payload = {
-        invoiceNo,
-        date: dateObj.toLocaleDateString('en-GB'),
-        branchName: officerAuth.branchName,
-        officerName: officerAuth.staffName,
-        customerName: saleData.customerName,
-        customerPhone: saleData.customerPhone,
-        itemDescription: itemDescriptions,
-        netWeight: totalNetWeight,
-        ratePerGram: firstRate, // Use first rate to prevent string distortion in Sheets
-        metalValue: metalValue,
-        makingCharges: goldMakingNum + silverMakingNum,
-        gstAmount: gstAmount,
-        discount: discountNum,
-        grandTotal: grandTotal,
-        vaultPdfFile: vaultCleanBase64
-      };
-
-      const res = await fetch('/api/jewellery-sales', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to sync to cloud.');
-
-      // 4. API Success! Setup Native Print
       const printData = {
         invoiceNo,
         date: dateObj.toLocaleDateString('en-GB'),
@@ -293,33 +227,26 @@ export default function JewellerySalesTerminal() {
         discount: discountNum,
         gstAmount: gstAmount,
         grandTotal: grandTotal,
-        jewelleryPhoto: jewelleryPhoto // Passed as base64 or object URL (Base64 preferred for storage)
+        customerPhoto,
+        jewelleryPhoto
       };
       
       localStorage.setItem('aarthika_current_invoice', JSON.stringify(printData));
 
-      // Redirect the tab we opened earlier to the native print page
-      if (newTab) {
-        newTab.location.href = '/jewellery/print';
-      } else {
-        // Fallback if blocked
-        window.open('/jewellery/print', '_blank');
-      }
-
-      showToast(`Sale recorded successfully! Invoice: ${invoiceNo}`, "success");
+      setShowPrint(true);
       
-      // Clear form
-      setSaleData({
-        customerName: '', customerPhone: '', customerVillage: '',
-        goldMakingCharges: '', silverMakingCharges: '', discount: '', applyGst: false
-      });
-      setSilverItems([]);
-      setGoldItems([]);
-      setCustomerPhoto('');
-      setJewelleryPhoto('');
-
+      const handleAfterPrint = () => {
+        setShowPrint(false);
+        window.removeEventListener('afterprint', handleAfterPrint);
+        setSaleData({ customerName: '', customerPhone: '', customerVillage: '', goldMakingCharges: '', silverMakingCharges: '', discount: '', applyGst: false });
+        setSilverItems([]);
+        setGoldItems([]);
+        setCustomerPhoto('');
+        setJewelleryPhoto('');
+      };
+      window.addEventListener('afterprint', handleAfterPrint);
+      
     } catch (err) {
-      if (newTab) newTab.close();
       showToast(err.message, "error");
     } finally {
       setCreateLoading(false);
