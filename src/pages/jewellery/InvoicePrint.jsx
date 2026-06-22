@@ -26,20 +26,21 @@ export default function InvoicePrint() {
     }
   }, []);
 
-  // Convert image to base64 so html2canvas can render it without CORS blocking
-  const toBase64 = (url) => new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      canvas.getContext('2d').drawImage(img, 0, 0);
-      resolve(canvas.toDataURL('image/png'));
-    };
-    img.onerror = reject;
-    img.src = url + '?t=' + Date.now();
-  });
+  // Fetch-based base64 converter - works reliably for all same-origin assets (no CORS canvas issues)
+  const toBase64 = async (url) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (e) {
+      return url; // fallback to original if fetch fails
+    }
+  };
 
   const generatePDF = async () => {
     if (generating) return;
