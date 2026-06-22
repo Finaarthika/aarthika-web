@@ -157,6 +157,10 @@ export default function JewellerySalesTerminal() {
 
   const metalValue = getSilverValue() + getGoldValue();
   
+  let totalNetWeight = 0;
+  silverItems.forEach(i => totalNetWeight += (parseFloat(i.netWeight) || 0));
+  goldItems.forEach(i => totalNetWeight += (parseFloat(i.netWeight) || 0));
+
   const goldMakingNum = parseFloat(saleData.goldMakingCharges) || 0;
   const silverMakingNum = parseFloat(saleData.silverMakingCharges) || 0;
   const discountNum = parseFloat(saleData.discount) || 0;
