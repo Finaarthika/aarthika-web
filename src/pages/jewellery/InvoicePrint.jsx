@@ -177,54 +177,8 @@ export default function InvoicePrint() {
                 </div>
               </div>
 
-              {/* Bank Details & QR (Left Side) */}
-              <div className="mt-4 flex flex-col px-2">
-                <div className="font-bold text-black mb-4 text-[13px] text-center tracking-wide" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>Payment Instructions</div>
-                
-                <div className="flex justify-between items-start">
-                  {/* Bank Info */}
-                  <div className="text-[10px] space-y-2 text-gray-800">
-                    <div className="flex gap-2"><span className="text-gray-500 w-[100px]">Payment Method:</span> <span className="font-bold">Bank Transfer</span></div>
-                    <div className="flex gap-2"><span className="text-gray-500 w-[100px]">Bank Name:</span> <span className="font-bold">{bankDetails.bankName}</span></div>
-                    <div className="flex gap-2"><span className="text-gray-500 w-[100px]">Account Number:</span> <span className="font-bold">{bankDetails.accountNumber}</span></div>
-                    <div className="flex gap-2"><span className="text-gray-500 w-[100px]">IFSC:</span> <span className="font-bold tracking-widest">{bankDetails.ifsc}</span></div>
-                  </div>
-                  
-                  {/* UPI Info & QR */}
-                  <div className="text-[10px] flex flex-col items-end">
-                    <div className="flex gap-2 justify-end mb-2"><span className="text-gray-500">Payment Method:</span> <span className="font-bold">UPI</span></div>
-                    <div className="flex gap-2 justify-end mb-4"><span className="text-gray-500">UPI ID:</span> <span className="font-bold">{bankDetails.upiId}</span></div>
-                    
-                    <div className="text-center">
-                      <div className="bg-white p-1.5 rounded-xl border border-gray-200 mb-1.5 inline-block shadow-sm">
-                        <img src={qrCodeImage} alt="QR Code" className="w-[75px] h-[75px] object-cover rounded-lg" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* RIGHT AREA (50% width) */}
-            <div className="w-[50%] flex flex-col pl-2">
-              
-              {/* Terms and Conditions */}
-              <div className="text-[9.5px] text-gray-700 text-justify leading-relaxed mb-6">
-                <div className="font-bold text-black mb-3 text-[14px] text-center tracking-wide" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>Terms and Conditions for Jewelry Sale</div>
-                <ol className="list-decimal pl-4 space-y-1">
-                  <li>Sale and Purchase Agreement: By purchasing jewelry from us, you agree to these terms and conditions. The sale is considered final once the purchase is completed, and no cancellations will be accepted post transaction.</li>
-                  <li>Payment of Remaining Due Amount: Any remaining balance due on the purchased jewelry must be settled within the agreed payment period. Failure to do so may result in interest charges of 2% per month or cancellation of the order.</li>
-                  <li>Exchange of Old Jewelry: Customers have the option to exchange old jewelry for new pieces. The value of the old jewelry will be assessed based on current market rates, considering factors such as metal weight and quality.</li>
-                  <li>Subtraction of Charges Upon Sale: When reselling jewelry bought from us, deductions will be made for making charges, any impurities, and the value of stones. The final resale value will be calculated after these adjustments.</li>
-                  <li>Future Exchange Conditions: Jewelry can be exchanged in the future under the condition that it remains in good condition. Any damage or significant wear may affect the resale or exchange value. Regular maintenance is advised to ensure the longevity and quality of the ornaments.</li>
-                  <li>Custom Orders: We offer customization services to create unique pieces tailored to your preferences. A non-refundable deposit is required to initiate the design process, and the final price will depend on the materials and complexity of the design.</li>
-                  <li>Privacy and Data Protection: We are committed to protecting your personal information. All data collected during transactions is securely stored and will not be shared with third parties without your consent, except as required by law.</li>
-                  <li>Dispute Resolution: In the event of any disputes arising from these terms and conditions, we encourage resolving matters amicably through direct communication. If necessary, disputes will be settled under the jurisdiction of the courts in Uttar Dinajpur, West Bengal.</li>
-                </ol>
-              </div>
-
-              {/* Totals Section */}
-              <div className="mt-auto pb-4">
+              {/* Totals Section (Left Side) */}
+              <div className="mt-4 pb-4">
                 <div className="bg-[#F8F9FA] p-5 rounded-xl border border-gray-200 shadow-sm mb-4">
                   <div className="flex justify-between py-1.5 text-[12px] font-bold text-black border-b border-gray-200 pb-2 mb-2">
                     <span className="font-nirand uppercase tracking-wide text-gray-500">TOTAL AMOUNT</span>
@@ -266,6 +220,52 @@ export default function InvoicePrint() {
                   <div className="text-[12px] flex items-center gap-2 text-[#1B1464]">
                     <span className="font-bold uppercase tracking-wider">Total Paid:</span> 
                     <span className="font-extrabold">₹ {formatINR(data.grandTotal)} /-</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT AREA (50% width) */}
+            <div className="w-[50%] flex flex-col pl-2">
+              
+              {/* Terms and Conditions */}
+              <div className="text-[9.5px] text-gray-700 text-justify leading-relaxed mb-6">
+                <div className="font-bold text-black mb-3 text-[14px] text-center tracking-wide" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>Terms and Conditions for Jewelry Sale</div>
+                <ol className="list-decimal pl-4 space-y-1">
+                  <li>Sale and Purchase Agreement: By purchasing jewelry from us, you agree to these terms and conditions. The sale is considered final once the purchase is completed, and no cancellations will be accepted post transaction.</li>
+                  <li>Payment of Remaining Due Amount: Any remaining balance due on the purchased jewelry must be settled within the agreed payment period. Failure to do so may result in interest charges of 2% per month or cancellation of the order.</li>
+                  <li>Exchange of Old Jewelry: Customers have the option to exchange old jewelry for new pieces. The value of the old jewelry will be assessed based on current market rates, considering factors such as metal weight and quality.</li>
+                  <li>Subtraction of Charges Upon Sale: When reselling jewelry bought from us, deductions will be made for making charges, any impurities, and the value of stones. The final resale value will be calculated after these adjustments.</li>
+                  <li>Future Exchange Conditions: Jewelry can be exchanged in the future under the condition that it remains in good condition. Any damage or significant wear may affect the resale or exchange value. Regular maintenance is advised to ensure the longevity and quality of the ornaments.</li>
+                  <li>Custom Orders: We offer customization services to create unique pieces tailored to your preferences. A non-refundable deposit is required to initiate the design process, and the final price will depend on the materials and complexity of the design.</li>
+                  <li>Privacy and Data Protection: We are committed to protecting your personal information. All data collected during transactions is securely stored and will not be shared with third parties without your consent, except as required by law.</li>
+                  <li>Dispute Resolution: In the event of any disputes arising from these terms and conditions, we encourage resolving matters amicably through direct communication. If necessary, disputes will be settled under the jurisdiction of the courts in Uttar Dinajpur, West Bengal.</li>
+                </ol>
+              </div>
+
+              {/* Bank Details & QR (Right Side) */}
+              <div className="mt-auto flex flex-col px-2 pb-4">
+                <div className="font-bold text-black mb-4 text-[13px] text-center tracking-wide" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>Payment Instructions</div>
+                
+                <div className="flex justify-between items-start">
+                  {/* Bank Info */}
+                  <div className="text-[10px] space-y-2 text-gray-800">
+                    <div className="flex gap-2"><span className="text-gray-500 w-[100px]">Payment Method:</span> <span className="font-bold">Bank Transfer</span></div>
+                    <div className="flex gap-2"><span className="text-gray-500 w-[100px]">Bank Name:</span> <span className="font-bold">{bankDetails.bankName}</span></div>
+                    <div className="flex gap-2"><span className="text-gray-500 w-[100px]">Account Number:</span> <span className="font-bold">{bankDetails.accountNumber}</span></div>
+                    <div className="flex gap-2"><span className="text-gray-500 w-[100px]">IFSC:</span> <span className="font-bold tracking-widest">{bankDetails.ifsc}</span></div>
+                  </div>
+                  
+                  {/* UPI Info & QR */}
+                  <div className="text-[10px] flex flex-col items-end">
+                    <div className="flex gap-2 justify-end mb-2"><span className="text-gray-500">Payment Method:</span> <span className="font-bold">UPI</span></div>
+                    <div className="flex gap-2 justify-end mb-4"><span className="text-gray-500">UPI ID:</span> <span className="font-bold">{bankDetails.upiId}</span></div>
+                    
+                    <div className="text-center">
+                      <div className="bg-white p-1.5 rounded-xl border border-gray-200 mb-1.5 inline-block shadow-sm">
+                        <img src={qrCodeImage} alt="QR Code" className="w-[75px] h-[75px] object-cover rounded-lg" />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
