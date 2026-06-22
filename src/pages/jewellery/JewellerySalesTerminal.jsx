@@ -190,6 +190,13 @@ export default function JewellerySalesTerminal() {
     }
 
     setCreateLoading(true);
+    
+    // Open a new tab synchronously to bypass popup blockers
+    const newTab = window.open('about:blank', '_blank');
+    if (newTab) {
+      newTab.document.write('<div style="font-family:sans-serif; text-align:center; margin-top:50px;"><h2>Processing Sale & Generating Secured Bill...</h2><p>Please wait, do not close this tab.</p></div>');
+    }
+
     try {
       // 1. Generate Invoice Number dynamically
       const dateObj = new Date();
@@ -243,20 +250,27 @@ export default function JewellerySalesTerminal() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to sync to cloud.');
 
-      // 4. API Success! Now generate the Customer Bill (A5) and pop it open in Chrome's print preview
+      // 4. API Success! Now generate the Customer Bill (A5)
       const customerElement = document.getElementById('customer-pdf-template');
       customerElement.style.display = 'block';
       
-      html2pdf().from(customerElement).set({
+      const pdfUrl = await html2pdf().from(customerElement).set({
         margin: [10, 10, 10, 10],
         filename: `${invoiceNo}_Customer_Bill.pdf`,
         image: { type: 'jpeg', quality: 1.0 },
         html2canvas: { scale: 3, useCORS: true, logging: false }, // high scale for crisp text
         jsPDF: { unit: 'mm', format: 'a5', orientation: 'portrait' }
-      }).output('bloburl').then(function(pdfUrl) {
+      }).output('bloburl');
+      
+      customerElement.style.display = 'none';
+
+      // Assign the generated PDF URL to the tab we opened earlier
+      if (newTab) {
+        newTab.location.href = pdfUrl;
+      } else {
+        // Fallback if the browser blocked the initial window.open
         window.open(pdfUrl, '_blank');
-        customerElement.style.display = 'none';
-      });
+      }
 
       showToast(`Sale recorded successfully! Invoice: ${invoiceNo}`, "success");
       
@@ -270,6 +284,7 @@ export default function JewellerySalesTerminal() {
       setJewelleryPhoto('');
 
     } catch (err) {
+      if (newTab) newTab.close();
       showToast(err.message, "error");
     } finally {
       setCreateLoading(false);
