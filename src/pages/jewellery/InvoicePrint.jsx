@@ -115,16 +115,16 @@ export default function InvoicePrint() {
           </div>
 
           {/* MAIN CONTENT SPLIT */}
-          <div className="flex gap-8 mt-6">
+          <div className="flex gap-16 mt-6 px-2">
             
-            {/* LEFT & MIDDLE AREA (60% width) */}
-            <div className="w-[58%] flex flex-col">
+            {/* LEFT AREA (50% width) */}
+            <div className="w-[50%] flex flex-col pr-2">
               
               {/* Meta Info Row */}
               <div className="flex justify-between items-start mb-6">
                 {/* INVOICE */}
                 <div>
-                  <h2 className="text-[40px] text-gray-800 mb-3 font-normal font-nirand leading-none">INVOICE</h2>
+                  <h2 className="text-[40px] mb-3 font-normal font-nirand leading-none tracking-wide" style={{ color: '#1B1464' }}>INVOICE</h2>
                   <div className="grid grid-cols-[100px_1fr] gap-x-2 gap-y-1.5 text-[12px] font-bold text-gray-700" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>
                     <span>Invoice date:</span>
                     <span className="text-black font-normal">{data.date}</span>
@@ -134,18 +134,18 @@ export default function InvoicePrint() {
                 </div>
                 
                 {/* INVOICE TO */}
-                <div className="flex flex-col text-center items-center px-4 pt-1 mr-4">
-                  <div className="text-[10px] font-bold text-gray-500 uppercase mb-1 tracking-wider">INVOICE TO</div>
-                  <div className="text-[14px] font-bold text-gray-800 tracking-wide uppercase">{data.customerName || 'Customer'}</div>
-                  <div className="text-[11px] text-gray-500 font-bold mt-1">+91-{data.customerPhone}</div>
-                  {data.customerVillage && <div className="text-[11px] text-gray-500 font-bold mt-0.5">{data.customerVillage}</div>}
+                <div className="flex flex-col items-center pt-2">
+                  <div className="text-[10px] font-bold text-gray-500 uppercase mb-1 tracking-widest text-center">INVOICE TO</div>
+                  <div className="text-[14px] font-bold text-gray-800 tracking-wide uppercase text-center">{data.customerName || 'Customer'}</div>
+                  <div className="text-[11px] text-gray-500 font-bold mt-1 text-center">+91-{data.customerPhone}</div>
+                  {data.customerVillage && <div className="text-[11px] text-gray-500 font-bold mt-0.5 text-center">{data.customerVillage}</div>}
                 </div>
               </div>
 
               {/* Table */}
-              <div className="w-full mb-6 border border-gray-200">
+              <div className="w-full mb-8 border border-gray-200">
                 {/* Table Header */}
-                <div className="grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] bg-[#F3F4F6] py-2 px-3 border-b border-gray-200">
+                <div className="grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] bg-[#F8F9FA] py-2 px-3 border-b border-gray-200">
                   <div className="text-[10px] font-bold text-gray-600 uppercase font-nirand">Descriptions</div>
                   <div className="text-[10px] font-bold text-gray-600 uppercase font-nirand text-center">Gross Weight</div>
                   <div className="text-[10px] font-bold text-gray-600 uppercase font-nirand text-center">Net Weight</div>
@@ -156,7 +156,7 @@ export default function InvoicePrint() {
                 {/* Table Row */}
                 <div className="grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] py-4 px-3 bg-white items-center min-h-[90px]">
                   <div>
-                    <div className="text-[12px] font-bold text-black uppercase font-nirand">{data.metalType}</div>
+                    <div className="text-[12px] font-bold text-black uppercase font-nirand tracking-wide">{data.metalType}</div>
                     <div className="text-[11px] font-semibold text-gray-500 uppercase mt-0.5">{data.itemCategory} ({data.purity})</div>
                   </div>
                   <div className="text-[12px] font-bold text-black text-center">{data.netWeight} g</div>
@@ -168,7 +168,7 @@ export default function InvoicePrint() {
 
               {/* Payment Details */}
               <div className="mb-4">
-                <div className="text-[12px] font-bold text-[#1B1464] tracking-widest mb-3 uppercase font-nirand">PAYMENT DETAILS</div>
+                <div className="text-[12px] font-bold tracking-widest mb-3 uppercase font-nirand" style={{ color: '#1B1464' }}>PAYMENT DETAILS</div>
                 <div className="grid grid-cols-[100px_1fr] gap-x-4 gap-y-2 text-[11px] text-black mb-4 pl-1">
                   <span className="font-bold text-gray-500">Advance UPI:</span>
                   <span className="font-bold">₹ 0 /-</span>
@@ -176,7 +176,7 @@ export default function InvoicePrint() {
                   <span className="font-bold">{data.date}</span>
                 </div>
                 
-                <div className="flex items-center gap-10 bg-white py-3 px-5 rounded-md border border-gray-200 w-fit">
+                <div className="flex items-center gap-12 bg-white py-3 px-5 rounded-md border border-gray-200 w-fit">
                   <div className="text-[12px]">
                     <span className="font-bold text-gray-500 uppercase mr-3">Paid:</span>
                     <span className="font-extrabold text-black">₹ {formatINR(data.grandTotal)} /-</span>
@@ -184,14 +184,14 @@ export default function InvoicePrint() {
                   <div className="h-4 w-px bg-gray-300"></div>
                   <div className="text-[12px]">
                     <span className="font-bold text-gray-500 uppercase mr-3">Total Paid:</span>
-                    <span className="font-extrabold text-[#1B1464]">₹ {formatINR(data.grandTotal)} /-</span>
+                    <span className="font-extrabold" style={{ color: '#1B1464' }}>₹ {formatINR(data.grandTotal)} /-</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* RIGHT AREA (42% width) */}
-            <div className="w-[42%] flex flex-col pl-4">
+            {/* RIGHT AREA (50% width) */}
+            <div className="w-[50%] flex flex-col pl-2">
               
               {/* Terms and Conditions */}
               <div className="text-[9.5px] text-gray-700 text-justify leading-relaxed mb-6">
