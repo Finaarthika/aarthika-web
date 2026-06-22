@@ -258,8 +258,8 @@ export default function JewellerySalesTerminal() {
         margin: [10, 10, 10, 10],
         filename: `${invoiceNo}_Customer_Bill.pdf`,
         image: { type: 'jpeg', quality: 1.0 },
-        html2canvas: { scale: 3, useCORS: true, logging: false }, // high scale for crisp text
-        jsPDF: { unit: 'mm', format: 'a5', orientation: 'portrait' }
+        html2canvas: { scale: 3, useCORS: true, windowWidth: 800, logging: false }, // Fixed width to prevent cutoff
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } // Switching to A4 to match the image ratio perfectly
       }).output('bloburl');
       
       customerElement.style.display = 'none';
@@ -589,85 +589,87 @@ export default function JewellerySalesTerminal() {
         </div>
       </div>
 
-      {/* 2. CUSTOMER BILL (A5 - High End, Tanishq Style, No Photos) */}
-      <div id="customer-pdf-template" style={{ display: 'none', width: '148mm', minHeight: '210mm', padding: '15mm', backgroundColor: '#ffffff', color: '#1a1a1a', fontFamily: '"Times New Roman", Times, serif' }}>
+      {/* 2. CUSTOMER BILL (Premium, Tanishq/Mishra Style, No Photos, Fixed Width to prevent cutoff) */}
+      <div id="customer-pdf-template" style={{ display: 'none', width: '800px', padding: '60px', backgroundColor: '#ffffff', color: '#1a1a1a', boxSizing: 'border-box' }}>
         
-        {/* Elegant Header */}
-        <div style={{ textAlign: 'center', marginBottom: '8mm' }}>
-          <img src={premiumLogo} alt="Mishra Jewellers" style={{ height: '25mm', marginBottom: '2mm' }} />
-          <h1 style={{ fontSize: '18pt', fontWeight: 'normal', letterSpacing: '2px', margin: '0 0 2mm 0', textTransform: 'uppercase' }}>Mishra Jeweller's</h1>
-          <p style={{ fontSize: '8pt', margin: 0, letterSpacing: '1px', color: '#555' }}>PURITY • TRUST • HERITAGE</p>
+        {/* Logo and Brand */}
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <img src={premiumLogo} alt="Aarthika" style={{ height: '40px', display: 'block', margin: '0 auto 20px auto' }} />
+          <h1 style={{ fontFamily: '"Georgia", serif', fontSize: '36px', fontWeight: 'normal', letterSpacing: '6px', margin: '0 0 10px 0', textTransform: 'uppercase' }}>Mishra Jeweller's</h1>
+          <p style={{ fontFamily: '"Georgia", serif', fontSize: '12px', margin: 0, letterSpacing: '4px', color: '#666', textTransform: 'uppercase' }}>Purity • Trust • Heritage</p>
         </div>
 
+        <hr style={{ borderTop: '1px solid #e5e5e5', borderBottom: 'none', margin: '0 0 30px 0' }} />
+
         {/* Invoice Meta */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #ddd', borderBottom: '1px solid #ddd', padding: '4mm 0', marginBottom: '8mm', fontSize: '9pt' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '40px', fontFamily: '"Georgia", serif' }}>
           <div>
-            <span style={{ color: '#777', textTransform: 'uppercase', fontSize: '7pt', letterSpacing: '1px', display: 'block' }}>Bill To</span>
-            <strong style={{ fontSize: '11pt', display: 'block', marginTop: '1mm' }}>{saleData.customerName || 'Customer'}</strong>
-            <span style={{ display: 'block' }}>{saleData.customerPhone}</span>
-            {saleData.customerVillage && <span style={{ display: 'block' }}>{saleData.customerVillage}</span>}
+            <span style={{ color: '#888', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '2px', display: 'block', marginBottom: '8px' }}>Bill To</span>
+            <strong style={{ fontSize: '18px', display: 'block', marginBottom: '6px', color: '#111' }}>{saleData.customerName || 'Customer'}</strong>
+            <span style={{ display: 'block', fontSize: '14px', color: '#444', marginBottom: '4px' }}>{saleData.customerPhone}</span>
+            {saleData.customerVillage && <span style={{ display: 'block', fontSize: '14px', color: '#444' }}>{saleData.customerVillage}</span>}
           </div>
           <div style={{ textAlign: 'right' }}>
-            <span style={{ color: '#777', textTransform: 'uppercase', fontSize: '7pt', letterSpacing: '1px', display: 'block' }}>Tax Invoice</span>
-            <strong style={{ fontSize: '10pt', display: 'block', marginTop: '1mm' }} id="customer-inv-display"></strong>
-            <span style={{ display: 'block' }}>Date: {currentDateStr}</span>
+            <span style={{ color: '#888', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '2px', display: 'block', marginBottom: '8px' }}>Tax Invoice</span>
+            <strong style={{ fontSize: '18px', display: 'block', marginBottom: '6px', color: '#111' }} id="customer-inv-display"></strong>
+            <span style={{ display: 'block', fontSize: '14px', color: '#444' }}>Date: {currentDateStr}</span>
           </div>
         </div>
 
         {/* Minimalist Item Table */}
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9pt', marginBottom: '8mm' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '60px', fontFamily: '"Georgia", serif' }}>
           <thead>
-            <tr style={{ borderBottom: '2px solid #1a1a1a' }}>
-              <th style={{ padding: '2mm 0', textAlign: 'left', fontWeight: 'normal', textTransform: 'uppercase', fontSize: '8pt', letterSpacing: '1px' }}>Description</th>
-              <th style={{ padding: '2mm 0', textAlign: 'center', fontWeight: 'normal', textTransform: 'uppercase', fontSize: '8pt', letterSpacing: '1px' }}>Purity</th>
-              <th style={{ padding: '2mm 0', textAlign: 'center', fontWeight: 'normal', textTransform: 'uppercase', fontSize: '8pt', letterSpacing: '1px' }}>Weight</th>
-              <th style={{ padding: '2mm 0', textAlign: 'right', fontWeight: 'normal', textTransform: 'uppercase', fontSize: '8pt', letterSpacing: '1px' }}>Amount</th>
+            <tr>
+              <th style={{ padding: '0 0 15px 0', textAlign: 'left', fontWeight: 'normal', textTransform: 'uppercase', fontSize: '12px', letterSpacing: '2px', color: '#555', borderBottom: '2px solid #222' }}>Description</th>
+              <th style={{ padding: '0 0 15px 0', textAlign: 'center', fontWeight: 'normal', textTransform: 'uppercase', fontSize: '12px', letterSpacing: '2px', color: '#555', borderBottom: '2px solid #222' }}>Purity</th>
+              <th style={{ padding: '0 0 15px 0', textAlign: 'center', fontWeight: 'normal', textTransform: 'uppercase', fontSize: '12px', letterSpacing: '2px', color: '#555', borderBottom: '2px solid #222' }}>Weight</th>
+              <th style={{ padding: '0 0 15px 0', textAlign: 'right', fontWeight: 'normal', textTransform: 'uppercase', fontSize: '12px', letterSpacing: '2px', color: '#555', borderBottom: '2px solid #222' }}>Amount</th>
             </tr>
           </thead>
           <tbody>
-            <tr style={{ borderBottom: '1px solid #eee' }}>
-              <td style={{ padding: '4mm 0', textAlign: 'left' }}>{saleData.metalType} {saleData.itemCategory}</td>
-              <td style={{ padding: '4mm 0', textAlign: 'center' }}>{saleData.purity}</td>
-              <td style={{ padding: '4mm 0', textAlign: 'center' }}>{saleData.netWeight} g</td>
-              <td style={{ padding: '4mm 0', textAlign: 'right' }}>{formatINR(metalValue)}</td>
+            <tr>
+              <td style={{ padding: '20px 0', textAlign: 'left', fontSize: '14px', color: '#222' }}>{saleData.metalType} {saleData.itemCategory}</td>
+              <td style={{ padding: '20px 0', textAlign: 'center', fontSize: '14px', color: '#222' }}>{saleData.purity}</td>
+              <td style={{ padding: '20px 0', textAlign: 'center', fontSize: '14px', color: '#222' }}>{saleData.netWeight} g</td>
+              <td style={{ padding: '20px 0', textAlign: 'right', fontSize: '14px', color: '#222' }}>{formatINR(metalValue)}</td>
             </tr>
           </tbody>
         </table>
 
         {/* Pricing Breakdown (Right Aligned) */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '9pt' }}>
-          <div style={{ width: '60%' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1mm 0' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', fontFamily: '"Georgia", serif' }}>
+          <div style={{ width: '400px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '14px', color: '#333' }}>
               <span>Metal Value @ {formatINR(rateNum)}/g</span>
               <span>{formatINR(metalValue)}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1mm 0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '14px', color: '#333' }}>
               <span>Making Charges</span>
               <span>{formatINR(makingNum)}</span>
             </div>
             {discountNum > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1mm 0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '14px', color: '#333' }}>
                 <span>Discount</span>
                 <span>-{formatINR(discountNum)}</span>
               </div>
             )}
             {saleData.applyGst && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1mm 0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '14px', color: '#333' }}>
                 <span>GST (3%)</span>
                 <span>{formatINR(gstAmount)}</span>
               </div>
             )}
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '3mm 0', marginTop: '2mm', borderTop: '2px solid #1a1a1a', borderBottom: '2px solid #1a1a1a', fontWeight: 'bold', fontSize: '11pt' }}>
-              <span style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>Grand Total</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '15px 0', marginTop: '10px', borderTop: '2px solid #111', borderBottom: '2px solid #111', fontWeight: 'bold', fontSize: '18px', color: '#000' }}>
+              <span style={{ textTransform: 'uppercase', letterSpacing: '2px' }}>Grand Total</span>
               <span>{formatINR(grandTotal)}</span>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div style={{ position: 'absolute', bottom: '15mm', left: '15mm', right: '15mm', textAlign: 'center', fontSize: '8pt', color: '#666', borderTop: '1px solid #ddd', paddingTop: '4mm' }}>
-          <p style={{ margin: '0 0 1mm 0' }}>Thank you for shopping with Mishra Jeweller's.</p>
-          <p style={{ margin: '0 0 1mm 0' }}>This is a computer generated invoice (<span id="customer-inv-display-2"></span>).</p>
+        <div style={{ marginTop: '80px', textAlign: 'center', fontSize: '12px', color: '#888', borderTop: '1px solid #e5e5e5', paddingTop: '30px', fontFamily: '"Georgia", serif' }}>
+          <p style={{ margin: '0 0 5px 0' }}>Thank you for shopping with Mishra Jeweller's.</p>
+          <p style={{ margin: 0, fontSize: '10px' }}>This is a computer generated invoice (<span id="customer-inv-display-2"></span>).</p>
         </div>
 
       </div>
