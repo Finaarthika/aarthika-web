@@ -65,8 +65,8 @@ export default function InvoicePrint() {
       {/* Invoice Canvas (A4 Landscape is approximately 1123px wide and 794px high) */}
       <div className="print-container max-w-[1123px] mx-auto bg-white pt-20 no-print:mt-16 no-print:shadow-2xl relative min-h-[794px] flex flex-col overflow-hidden">
         
-        {/* Watermark */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none z-0">
+        {/* Watermark - 600x200 Aarthika logo centered */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-[0.08] pointer-events-none z-0">
           <img src={watermarkImg} alt="Watermark" className="w-[600px] object-contain" />
         </div>
 
@@ -74,12 +74,12 @@ export default function InvoicePrint() {
         <div className="px-12 pt-6 flex-grow flex flex-col relative z-10">
           
           {/* Header Section */}
-          <div className="flex justify-between items-start mb-4">
+          <div className="flex justify-between items-start mb-6">
             <div>
-              <h1 className="text-[32px] font-normal tracking-wide font-redhat" style={{ color: '#3A2E8A' }}>MISHRA JEWELER'S</h1>
+              <h1 className="text-[34px] font-normal tracking-wide font-redhat" style={{ color: '#3A2E8A' }}>MISHRA JEWELER'S</h1>
               <p className="text-[12px] font-bold tracking-widest mt-1 font-nirand" style={{ color: '#3A2E8A' }}>GOLD & SILVER</p>
             </div>
-            <div className="text-[11px] text-gray-700 space-y-1.5 text-right">
+            <div className="text-[11px] text-gray-700 space-y-1.5 text-right mt-2">
               <div className="flex items-center justify-end gap-2">
                 <svg className="w-3 h-3 text-[#3A2E8A]" fill="currentColor" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path></svg>
                 <span>+91-06205168541</span>
@@ -91,93 +91,81 @@ export default function InvoicePrint() {
             </div>
           </div>
 
-          <div className="w-full border-t mb-6" style={{ borderColor: '#E5E5E5' }}></div>
+          <div className="w-full border-t mb-8" style={{ borderColor: '#E5E5E5' }}></div>
 
           {/* Title and Meta */}
           <div className="flex justify-between items-start mb-6">
             <div>
-              <h2 className="text-[36px] text-black mb-3 uppercase font-nirand">INVOICE</h2>
-              <div className="grid grid-cols-[110px_1fr] gap-x-2 gap-y-1 text-[12px] text-black">
-                <span className="font-semibold font-nirand">Invoice date:</span>
+              <h2 className="text-[36px] text-black mb-4 uppercase font-nirand leading-none">INVOICE</h2>
+              <div className="grid grid-cols-[100px_1fr] gap-x-2 gap-y-1.5 text-[12px] text-black">
+                <span className="font-bold font-nirand">Invoice date:</span>
                 <span>{data.date}</span>
-                <span className="font-semibold font-nirand">Invoice Number:</span>
+                <span className="font-bold font-nirand">Invoice Number:</span>
                 <span>{data.invoiceNo}</span>
               </div>
             </div>
             <div className="text-right">
               <div className="text-[12px] font-bold text-gray-500 tracking-wide mb-1 uppercase font-nirand">INVOICE TO</div>
-              <div className="text-[16px] font-bold text-black">{data.customerName || 'Customer'}</div>
-              <div className="text-[13px] text-black mt-1">+91-{data.customerPhone}</div>
-              {data.customerVillage && <div className="text-[13px] text-black w-48 text-right ml-auto leading-tight mt-1">{data.customerVillage}</div>}
+              <div className="text-[18px] font-bold text-black">{data.customerName || 'Customer'}</div>
+              <div className="text-[13px] text-black mt-1 font-semibold">+91-{data.customerPhone}</div>
+              {data.customerVillage && <div className="text-[13px] text-black text-right ml-auto leading-tight mt-1">{data.customerVillage}</div>}
             </div>
           </div>
 
-          {/* Main Content Split: Left (Jewellery Table/Totals) vs Right (T&C, Payment, QR) */}
-          <div className="flex gap-10 flex-grow mt-4">
-            
-            {/* LEFT COLUMN: Jewellery Details & Totals */}
-            <div className="w-[55%] flex flex-col">
-              
-              {/* Table */}
-              <div className="w-full mb-6 border border-gray-200 rounded overflow-hidden">
-                <div className="grid grid-cols-[3fr_1.5fr_1.5fr_1.5fr_2fr] gap-2 bg-[#F3F4F6] py-2 px-3 text-[10px] font-bold text-black border-b border-gray-200 font-nirand">
-                  <div>DESCRIPTIONS</div>
-                  <div className="text-center">GROSS WT.</div>
-                  <div className="text-center">NET WT.</div>
-                  <div className="text-center">RATE ₹</div>
-                  <div className="text-right">AMOUNT ₹</div>
-                </div>
-                
-                <div className="grid grid-cols-[3fr_1.5fr_1.5fr_1.5fr_2fr] gap-2 py-4 px-3 text-[12px] text-black items-center min-h-[120px]">
-                  <div>
-                    <div className="font-bold uppercase mb-1 font-nirand">{data.metalType}</div>
-                    <div className="text-gray-600 uppercase font-nirand">{data.itemCategory} ({data.purity})</div>
-                  </div>
-                  <div className="text-center">{data.netWeight}</div>
-                  <div className="text-center">{data.netWeight}</div>
-                  <div className="text-center">{formatINR(data.ratePerGram)}</div>
-                  <div className="text-right font-semibold">{formatINR(data.metalValue)}</div>
-                </div>
-              </div>
-
-              {/* Totals Section */}
-              <div className="bg-[#F9FAFB] p-4 rounded border border-gray-200 ml-auto w-[85%]">
-                <div className="flex justify-between py-1.5 text-[12px] font-bold text-black">
-                  <span className="font-nirand">TOTAL AMOUNT</span>
-                  <span>{formatINR(data.metalValue)}</span>
-                </div>
-                <div className="flex justify-between py-1.5 text-[12px] text-gray-700">
-                  <span className="font-nirand">Making Charges</span>
-                  <span>{formatINR(data.makingCharges)}</span>
-                </div>
-                {data.discount > 0 && (
-                  <div className="flex justify-between py-1.5 text-[12px] text-gray-700">
-                    <span className="font-nirand">Discount</span>
-                    <span>-{formatINR(data.discount)}</span>
-                  </div>
-                )}
-                {data.gstAmount > 0 && (
-                  <div className="flex justify-between py-1.5 text-[12px] text-gray-700">
-                    <span className="font-nirand">GST (3%)</span>
-                    <span>{formatINR(data.gstAmount)}</span>
-                  </div>
-                )}
-                
-                <div className="flex justify-between items-center py-3 mt-2 border-t border-b border-gray-300 font-bold text-[14px] text-black">
-                  <span className="font-nirand">GRAND TOTAL AMOUNT</span>
-                  <span>₹ {formatINR(data.grandTotal)}</span>
-                </div>
-              </div>
-              
+          {/* Table - FULL WIDTH */}
+          <div className="w-full mb-8">
+            <div className="grid grid-cols-[3fr_1.5fr_1.5fr_1.5fr_2fr] gap-2 bg-[#F3F4F6] py-3 px-4 text-[11px] font-bold text-black border-y border-gray-200 font-nirand">
+              <div>DESCRIPTIONS</div>
+              <div className="text-center">GROSS WEIGHT</div>
+              <div className="text-center">NET WEIGHT</div>
+              <div className="text-center">RATE ₹</div>
+              <div className="text-right">AMOUNT ₹</div>
             </div>
+            
+            <div className="grid grid-cols-[3fr_1.5fr_1.5fr_1.5fr_2fr] gap-2 py-5 px-4 text-[13px] text-black border-b border-gray-200 items-center">
+              <div>
+                <div className="font-bold uppercase mb-1 font-nirand">{data.metalType}</div>
+                <div className="text-gray-600 uppercase font-nirand">{data.itemCategory} ({data.purity})</div>
+              </div>
+              <div className="text-center">{data.netWeight}</div>
+              <div className="text-center">{data.netWeight}</div>
+              <div className="text-center">{formatINR(data.ratePerGram)}</div>
+              <div className="text-right">{formatINR(data.metalValue)}</div>
+            </div>
+          </div>
 
-
-            {/* RIGHT COLUMN: Terms, Payment, QR */}
-            <div className="w-[45%] flex flex-col justify-start">
+          {/* Bottom Split Section: Left (Payment + T&C) | Right (QR + Totals) */}
+          <div className="flex gap-16 flex-grow">
+            
+            {/* LEFT COLUMN: Payment Details & T&C */}
+            <div className="w-[60%] flex flex-col">
               
+              {/* Payment Details */}
+              <div className="mb-6">
+                <div className="text-[12px] font-bold text-black mb-3 uppercase font-nirand">PAYMENT DETAILS</div>
+                <div className="grid grid-cols-[100px_1fr] gap-x-2 gap-y-1.5 text-[12px] text-black mb-3">
+                  <span className="font-bold">Advance UPI :</span>
+                  <span>₹ 0 /-</span>
+                  <span className="font-bold">Date Paid :</span>
+                  <span>{data.date}</span>
+                </div>
+                
+                {/* Gray box for Paid / Total Paid */}
+                <div className="flex items-center gap-12 text-[14px] font-bold text-black bg-[#F9FAFB] py-3 px-4 rounded border border-gray-200 w-fit">
+                  <div className="flex gap-2">
+                    <span>Paid :</span>
+                    <span>₹ {formatINR(data.grandTotal)} /-</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <span>Total Paid :</span>
+                    <span>₹ {formatINR(data.grandTotal)} /-</span>
+                  </div>
+                </div>
+              </div>
+
               {/* Terms & Conditions */}
-              <div className="text-[8px] text-gray-700 text-justify leading-snug mb-6 pr-2">
-                <div className="font-bold text-black mb-1.5 text-[10px] uppercase font-nirand">Terms and Conditions for Jewelry Sale</div>
+              <div className="text-[8px] text-gray-700 text-justify leading-snug mt-auto pr-8 pb-4">
+                <div className="font-bold text-black mb-2 text-[11px] uppercase font-nirand">TERMS AND CONDITIONS FOR JEWELRY SALE</div>
                 <ol className="list-decimal pl-4 space-y-1">
                   <li>Sale and Purchase Agreement: By purchasing jewelry from us, you agree to these terms and conditions. The sale is considered final once the purchase is completed, and no cancellations will be accepted post transaction.</li>
                   <li>Payment of Remaining Due Amount: Any remaining balance due on the purchased jewelry must be settled within the agreed payment period. Failure to do so may result in interest charges of 2% per month or cancellation of the order.</li>
@@ -190,37 +178,47 @@ export default function InvoicePrint() {
                 </ol>
               </div>
 
-              {/* Payment Details and QR row */}
-              <div className="flex gap-6 items-end mt-auto mb-4 bg-gray-50 p-3 border border-gray-100 rounded">
+            </div>
+
+
+            {/* RIGHT COLUMN: QR Code & Totals */}
+            <div className="w-[40%] flex flex-col justify-between pb-4">
+              
+              {/* QR Code */}
+              <div className="flex justify-center mb-6 pt-2">
+                <div className="text-center">
+                  <img src={qrCodeImage} alt="QR Code" className="w-[90px] h-[90px] border border-gray-300 p-1.5 rounded mb-1.5 object-cover bg-white" />
+                  <div className="text-[9px] font-bold text-gray-500 uppercase font-nirand tracking-widest">SCAN TO PAY</div>
+                </div>
+              </div>
+
+              {/* Totals Section */}
+              <div className="bg-[#F3F4F6] p-5 rounded border border-gray-200 mt-auto">
+                <div className="flex justify-between py-2 text-[12px] font-bold text-black">
+                  <span className="font-nirand uppercase">TOTAL AMOUNT</span>
+                  <span>{formatINR(data.metalValue)}</span>
+                </div>
+                <div className="flex justify-between py-2 text-[12px] text-gray-700">
+                  <span className="font-nirand">Making Charges</span>
+                  <span>{formatINR(data.makingCharges)}</span>
+                </div>
+                {data.discount > 0 && (
+                  <div className="flex justify-between py-2 text-[12px] text-gray-700">
+                    <span className="font-nirand">Discount</span>
+                    <span>-{formatINR(data.discount)}</span>
+                  </div>
+                )}
+                {data.gstAmount > 0 && (
+                  <div className="flex justify-between py-2 text-[12px] text-gray-700">
+                    <span className="font-nirand">GST (3%)</span>
+                    <span>{formatINR(data.gstAmount)}</span>
+                  </div>
+                )}
                 
-                {/* Payment Info */}
-                <div className="flex-1">
-                  <div className="text-[11px] font-bold text-black mb-2 uppercase font-nirand">Payment Details</div>
-                  <div className="grid grid-cols-[90px_1fr] gap-1 text-[11px] text-black mb-3">
-                    <span>Advance UPI :</span>
-                    <span>₹ 0 /-</span>
-                    <span>Date Paid :</span>
-                    <span>{data.date}</span>
-                  </div>
-                  
-                  <div className="flex flex-col gap-1 text-[12px] font-bold text-black">
-                    <div className="flex justify-between border-b border-gray-200 pb-1">
-                      <span>Paid:</span>
-                      <span>₹ {formatINR(data.grandTotal)} /-</span>
-                    </div>
-                    <div className="flex justify-between pt-1">
-                      <span>Total Paid:</span>
-                      <span style={{ color: '#3A2E8A' }}>₹ {formatINR(data.grandTotal)} /-</span>
-                    </div>
-                  </div>
+                <div className="flex justify-between items-center pt-4 pb-2 mt-2 border-t border-b border-gray-300 font-bold text-[15px] text-black">
+                  <span className="font-nirand">GRAND TOTAL AMOUNT</span>
+                  <span>₹ {formatINR(data.grandTotal)}</span>
                 </div>
-
-                {/* QR Code embedded on the right */}
-                <div className="text-center flex-shrink-0">
-                  <img src={qrCodeImage} alt="QR Code" className="w-20 h-20 border border-gray-300 p-1 rounded mb-1 object-cover bg-white" />
-                  <div className="text-[8px] font-bold text-gray-500 uppercase font-nirand tracking-wide">Scan to Pay</div>
-                </div>
-
               </div>
 
             </div>
@@ -229,7 +227,7 @@ export default function InvoicePrint() {
         </div>
 
         {/* Huge Black Footer */}
-        <div className="bg-[#1A1A1A] w-full text-white px-12 py-5 flex justify-between items-center mt-6 z-10 relative">
+        <div className="bg-[#1A1A1A] w-full text-white px-12 py-5 flex justify-between items-center z-10 relative">
           <div className="flex items-center gap-3">
             <span className="text-[11px] font-bold tracking-widest text-gray-400 font-nirand">FINANCE PARTNER</span>
             <div className="flex flex-col">
