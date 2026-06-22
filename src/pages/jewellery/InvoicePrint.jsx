@@ -22,9 +22,77 @@ export default function InvoicePrint() {
     if (savedBank) {
       setBankDetails(JSON.parse(savedBank));
     }
-    // Trigger Chrome native print dialog after DOM is ready
-    setTimeout(() => window.print(), 800);
   }, []);
+
+  const handlePrint = () => {
+    const receipt = document.getElementById('actual-receipt-content');
+    if (!receipt) return;
+
+    // Create a hidden off-screen iframe — same page, no new tab
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:absolute;left:-99999px;top:0;width:1200px;height:900px;border:0;visibility:hidden;';
+    document.body.appendChild(iframe);
+
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+
+    // Collect ALL styles from the current page (Tailwind + custom)
+    const allStyles = Array.from(document.querySelectorAll('style'))
+      .map(s => s.outerHTML).join('');
+    const allLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+      .map(l => l.outerHTML).join('');
+
+    iframeDoc.open();
+    iframeDoc.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <base href="${window.location.origin}/">
+        ${allLinks}
+        ${allStyles}
+        <style>
+          @page { size: A4 landscape; margin: 0; }
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+          body { margin: 0; padding: 0; background: white; }
+          .print-container { margin: 0 !important; box-shadow: none !important; overflow: visible !important; }
+        </style>
+      </head>
+      <body>${receipt.outerHTML}</body>
+      </html>
+    `);
+    iframeDoc.close();
+
+    // Wait for images to load inside the iframe, then print
+    const images = iframeDoc.querySelectorAll('img');
+    let loaded = 0;
+    const total = images.length;
+
+    const doPrint = () => {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+      setTimeout(() => {
+        if (document.body.contains(iframe)) document.body.removeChild(iframe);
+      }, 2000);
+    };
+
+    if (total === 0) {
+      setTimeout(doPrint, 500);
+    } else {
+      images.forEach(img => {
+        if (img.complete) {
+          loaded++;
+          if (loaded >= total) doPrint();
+        } else {
+          img.onload = img.onerror = () => {
+            loaded++;
+            if (loaded >= total) doPrint();
+          };
+        }
+      });
+      // Failsafe: print after 2s even if some images fail
+      setTimeout(doPrint, 2000);
+    }
+  };
 
   if (!data) return <div className="p-10 text-center font-sans text-gray-500">No invoice data found in session.</div>;
 
@@ -71,7 +139,7 @@ export default function InvoicePrint() {
       <div className="no-print bg-gray-900 text-white p-4 flex justify-between items-center fixed top-0 w-full z-50 shadow-md">
         <div className="text-sm font-semibold tracking-wide">Receipt Preview</div>
         <button 
-          onClick={() => window.print()} 
+          onClick={handlePrint} 
           className="bg-[#1B1464] hover:bg-[#2d22a0] text-white px-8 py-2.5 rounded text-sm font-bold tracking-widest uppercase shadow-lg transition-all"
         >
           PRINT / SAVE AS PDF
