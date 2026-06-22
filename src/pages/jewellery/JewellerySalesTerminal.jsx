@@ -289,6 +289,14 @@ export default function JewellerySalesTerminal() {
 
   const currentDateStr = new Date().toLocaleDateString('en-GB');
 
+  if (showPrint) {
+    return (
+      <div className="w-full min-h-screen bg-white">
+        <InvoicePrint />
+      </div>
+    );
+  }
+
   return (
     <div className="bg-[#f8f9fa] min-h-screen font-sans pb-20">
       <ToastComponent />
