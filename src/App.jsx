@@ -26,6 +26,7 @@ import JewellerySales from './pages/JewellerySales'
 import OldGoldSilverBuying from './pages/OldGoldSilverBuying'
 import SearchGrid from './pages/passbook/SearchGrid'
 import JewellerySalesTerminal from './pages/jewellery/JewellerySalesTerminal'
+import InvoicePrint from './pages/jewellery/InvoicePrint'
 import './App.css'
 
 const NAV_OFFSET = -80;
@@ -120,6 +121,7 @@ function App() {
         <Route path="/blog/trust-and-time" element={<TrustAndTime />} />
         <Route path="/passbook" element={<SearchGrid />} />
         <Route path="/jewellery" element={<JewellerySalesTerminal />} />
+        <Route path="/jewellery/print" element={<InvoicePrint />} />
       </Routes>
       {isJoinFormVisible && <JoinAarthika onClose={toggleJoinForm} />}
     </Router>
