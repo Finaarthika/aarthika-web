@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import premiumLogo from '../../assets/3.png';
 import qrCodeImage from '../../assets/qr-code.jpeg';
-import watermarkImg from '../../assets/Aarthika (1).png'; // Note: The user attached "Aarthika (600 x 200 px) (1).png", but in the assets folder it's named "Aarthika (1).png" based on the ls output.
+import watermarkImg from '../../assets/watermark.png';
 
 export default function InvoicePrint() {
   const [data, setData] = useState(null);
