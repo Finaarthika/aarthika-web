@@ -175,7 +175,7 @@ export default function InvoicePrint() {
               {/* Table */}
               <div className="w-full mb-4 border border-gray-200">
                 {/* Table Header */}
-                <div className="grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] bg-[#F8F9FA] py-2 px-3 border-b border-gray-200">
+                <div className="grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] bg-[#F8F9FA] py-1 px-3 border-b border-gray-200">
                   <div className="text-[10px] font-bold text-gray-600 uppercase font-nirand">Descriptions</div>
                   <div className="text-[10px] font-bold text-gray-600 uppercase font-nirand text-center">Gross Weight</div>
                   <div className="text-[10px] font-bold text-gray-600 uppercase font-nirand text-center">Net Weight</div>
@@ -184,16 +184,16 @@ export default function InvoicePrint() {
                 </div>
                 
                 {/* Table Body */}
-                <div className="flex flex-col min-h-[140px] bg-white pb-4">
+                <div className="flex flex-col min-h-[120px] bg-white pb-2">
                   {/* Silver Section */}
                   {silverItems.length > 0 && (
-                    <div className="mb-3">
-                      <div className="text-[11px] font-bold text-[#1B1464] uppercase px-3 pt-3 pb-1 font-nirand tracking-widest">SILVER</div>
+                    <div className="mb-2">
+                      <div className="text-[11px] font-bold text-[#1B1464] uppercase px-3 pt-2 pb-0.5 font-nirand tracking-widest">SILVER</div>
                       {silverItems.map((item, idx) => {
                         const netW = parseFloat(item.netWeight) || 0;
                         const rate = parseFloat(item.rate) || 0;
                         return (
-                          <div key={`s-${idx}`} className="grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] py-1.5 px-3 items-center">
+                          <div key={`s-${idx}`} className="grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] py-[3px] px-3 items-center">
                             <div className="text-[10.5px] font-bold text-gray-800 uppercase">{item.category} ({item.purity})</div>
                             <div className="text-[10.5px] font-bold text-gray-800 text-center">{item.grossWeight || item.netWeight} g</div>
                             <div className="text-[10.5px] font-bold text-gray-800 text-center">{item.netWeight} g</div>
@@ -208,12 +208,12 @@ export default function InvoicePrint() {
                   {/* Gold Section */}
                   {goldItems.length > 0 && (
                     <div className="mb-1">
-                      <div className="text-[11px] font-bold text-[#1B1464] uppercase px-3 pt-3 pb-1 font-nirand tracking-widest">GOLD</div>
+                      <div className="text-[11px] font-bold text-[#1B1464] uppercase px-3 pt-2 pb-0.5 font-nirand tracking-widest">GOLD</div>
                       {goldItems.map((item, idx) => {
                         const netW = parseFloat(item.netWeight) || 0;
                         const rate = parseFloat(item.rate) || 0;
                         return (
-                          <div key={`g-${idx}`} className="grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] py-1.5 px-3 items-center">
+                          <div key={`g-${idx}`} className="grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] py-[3px] px-3 items-center">
                             <div className="text-[10.5px] font-bold text-gray-800 uppercase">{item.category} ({item.purity})</div>
                             <div className="text-[10.5px] font-bold text-gray-800 text-center">{item.grossWeight || item.netWeight} g</div>
                             <div className="text-[10.5px] font-bold text-gray-800 text-center">{item.netWeight} g</div>
@@ -228,14 +228,14 @@ export default function InvoicePrint() {
               </div>
 
               {/* Totals Section (Left Side) */}
-              <div className="mt-2 pb-2">
-                <div className="bg-[#F8F9FA] px-4 py-3 rounded-xl border border-gray-200 shadow-sm">
-                  <div className="flex justify-between py-1.5 text-[12px] font-bold text-black border-b border-gray-200 pb-2 mb-2">
+              <div className="mt-1 pb-1">
+                <div className="bg-[#F8F9FA] px-4 py-2 rounded-xl border border-gray-200 shadow-sm">
+                  <div className="flex justify-between py-1 text-[12px] font-bold text-black border-b border-gray-200 pb-1.5 mb-1.5">
                     <span className="font-nirand uppercase tracking-wide text-gray-500">TOTAL AMOUNT</span>
                     <span className="font-extrabold">{formatINR(data.metalValue)}</span>
                   </div>
                   
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
                     {parseFloat(data.silverMakingCharges) > 0 && (
                       <div className="flex justify-between text-[11px]">
                         <span className="font-nirand text-gray-600 font-semibold">Silver Making Charges</span>
@@ -262,14 +262,14 @@ export default function InvoicePrint() {
                     )}
                   </div>
                   
-                  <div className="flex justify-between items-center pt-3 mt-3 border-t border-gray-300">
+                  <div className="flex justify-between items-center pt-2 mt-2 border-t border-gray-300">
                     <span className="font-nirand font-bold text-[14px] tracking-wide text-[#1B1464] uppercase">GRAND TOTAL</span>
                     <span className="font-extrabold text-[16px] text-[#1B1464]">₹ {formatINR(data.grandTotal)}</span>
                   </div>
                 </div>
 
                 {/* Payment Tracking */}
-                <div className="border border-gray-200 rounded-lg py-3 px-5 bg-white flex justify-between items-center">
+                <div className="border border-gray-200 rounded-lg py-2 px-5 bg-white flex justify-between items-center mt-2">
                   <div className="text-[11px] flex items-center gap-2">
                     <span className="text-gray-500 font-bold uppercase tracking-wider">Paid:</span> 
                     <span className="font-extrabold text-black">₹ {formatINR(data.grandTotal)} /-</span>
@@ -331,21 +331,21 @@ export default function InvoicePrint() {
 
           </div>
           
-          <div className="text-center mt-2 text-[18px] text-gray-800 font-nirand tracking-wide font-medium">
+          <div className="text-center mt-2 text-[16px] text-gray-800 font-nirand tracking-wide font-medium">
             Hamara bill, Hamari Zimmedaari.
           </div>
         </div>
 
         {/* Footer */}
-        <div className="bg-[#1B1464] w-full text-white px-8 py-3 flex justify-between items-center z-10 relative h-[50px] shrink-0 mt-auto">
+        <div className="bg-[#1B1464] w-full text-white px-8 py-2 flex justify-between items-center z-10 relative h-[40px] shrink-0 mt-auto">
           <div className="flex items-center gap-2">
-            <span className="text-[12px] font-medium tracking-widest text-gray-300">Contact :</span>
-            <span className="text-[12px] text-white">info@aarthikafinance.com | 0203 68541</span>
+            <span className="text-[11px] font-medium tracking-widest text-gray-300">Contact :</span>
+            <span className="text-[11px] text-white">info@aarthikafinance.com | 0203 68541</span>
           </div>
           
           <div className="flex items-center justify-end gap-3">
-            <img src={premiumLogo} alt="aarthika" className="h-5 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
-            <span className="text-[12px] text-white">www.aarthikafinance.com</span>
+            <img src={premiumLogo} alt="aarthika" className="h-4 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+            <span className="text-[11px] text-white">www.aarthikafinance.com</span>
           </div>
         </div>
       </div>
