@@ -91,7 +91,7 @@ export default function InvoicePrint() {
       </div>
 
       {/* Invoice Canvas */}
-      <div id="actual-receipt-content" className="print-container w-[1123px] h-[794px] bg-white pt-2 relative flex flex-col shadow-2xl print:shadow-none my-24 print:my-0 mx-auto print:mx-0 overflow-hidden box-border">
+      <div id="actual-receipt-content" className="print-container w-[1123px] h-[760px] bg-white pt-2 relative flex flex-col shadow-2xl print:shadow-none my-24 print:my-0 mx-auto print:mx-0 overflow-hidden box-border">
         
         {/* Massive Watermark Center */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none z-0">
@@ -145,13 +145,13 @@ export default function InvoicePrint() {
           </div>
 
           {/* MAIN CONTENT SPLIT */}
-          <div className="flex gap-12 mt-2 px-2 flex-grow">
+          <div className="flex gap-12 mt-1 px-2 flex-grow">
             
             {/* LEFT AREA (50% width) */}
             <div className="w-[50%] flex flex-col pr-2">
               
               {/* Meta Info Row */}
-              <div className="flex justify-between items-start mb-4">
+              <div className="flex justify-between items-start mb-2">
                 {/* INVOICE */}
                 <div>
                   <h2 className="text-[40px] mb-3 font-normal font-nirand leading-none tracking-wide" style={{ color: '#1B1464' }}>INVOICE</h2>
@@ -173,7 +173,7 @@ export default function InvoicePrint() {
               </div>
 
               {/* Table */}
-              <div className="w-full mb-4 border border-gray-200">
+              <div className="w-full mb-2 border border-gray-200">
                 {/* Table Header */}
                 <div className="grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] bg-[#F8F9FA] py-1 px-3 border-b border-gray-200">
                   <div className="text-[10px] font-bold text-gray-600 uppercase font-nirand">Descriptions</div>
@@ -228,9 +228,9 @@ export default function InvoicePrint() {
               </div>
 
               {/* Totals Section (Left Side) */}
-              <div className="mt-1 pb-1">
-                <div className="bg-[#F8F9FA] px-4 py-2 rounded-xl border border-gray-200 shadow-sm">
-                  <div className="flex justify-between py-1 text-[12px] font-bold text-black border-b border-gray-200 pb-1.5 mb-1.5">
+              <div className="mt-0 pb-1">
+                <div className="bg-[#F8F9FA] px-4 py-1.5 rounded-xl border border-gray-200 shadow-sm">
+                  <div className="flex justify-between py-1 text-[12px] font-bold text-black border-b border-gray-200 pb-1 mb-1">
                     <span className="font-nirand uppercase tracking-wide text-gray-500">TOTAL AMOUNT</span>
                     <span className="font-extrabold">{formatINR(data.metalValue)}</span>
                   </div>
@@ -262,14 +262,14 @@ export default function InvoicePrint() {
                     )}
                   </div>
                   
-                  <div className="flex justify-between items-center pt-2 mt-2 border-t border-gray-300">
+                  <div className="flex justify-between items-center pt-1.5 mt-1.5 border-t border-gray-300">
                     <span className="font-nirand font-bold text-[14px] tracking-wide text-[#1B1464] uppercase">GRAND TOTAL</span>
                     <span className="font-extrabold text-[16px] text-[#1B1464]">₹ {formatINR(data.grandTotal)}</span>
                   </div>
                 </div>
 
                 {/* Payment Tracking */}
-                <div className="border border-gray-200 rounded-lg py-2 px-5 bg-white flex justify-between items-center mt-2">
+                <div className="border border-gray-200 rounded-lg py-1.5 px-5 bg-white flex justify-between items-center mt-1.5">
                   <div className="text-[11px] flex items-center gap-2">
                     <span className="text-gray-500 font-bold uppercase tracking-wider">Paid:</span> 
                     <span className="font-extrabold text-black">₹ {formatINR(data.grandTotal)} /-</span>
