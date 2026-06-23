@@ -41,7 +41,7 @@ export default function InvoicePrint() {
   const silverItems = data.items?.filter(i => i.metalType === 'Silver') || [];
   const goldItems = data.items?.filter(i => i.metalType === 'Gold') || []; 
   const totalItemsCount = silverItems.length + goldItems.length;
-  const isCrowded = totalItemsCount > 4;
+  const isCrowded = totalItemsCount > 8;
   
   return (
     <div className="bg-[#F8F9FA] text-black w-full min-h-screen print:min-h-0 relative flex print:block items-center justify-center print:p-0 print:m-0" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>
@@ -117,28 +117,22 @@ export default function InvoicePrint() {
             </div>
 
             {/* Column 2: Contact Info */}
-            <div className="flex flex-col gap-1 border-l-[2px] border-black pl-3 py-1 ml-4 mr-auto" style={{ color: '#1B1464', fontFamily: '"Arial Nova", Arial, sans-serif' }}>
-              <div className="flex items-center gap-1.5">
+            <div className="flex flex-col gap-1 border-l-[2px] border-black pl-4 py-1 ml-6 text-right" style={{ color: '#1B1464', fontFamily: '"Arial Nova", Arial, sans-serif' }}>
+              <div className="flex items-center justify-end gap-1.5">
+                <span className="text-[10px] font-semibold">+91-6205168541</span>
                 <svg className="w-[12px] h-[12px] text-black" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path>
                 </svg>
-                <span className="text-[10px] font-semibold">+91-6205168541</span>
               </div>
-              <div className="flex items-start gap-1.5">
-                <svg className="w-[14px] h-[14px] text-black mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"></path>
-                </svg>
-                <span className="text-[8px] leading-tight font-semibold">
+              <div className="flex items-start justify-end gap-1.5">
+                <span className="text-[9px] leading-tight font-semibold">
                   Dharampur, Uttar Dinajpur<br/>
                   Pin Code : 733210
                 </span>
+                <svg className="w-[14px] h-[14px] text-black mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"></path>
+                </svg>
               </div>
-            </div>
-
-            {/* Column 3: Finance Partner */}
-            <div className="flex flex-col items-end gap-1 flex-shrink-0">
-              <span className="text-[8px] font-bold tracking-[0.1em]" style={{ color: '#1B1464', fontFamily: '"Arial Nova", Arial, sans-serif' }}>FINANCE PARTNER</span>
-              <img src={aarthikaLogo} alt="Aarthika" className="h-[30px] object-contain" />
             </div>
 
           </div>
@@ -150,7 +144,7 @@ export default function InvoicePrint() {
               <div className="flex justify-between items-start mb-2 shrink-0">
                 {/* INVOICE */}
                 <div>
-                  <h2 className="text-[40px] mb-3 font-normal font-nirand leading-none tracking-wide" style={{ color: '#1B1464' }}>INVOICE</h2>
+                  <h2 className="text-[28px] mb-2 font-normal font-nirand leading-none tracking-wide" style={{ color: '#1B1464' }}>INVOICE</h2>
                   <div className="grid grid-cols-[100px_1fr] gap-x-2 gap-y-1.5 text-[12px] font-bold text-gray-700" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>
                     <span>Invoice date:</span>
                     <span className="text-black font-normal">{data.date}</span>
@@ -189,7 +183,7 @@ export default function InvoicePrint() {
                         const netW = parseFloat(item.netWeight) || 0;
                         const rate = parseFloat(item.rate) || 0;
                         return (
-                          <div key={`s-${idx}`} className={`grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] ${isCrowded ? 'py-[1px]' : 'py-[3px]'} px-3 items-center`}>
+                          <div key={`s-${idx}`} className={`grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] ${isCrowded ? 'py-[1px]' : 'py-[5px]'} px-3 items-center`}>
                             <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 uppercase`}>{item.category} ({item.purity})</div>
                             <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 text-center`}>{item.grossWeight || item.netWeight} g</div>
                             <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 text-center`}>{item.netWeight} g</div>
@@ -209,7 +203,7 @@ export default function InvoicePrint() {
                         const netW = parseFloat(item.netWeight) || 0;
                         const rate = parseFloat(item.rate) || 0;
                         return (
-                          <div key={`g-${idx}`} className={`grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] ${isCrowded ? 'py-[1px]' : 'py-[3px]'} px-3 items-center`}>
+                          <div key={`g-${idx}`} className={`grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] ${isCrowded ? 'py-[1px]' : 'py-[5px]'} px-3 items-center`}>
                             <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 uppercase`}>{item.category} ({item.purity})</div>
                             <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 text-center`}>{item.grossWeight || item.netWeight} g</div>
                             <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 text-center`}>{item.netWeight} g</div>
