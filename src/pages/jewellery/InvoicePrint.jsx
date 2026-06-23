@@ -99,7 +99,7 @@ export default function InvoicePrint() {
         </div>
 
         {/* Content Wrapper */}
-        <div className="px-8 flex-grow flex flex-col relative z-10 justify-between">
+        <div className="px-8 flex-grow flex flex-col relative z-10 justify-between min-h-0">
           
           {/* TOP STRIP */}
           <div className="flex justify-between items-center py-1 border-b-[2px] border-gray-300">
@@ -145,13 +145,13 @@ export default function InvoicePrint() {
           </div>
 
           {/* MAIN CONTENT SPLIT */}
-          <div className="flex gap-12 mt-6 px-2 flex-grow">
+          <div className="flex gap-12 mt-6 px-2 flex-grow min-h-0">
             
             {/* LEFT AREA (50% width) */}
-            <div className="w-[50%] flex flex-col pr-2">
+            <div className="w-[50%] flex flex-col pr-2 h-full">
               
               {/* Meta Info Row */}
-              <div className="flex justify-between items-start mb-2">
+              <div className="flex justify-between items-start mb-2 shrink-0">
                 {/* INVOICE */}
                 <div>
                   <h2 className="text-[40px] mb-3 font-normal font-nirand leading-none tracking-wide" style={{ color: '#1B1464' }}>INVOICE</h2>
@@ -173,7 +173,7 @@ export default function InvoicePrint() {
               </div>
 
               {/* Table */}
-              <div className="w-full mb-2 border border-gray-200">
+              <div className="w-full mb-2 border border-gray-200 flex flex-col flex-grow min-h-0">
                 {/* Table Header */}
                 <div className="grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] bg-[#F8F9FA] py-1 px-3 border-b border-gray-200">
                   <div className="text-[10px] font-bold text-gray-600 uppercase font-nirand">Descriptions</div>
@@ -184,7 +184,7 @@ export default function InvoicePrint() {
                 </div>
                 
                 {/* Table Body */}
-                <div className="flex flex-col min-h-[120px] bg-white pb-2">
+                <div className="flex flex-col flex-grow bg-white pb-2 overflow-hidden">
                   {/* Silver Section */}
                   {silverItems.length > 0 && (
                     <div className="mb-2">
@@ -228,7 +228,7 @@ export default function InvoicePrint() {
               </div>
 
               {/* Totals Section (Left Side) */}
-              <div className="mt-0 pb-1">
+              <div className="mt-0 pb-1 shrink-0">
                 <div className="bg-[#F8F9FA] px-4 py-1.5 rounded-xl border border-gray-200 shadow-sm">
                   <div className="flex justify-between py-1 text-[12px] font-bold text-black border-b border-gray-200 pb-1 mb-1">
                     <span className="font-nirand uppercase tracking-wide text-gray-500">TOTAL AMOUNT</span>
@@ -284,10 +284,10 @@ export default function InvoicePrint() {
             </div>
 
             {/* RIGHT AREA (50% width) */}
-            <div className="w-[50%] flex flex-col pl-2">
+            <div className="w-[50%] flex flex-col pl-2 h-full">
               
               {/* Terms and Conditions */}
-              <div className="text-[8.5px] text-gray-700 text-justify leading-snug mb-2">
+              <div className="text-[8.5px] text-gray-700 text-justify leading-snug mb-2 shrink-0">
                 <div className="font-bold text-black mb-1.5 text-[13px] text-center tracking-wide" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>Terms and Conditions for Jewelry Sale</div>
                 <ol className="list-decimal pl-4 space-y-0.5">
                   <li>Sale and Purchase Agreement: By purchasing jewelry from us, you agree to these terms and conditions. The sale is considered final once the purchase is completed, and no cancellations will be accepted post transaction.</li>
@@ -302,7 +302,7 @@ export default function InvoicePrint() {
               </div>
 
               {/* Bank Details & QR (Right Side) */}
-              <div className="mt-6 flex flex-col px-2 pb-2">
+              <div className="mt-auto flex flex-col px-2 pb-2 shrink-0">
                 <div className="font-bold text-black mb-2 text-[13px] text-center tracking-wide" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>Payment Instructions</div>
                 
                 <div className="flex justify-between items-start">
