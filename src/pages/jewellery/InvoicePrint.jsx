@@ -60,19 +60,26 @@ export default function InvoicePrint() {
               padding: 0 !important;
             }
             ::-webkit-scrollbar { display: none !important; }
-            body * { visibility: visible !important; }
-            .no-print { display: none !important; }
-            body { 
-              background: white !important; 
+            body * { 
               -webkit-print-color-adjust: exact !important; 
               print-color-adjust: exact !important; 
             }
+            .no-print { display: none !important; }
+            
+            body, html { 
+              background: white !important; 
+              height: 100% !important;
+            }
+            
             .print-container {
               margin: 0 !important;
               padding: 0 !important;
               box-shadow: none !important;
-              overflow: hidden !important;
               page-break-inside: avoid !important;
+              width: 100% !important;
+              height: auto !important;
+              min-height: 100% !important;
+              overflow: visible !important;
             }
           }
           
