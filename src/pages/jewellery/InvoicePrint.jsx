@@ -40,6 +40,8 @@ export default function InvoicePrint() {
 
   const silverItems = data.items?.filter(i => i.metalType === 'Silver') || [];
   const goldItems = data.items?.filter(i => i.metalType === 'Gold') || []; 
+  const totalItemsCount = silverItems.length + goldItems.length;
+  const isCrowded = totalItemsCount > 4;
   
   return (
     <div className="bg-[#F8F9FA] text-black w-full min-h-screen print:min-h-0 relative flex print:block items-center justify-center print:p-0 print:m-0" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>
@@ -184,21 +186,21 @@ export default function InvoicePrint() {
                 </div>
                 
                 {/* Table Body */}
-                <div className="flex flex-col flex-grow bg-white pb-2 overflow-hidden">
+                <div className="flex flex-col flex-grow bg-white pb-2">
                   {/* Silver Section */}
                   {silverItems.length > 0 && (
-                    <div className="mb-2">
-                      <div className="text-[11px] font-bold text-[#1B1464] uppercase px-3 pt-2 pb-0.5 font-nirand tracking-widest">SILVER</div>
+                    <div className={isCrowded ? "mb-1" : "mb-2"}>
+                      <div className={`text-[11px] font-bold text-[#1B1464] uppercase px-3 ${isCrowded ? 'pt-1 pb-0' : 'pt-2 pb-0.5'} font-nirand tracking-widest`}>SILVER</div>
                       {silverItems.map((item, idx) => {
                         const netW = parseFloat(item.netWeight) || 0;
                         const rate = parseFloat(item.rate) || 0;
                         return (
-                          <div key={`s-${idx}`} className="grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] py-[3px] px-3 items-center">
-                            <div className="text-[10.5px] font-bold text-gray-800 uppercase">{item.category} ({item.purity})</div>
-                            <div className="text-[10.5px] font-bold text-gray-800 text-center">{item.grossWeight || item.netWeight} g</div>
-                            <div className="text-[10.5px] font-bold text-gray-800 text-center">{item.netWeight} g</div>
-                            <div className="text-[10.5px] font-bold text-gray-800 text-center">{formatINR(rate).replace('₹', '').trim()}</div>
-                            <div className="text-[11.5px] font-extrabold text-black text-right">{formatINR(netW * rate).replace('₹', '').trim()}</div>
+                          <div key={`s-${idx}`} className={`grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] ${isCrowded ? 'py-[1px]' : 'py-[3px]'} px-3 items-center`}>
+                            <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 uppercase`}>{item.category} ({item.purity})</div>
+                            <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 text-center`}>{item.grossWeight || item.netWeight} g</div>
+                            <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 text-center`}>{item.netWeight} g</div>
+                            <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 text-center`}>{formatINR(rate).replace('₹', '').trim()}</div>
+                            <div className={`${isCrowded ? 'text-[10px]' : 'text-[11.5px]'} font-extrabold text-black text-right`}>{formatINR(netW * rate).replace('₹', '').trim()}</div>
                           </div>
                         );
                       })}
@@ -207,18 +209,18 @@ export default function InvoicePrint() {
 
                   {/* Gold Section */}
                   {goldItems.length > 0 && (
-                    <div className="mb-1">
-                      <div className="text-[11px] font-bold text-[#1B1464] uppercase px-3 pt-2 pb-0.5 font-nirand tracking-widest">GOLD</div>
+                    <div className={isCrowded ? "mb-0" : "mb-1"}>
+                      <div className={`text-[11px] font-bold text-[#1B1464] uppercase px-3 ${isCrowded ? 'pt-1 pb-0' : 'pt-2 pb-0.5'} font-nirand tracking-widest`}>GOLD</div>
                       {goldItems.map((item, idx) => {
                         const netW = parseFloat(item.netWeight) || 0;
                         const rate = parseFloat(item.rate) || 0;
                         return (
-                          <div key={`g-${idx}`} className="grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] py-[3px] px-3 items-center">
-                            <div className="text-[10.5px] font-bold text-gray-800 uppercase">{item.category} ({item.purity})</div>
-                            <div className="text-[10.5px] font-bold text-gray-800 text-center">{item.grossWeight || item.netWeight} g</div>
-                            <div className="text-[10.5px] font-bold text-gray-800 text-center">{item.netWeight} g</div>
-                            <div className="text-[10.5px] font-bold text-gray-800 text-center">{formatINR(rate).replace('₹', '').trim()}</div>
-                            <div className="text-[11.5px] font-extrabold text-black text-right">{formatINR(netW * rate).replace('₹', '').trim()}</div>
+                          <div key={`g-${idx}`} className={`grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] ${isCrowded ? 'py-[1px]' : 'py-[3px]'} px-3 items-center`}>
+                            <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 uppercase`}>{item.category} ({item.purity})</div>
+                            <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 text-center`}>{item.grossWeight || item.netWeight} g</div>
+                            <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 text-center`}>{item.netWeight} g</div>
+                            <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 text-center`}>{formatINR(rate).replace('₹', '').trim()}</div>
+                            <div className={`${isCrowded ? 'text-[10px]' : 'text-[11.5px]'} font-extrabold text-black text-right`}>{formatINR(netW * rate).replace('₹', '').trim()}</div>
                           </div>
                         );
                       })}
