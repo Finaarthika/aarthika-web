@@ -93,7 +93,7 @@ export default function InvoicePrint() {
       </div>
 
       {/* Invoice Canvas */}
-      <div id="actual-receipt-content" className="print-container w-[559px] h-[720px] bg-white pt-1 relative flex flex-col shadow-2xl print:shadow-none my-12 print:my-0 mx-auto print:mx-0 overflow-hidden box-border">
+      <div id="actual-receipt-content" className="print-container w-[520px] h-[720px] bg-white pt-1 relative flex flex-col shadow-2xl print:shadow-none my-12 print:my-0 mx-auto print:mx-0 overflow-hidden box-border">
         
         {/* Massive Watermark Center */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none z-0">
