@@ -278,7 +278,6 @@ export default function InvoicePrint() {
                 </div>
               </div>
             </div>
-          </div>
           
           <div className="text-center mt-2 text-[16px] text-gray-800 font-nirand tracking-wide font-medium">
             Hamara bill, Hamari Zimmedaari.
