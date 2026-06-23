@@ -302,7 +302,7 @@ export default function InvoicePrint() {
               </div>
 
               {/* Bank Details & QR (Right Side) */}
-              <div className="mt-auto flex flex-col px-2 pb-2">
+              <div className="mt-6 flex flex-col px-2 pb-2">
                 <div className="font-bold text-black mb-2 text-[13px] text-center tracking-wide" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>Payment Instructions</div>
                 
                 <div className="flex justify-between items-start">
