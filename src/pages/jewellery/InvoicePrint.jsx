@@ -71,7 +71,14 @@ export default function InvoicePrint() {
               height: 100% !important;
             }
             
+            .print-container, .print-container * {
+              visibility: visible !important;
+            }
+            
             .print-container {
+              position: absolute !important;
+              left: 0 !important;
+              top: 0 !important;
               margin: 0 !important;
               padding: 0 !important;
               box-shadow: none !important;
