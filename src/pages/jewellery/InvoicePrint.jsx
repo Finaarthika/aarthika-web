@@ -145,7 +145,7 @@ export default function InvoicePrint() {
           </div>
 
           {/* MAIN CONTENT SPLIT */}
-          <div className="flex gap-12 mt-1 px-2 flex-grow">
+          <div className="flex gap-12 mt-6 px-2 flex-grow">
             
             {/* LEFT AREA (50% width) */}
             <div className="w-[50%] flex flex-col pr-2">
