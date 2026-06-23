@@ -91,7 +91,7 @@ export default function InvoicePrint() {
       </div>
 
       {/* Invoice Canvas */}
-      <div id="actual-receipt-content" className="print-container w-[1123px] h-[760px] bg-white pt-2 relative flex flex-col shadow-2xl print:shadow-none my-24 print:my-0 mx-auto print:mx-0 overflow-hidden box-border">
+      <div id="actual-receipt-content" className="print-container w-[1123px] h-[720px] bg-white pt-1 relative flex flex-col shadow-2xl print:shadow-none my-24 print:my-0 mx-auto print:mx-0 overflow-hidden box-border">
         
         {/* Massive Watermark Center */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none z-0">
@@ -102,7 +102,7 @@ export default function InvoicePrint() {
         <div className="px-8 flex-grow flex flex-col relative z-10 justify-between">
           
           {/* TOP STRIP */}
-          <div className="flex justify-between items-center py-2 border-b-[2px] border-gray-300">
+          <div className="flex justify-between items-center py-1 border-b-[2px] border-gray-300">
             
             {/* Column 1: Logo */}
             <div className="flex-shrink-0 pl-2">
@@ -337,7 +337,7 @@ export default function InvoicePrint() {
         </div>
 
         {/* Footer */}
-        <div className="bg-[#1B1464] w-full text-white px-8 py-2 flex justify-between items-center z-10 relative h-[40px] shrink-0 mt-auto">
+        <div className="bg-[#1B1464] w-full text-white px-8 py-1.5 flex justify-between items-center z-10 relative h-[32px] shrink-0 mt-auto" style={{ pageBreakInside: 'avoid' }}>
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-medium tracking-widest text-gray-300">Contact :</span>
             <span className="text-[11px] text-white">info@aarthikafinance.com | 0203 68541</span>
