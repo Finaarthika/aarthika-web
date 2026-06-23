@@ -51,12 +51,9 @@ export default function InvoicePrint() {
           @media print {
             @page {
               size: A4 landscape;
-              margin: 0;
+              margin: 5mm;
             }
             html, body {
-              height: 100vh !important;
-              width: 100vw !important;
-              overflow: hidden !important;
               margin: 0 !important;
               padding: 0 !important;
             }
@@ -69,15 +66,11 @@ export default function InvoicePrint() {
               print-color-adjust: exact !important; 
             }
             .print-container {
-              width: 100vw !important;
-              height: 100vh !important;
               margin: 0 !important;
               padding: 0 !important;
               box-shadow: none !important;
               overflow: hidden !important;
               page-break-inside: avoid !important;
-              page-break-after: avoid !important;
-              page-break-before: avoid !important;
             }
           }
           
@@ -98,7 +91,7 @@ export default function InvoicePrint() {
       </div>
 
       {/* Invoice Canvas */}
-      <div id="actual-receipt-content" className="print-container w-[1123px] bg-white pt-2 relative min-h-[794px] print:h-screen print:w-screen flex flex-col shadow-2xl print:shadow-none my-24 print:my-0 mx-auto print:mx-0 overflow-hidden print:overflow-hidden box-border">
+      <div id="actual-receipt-content" className="print-container w-[1123px] h-[794px] bg-white pt-2 relative flex flex-col shadow-2xl print:shadow-none my-24 print:my-0 mx-auto print:mx-0 overflow-hidden box-border">
         
         {/* Massive Watermark Center */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none z-0">
@@ -294,8 +287,8 @@ export default function InvoicePrint() {
             <div className="w-[50%] flex flex-col pl-2">
               
               {/* Terms and Conditions */}
-              <div className="text-[9.5px] text-gray-700 text-justify leading-snug mb-3">
-                <div className="font-bold text-black mb-2 text-[14px] text-center tracking-wide" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>Terms and Conditions for Jewelry Sale</div>
+              <div className="text-[8.5px] text-gray-700 text-justify leading-snug mb-2">
+                <div className="font-bold text-black mb-1.5 text-[13px] text-center tracking-wide" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>Terms and Conditions for Jewelry Sale</div>
                 <ol className="list-decimal pl-4 space-y-0.5">
                   <li>Sale and Purchase Agreement: By purchasing jewelry from us, you agree to these terms and conditions. The sale is considered final once the purchase is completed, and no cancellations will be accepted post transaction.</li>
                   <li>Payment of Remaining Due Amount: Any remaining balance due on the purchased jewelry must be settled within the agreed payment period. Failure to do so may result in interest charges of 2% per month or cancellation of the order.</li>
