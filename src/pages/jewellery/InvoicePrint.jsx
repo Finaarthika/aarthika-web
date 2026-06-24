@@ -99,7 +99,7 @@ export default function InvoicePrint() {
             }
             
             .mobile-print-override {
-              position: relative !important;
+              position: absolute !important;
               height: auto !important;
               min-height: 100% !important;
             }
