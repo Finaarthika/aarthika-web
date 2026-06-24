@@ -110,7 +110,7 @@ export default function InvoicePrint() {
       <div id="actual-receipt-content" className="print-container w-[520px] h-[720px] bg-white pt-1 relative flex flex-col shadow-2xl print:shadow-none my-12 print:my-0 mx-auto print:mx-0 overflow-hidden box-border">
         
         {/* Massive Watermark Center */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none z-0">
+        <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none z-0 print:hidden">
           <img src={watermarkImg} alt="Watermark" className="w-[80%] object-contain grayscale" />
         </div>
 
@@ -300,7 +300,7 @@ export default function InvoicePrint() {
           </div>
           
           <div className="flex items-center justify-end gap-2">
-            <img src={premiumLogo} alt="aarthika" className="h-3 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+            <img src={premiumLogo} alt="aarthika" className="h-3 object-contain print:hidden" style={{ filter: 'brightness(0) invert(1)' }} />
             <span className="text-[9px] text-white">www.aarthikafinance.com</span>
           </div>
         </div>
