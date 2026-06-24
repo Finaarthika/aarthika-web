@@ -15,7 +15,11 @@ export default function InvoicePrint() {
   });
 
   useEffect(() => {
+    document.body.classList.add('printing-a5');
     setIsMobileEngine(window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+    return () => {
+      document.body.classList.remove('printing-a5');
+    };
   }, []);
 
   useEffect(() => {
@@ -99,9 +103,13 @@ export default function InvoicePrint() {
             }
             
             .mobile-print-override {
-              position: absolute !important;
+              position: static !important;
               height: auto !important;
-              min-height: 100% !important;
+              min-height: 0 !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              width: 100% !important;
+              transform: none !important;
             }
           }
           
