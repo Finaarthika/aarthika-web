@@ -6,12 +6,17 @@ import aarthikaLogo from '../../assets/Aarthika (1).png';
 
 export default function InvoicePrint() {
   const [data, setData] = useState(null);
+  const [isMobileEngine, setIsMobileEngine] = useState(false);
   const [bankDetails, setBankDetails] = useState({
     bankName: 'State Bank Of India',
     accountNumber: '43017839721',
     ifsc: 'S B I N 0 0 0 0 1 1 7',
     upiId: 'shriyanshumishrakne-1@oksbi'
   });
+
+  useEffect(() => {
+    setIsMobileEngine(window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+  }, []);
 
   useEffect(() => {
     const rawData = localStorage.getItem('aarthika_current_invoice');
@@ -33,12 +38,6 @@ export default function InvoicePrint() {
   }, []);
 
   if (!data) return <div className="p-10 text-center font-sans text-gray-500">No invoice data found in session.</div>;
-
-  const [isMobileEngine, setIsMobileEngine] = useState(false);
-  
-  useEffect(() => {
-    setIsMobileEngine(window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
-  }, []);
 
   const formatINR = (amount) => {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
