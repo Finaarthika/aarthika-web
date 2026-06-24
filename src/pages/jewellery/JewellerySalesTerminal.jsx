@@ -446,7 +446,7 @@ export default function JewellerySalesTerminal() {
                   </div>
                   <div className="col-span-3 relative">
                     <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Rate/g (₹)</label>
-                    <input type="number" className="w-full border border-gray-300 rounded-lg pl-3 pr-8 py-2 text-sm text-gray-800 outline-none focus:border-amber-500" value={item.rate} onChange={e => { const newItems = [...silverItems]; newItems[index].rate = e.target.value; setSilverItems(newItems); }} placeholder="0" />
+                    <input type="number" className="w-full border border-gray-300 bg-gray-100 cursor-not-allowed rounded-lg pl-3 pr-8 py-2 text-sm text-gray-600 outline-none" value={item.rate} readOnly placeholder="0" />
                     
                     <button onClick={() => { const newItems = [...silverItems]; newItems.splice(index, 1); setSilverItems(newItems); }} className="absolute right-2 top-[26px] text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -499,7 +499,7 @@ export default function JewellerySalesTerminal() {
                   </div>
                   <div className="col-span-3 relative">
                     <label className="block text-[10px] font-bold text-yellow-700/60 uppercase mb-1">Rate/g (₹)</label>
-                    <input type="number" className="w-full border border-yellow-200 rounded-lg pl-3 pr-8 py-2 text-sm text-gray-800 outline-none focus:border-amber-500" value={item.rate} onChange={e => { const newItems = [...goldItems]; newItems[index].rate = e.target.value; setGoldItems(newItems); }} placeholder="0" />
+                    <input type="number" className="w-full border border-yellow-200 bg-yellow-100/50 cursor-not-allowed rounded-lg pl-3 pr-8 py-2 text-sm text-yellow-800/70 outline-none" value={item.rate} readOnly placeholder="0" />
                     
                     <button onClick={() => { const newItems = [...goldItems]; newItems.splice(index, 1); setGoldItems(newItems); }} className="absolute right-2 top-[26px] text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
