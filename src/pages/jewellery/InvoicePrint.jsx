@@ -4,6 +4,8 @@ import qrCodeImage from '../../assets/qr-code.jpeg';
 import watermarkImg from '../../assets/watermark.png';
 import aarthikaLogo from '../../assets/Aarthika (1).png';
 
+import html2pdf from 'html2pdf.js';
+
 export default function InvoicePrint() {
   const [data, setData] = useState(null);
   const [isMobileEngine, setIsMobileEngine] = useState(false);
@@ -34,12 +36,31 @@ export default function InvoicePrint() {
   }, []);
 
   useEffect(() => {
-    // Automatically trigger print when rendered
-    const timer = setTimeout(() => {
+    // Automatically trigger print when rendered ONLY for PC.
+    // Mobile browsers heavily block auto-downloads, so we let mobile users press the button.
+    if (!isMobileEngine) {
+      const timer = setTimeout(() => {
+        window.print();
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [isMobileEngine]);
+
+  const handlePrint = () => {
+    if (isMobileEngine) {
+      const element = document.getElementById('actual-receipt-content');
+      const opt = {
+        margin:       0,
+        filename:     `A5-Invoice-${data.invoiceNumber || 'receipt'}.pdf`,
+        image:        { type: 'jpeg', quality: 1.0 },
+        html2canvas:  { scale: 3, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a5', orientation: 'portrait' }
+      };
+      html2pdf().set(opt).from(element).save();
+    } else {
       window.print();
-    }, 800);
-    return () => clearTimeout(timer);
-  }, []);
+    }
+  };
 
   if (!data) return <div className="p-10 text-center font-sans text-gray-500">No invoice data found in session.</div>;
 
@@ -122,7 +143,7 @@ export default function InvoicePrint() {
       <div className="no-print bg-gray-900 text-white p-4 flex justify-between items-center fixed top-0 w-full z-50 shadow-md">
         <div className="text-sm font-semibold tracking-wide">Receipt Preview</div>
         <button 
-          onClick={() => window.print()} 
+          onClick={handlePrint} 
           className="bg-[#1B1464] hover:bg-[#2d22a0] text-white px-8 py-2.5 rounded text-sm font-bold tracking-widest uppercase shadow-lg transition-all"
         >
           PRINT / SAVE AS PDF
