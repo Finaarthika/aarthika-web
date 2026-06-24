@@ -260,8 +260,8 @@ export default function JewellerySalesTerminal() {
       const opt = {
         margin:       0,
         filename:     `${invoiceNo}_Vault.pdf`,
-        image:        { type: 'jpeg', quality: 1.0 },
-        html2canvas:  { scale: 4, useCORS: true, scrollY: 0, windowWidth: 1040 },
+        image:        { type: 'jpeg', quality: 0.8 },
+        html2canvas:  { scale: 2, useCORS: true, scrollY: 0, windowWidth: 1040 },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape', compress: true }
       };
       
