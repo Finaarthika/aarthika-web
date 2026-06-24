@@ -34,6 +34,12 @@ export default function InvoicePrint() {
 
   if (!data) return <div className="p-10 text-center font-sans text-gray-500">No invoice data found in session.</div>;
 
+  const [isMobileEngine, setIsMobileEngine] = useState(false);
+  
+  useEffect(() => {
+    setIsMobileEngine(window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+  }, []);
+
   const formatINR = (amount) => {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
   };
@@ -58,6 +64,8 @@ export default function InvoicePrint() {
             html, body {
               margin: 0 !important;
               padding: 0 !important;
+              overflow: visible !important;
+              overflow-x: visible !important;
             }
             ::-webkit-scrollbar { display: none !important; }
             body * { 
@@ -88,11 +96,13 @@ export default function InvoicePrint() {
             }
             
             @media (max-width: 768px) {
-              .print-container {
-                position: absolute !important;
-                height: auto !important;
-                min-height: 100% !important;
-              }
+              /* Mobile Chrome completely ignores this if the paper size is Letter. Do not use. */
+            }
+            
+            .mobile-print-override {
+              position: relative !important;
+              height: auto !important;
+              min-height: 100% !important;
             }
           }
           
@@ -113,7 +123,7 @@ export default function InvoicePrint() {
       </div>
 
       {/* Invoice Canvas */}
-      <div id="actual-receipt-content" className="print-container w-[520px] h-[720px] bg-white pt-1 relative flex flex-col shadow-2xl print:shadow-none my-12 print:my-0 mx-auto print:mx-0 overflow-hidden box-border">
+      <div id="actual-receipt-content" className={`print-container w-[520px] h-[720px] bg-white pt-1 relative flex flex-col shadow-2xl print:shadow-none my-12 print:my-0 mx-auto print:mx-0 overflow-hidden box-border ${isMobileEngine ? 'mobile-print-override' : ''}`}>
         
         {/* Massive Watermark Center */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none z-0 print:hidden">
