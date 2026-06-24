@@ -243,13 +243,15 @@ export default function InvoicePrint() {
                       {silverItems.map((item, idx) => {
                         const netW = parseFloat(item.netWeight) || 0;
                         const rate = parseFloat(item.rate) || 0;
+                        const purityMult = item.purity ? (item.purity.includes('%') ? parseFloat(item.purity)/100 : (item.purity.includes('K') ? parseFloat(item.purity)/24 : 1)) : 1;
+                        const effRate = rate * purityMult;
                         return (
                           <div key={`s-${idx}`} className={`grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] ${isCrowded ? 'py-[1px]' : 'py-[5px]'} px-3 items-center`}>
                             <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 uppercase`}>{item.category} ({item.purity})</div>
                             <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 text-center`}>{item.grossWeight || item.netWeight} g</div>
                             <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 text-center`}>{item.netWeight} g</div>
                             <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 text-center`}>{formatINR(rate).replace('₹', '').trim()}</div>
-                            <div className={`${isCrowded ? 'text-[10px]' : 'text-[11.5px]'} font-extrabold text-black text-right`}>{formatINR(netW * rate).replace('₹', '').trim()}</div>
+                            <div className={`${isCrowded ? 'text-[10px]' : 'text-[11.5px]'} font-extrabold text-black text-right`}>{formatINR(netW * effRate).replace('₹', '').trim()}</div>
                           </div>
                         );
                       })}
@@ -263,13 +265,15 @@ export default function InvoicePrint() {
                       {goldItems.map((item, idx) => {
                         const netW = parseFloat(item.netWeight) || 0;
                         const rate = parseFloat(item.rate) || 0;
+                        const purityMult = item.purity ? (item.purity.includes('%') ? parseFloat(item.purity)/100 : (item.purity.includes('K') ? parseFloat(item.purity)/24 : 1)) : 1;
+                        const effRate = rate * purityMult;
                         return (
                           <div key={`g-${idx}`} className={`grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] ${isCrowded ? 'py-[1px]' : 'py-[5px]'} px-3 items-center`}>
                             <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 uppercase`}>{item.category} ({item.purity})</div>
                             <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 text-center`}>{item.grossWeight || item.netWeight} g</div>
                             <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 text-center`}>{item.netWeight} g</div>
                             <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 text-center`}>{formatINR(rate).replace('₹', '').trim()}</div>
-                            <div className={`${isCrowded ? 'text-[10px]' : 'text-[11.5px]'} font-extrabold text-black text-right`}>{formatINR(netW * rate).replace('₹', '').trim()}</div>
+                            <div className={`${isCrowded ? 'text-[10px]' : 'text-[11.5px]'} font-extrabold text-black text-right`}>{formatINR(netW * effRate).replace('₹', '').trim()}</div>
                           </div>
                         );
                       })}

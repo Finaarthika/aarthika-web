@@ -168,10 +168,18 @@ export default function JewellerySalesTerminal() {
   const [jewelleryPhoto, setJewelleryPhoto] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
 
+  const getPurityMultiplier = (purity) => {
+    if (!purity) return 1;
+    if (purity.includes('%')) return parseFloat(purity) / 100;
+    if (purity.includes('K')) return parseFloat(purity) / 24;
+    return 1;
+  };
+
   const calculateItemValue = (item) => {
     const w = parseFloat(item.netWeight) || 0;
     const r = parseFloat(item.rate) || 0;
-    return w * r;
+    const mult = getPurityMultiplier(item.purity);
+    return w * r * mult;
   };
 
   const getSilverValue = () => silverItems.reduce((acc, item) => acc + calculateItemValue(item), 0);
