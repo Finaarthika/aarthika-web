@@ -86,6 +86,13 @@ export default function InvoicePrint() {
               height: 200mm !important;
               overflow: visible !important;
             }
+            
+            @media (max-width: 768px) {
+              .print-container {
+                position: relative !important;
+                height: auto !important;
+              }
+            }
           }
           
           .font-nirand { font-family: "Nirand", "Red Hat Display", sans-serif; }
