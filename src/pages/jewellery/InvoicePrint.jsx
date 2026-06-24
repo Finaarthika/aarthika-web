@@ -83,7 +83,7 @@ export default function InvoicePrint() {
               padding: 0 !important;
               box-shadow: none !important;
               width: 100% !important;
-              height: 100% !important;
+              height: 200mm !important;
               overflow: visible !important;
             }
           }
