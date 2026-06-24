@@ -12,7 +12,7 @@ export default function DetailedA4Receipt({ data, id = "detailed-a4-receipt" }) 
   const silverItems = data.items?.filter(i => i.metalType === 'Silver') || [];
   const goldItems = data.items?.filter(i => i.metalType === 'Gold') || []; 
   const totalItemsCount = silverItems.length + goldItems.length;
-  const isCrowded = totalItemsCount > 8;
+  const isCrowded = totalItemsCount >= 4;
 
   return (
     <div id={id} className="w-[1040px] h-[720px] bg-white text-black flex flex-col relative overflow-hidden box-border" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>
