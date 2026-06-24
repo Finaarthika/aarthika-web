@@ -84,8 +84,8 @@ export default function InvoicePrint() {
               box-shadow: none !important;
               page-break-inside: avoid !important;
               width: 100% !important;
-              height: auto !important;
-              min-height: 100% !important;
+              height: 100% !important;
+              min-height: 100vh !important;
               overflow: visible !important;
             }
           }
