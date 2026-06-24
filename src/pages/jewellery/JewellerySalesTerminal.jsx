@@ -242,8 +242,9 @@ export default function JewellerySalesTerminal() {
       // 1. Render Detailed A4 Receipt in background
       const tempDiv = document.createElement('div');
       tempDiv.style.position = 'absolute';
-      tempDiv.style.top = '-9999px';
-      tempDiv.style.zIndex = '-9999';
+      tempDiv.style.top = '0';
+      tempDiv.style.left = '0';
+      tempDiv.style.zIndex = '-50';
       document.body.appendChild(tempDiv);
       
       const { createRoot } = await import('react-dom/client');
@@ -260,7 +261,7 @@ export default function JewellerySalesTerminal() {
         margin:       0,
         filename:     `${invoiceNo}_Vault.pdf`,
         image:        { type: 'jpeg', quality: 0.8 },
-        html2canvas:  { scale: 2, useCORS: true },
+        html2canvas:  { scale: 2, useCORS: true, scrollY: 0, windowWidth: 1200 },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
       

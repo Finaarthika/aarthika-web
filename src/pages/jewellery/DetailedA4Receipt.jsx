@@ -11,7 +11,7 @@ export default function DetailedA4Receipt({ data, id = "detailed-a4-receipt" }) 
   };
 
   return (
-    <div id={id} className="w-[210mm] h-[297mm] bg-white p-10 box-border text-black absolute top-0 left-[-9999px] z-[-9999]" style={{ fontFamily: 'Arial, sans-serif' }}>
+    <div id={id} className="w-[210mm] h-[297mm] bg-white p-10 box-border text-black" style={{ fontFamily: 'Arial, sans-serif' }}>
       
       <div className="text-center mb-8 border-b-2 border-gray-800 pb-6">
         <h1 className="text-4xl font-black mb-2 uppercase tracking-widest text-gray-900">MISHRA JEWELER'S</h1>
