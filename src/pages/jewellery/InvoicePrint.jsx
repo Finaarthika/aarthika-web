@@ -56,7 +56,10 @@ export default function InvoicePrint() {
         html2canvas:  { scale: 3, useCORS: true },
         jsPDF:        { unit: 'mm', format: 'a5', orientation: 'portrait' }
       };
-      html2pdf().set(opt).from(element).save();
+      html2pdf().set(opt).from(element).save().then(() => {
+        // Manually dispatch afterprint so the terminal resets and goes back to checkout
+        window.dispatchEvent(new Event('afterprint'));
+      });
     } else {
       window.print();
     }

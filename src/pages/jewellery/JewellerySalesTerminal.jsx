@@ -238,9 +238,56 @@ export default function JewellerySalesTerminal() {
         customerPhoto,
         jewelleryPhoto
       };
-      
-      localStorage.setItem('aarthika_current_invoice', JSON.stringify(printData));
 
+      // 1. Render Detailed A4 Receipt in background
+      const tempDiv = document.createElement('div');
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.top = '-9999px';
+      tempDiv.style.zIndex = '-9999';
+      document.body.appendChild(tempDiv);
+      
+      const { createRoot } = await import('react-dom/client');
+      const DetailedA4Receipt = (await import('./DetailedA4Receipt')).default;
+      const root = createRoot(tempDiv);
+      root.render(React.createElement(DetailedA4Receipt, { data: printData }));
+      
+      // Wait for images to load and React to render
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // 2. Generate PDF via html2pdf
+      const element = document.getElementById('detailed-a4-receipt');
+      const opt = {
+        margin:       0,
+        filename:     `${invoiceNo}_Vault.pdf`,
+        image:        { type: 'jpeg', quality: 0.8 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      
+      const base64Pdf = await html2pdf().set(opt).from(element).output('datauristring');
+      const base64Data = base64Pdf.split(',')[1];
+      
+      // 3. Send to API for Drive Upload & Sheet Logging
+      const apiRes = await fetch('/api/jewellery-sales', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...printData,
+          officerName: officerAuth.staffName,
+          vaultPdfFile: base64Data
+        })
+      });
+      
+      root.unmount();
+      document.body.removeChild(tempDiv);
+      
+      if (!apiRes.ok) {
+        const errText = await apiRes.text();
+        throw new Error(`Failed to save record to Drive/Sheets: ${errText}`);
+      }
+      
+      // 4. Show Standard A5 Print Dialog
+      localStorage.setItem('aarthika_current_invoice', JSON.stringify(printData));
       setShowPrint(true);
       
       const handleAfterPrint = () => {
