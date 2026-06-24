@@ -89,6 +89,12 @@ export default function JewellerySalesTerminal() {
   useEffect(() => {
     if (officerAuth.loggedIn) {
       verifyAuthSentinel(officerAuth);
+      fetch('/api/metal-rates')
+        .then(res => res.json())
+        .then(data => {
+          if (!data.error) setLiveRates(data);
+        })
+        .catch(console.error);
     }
   }, [officerAuth.loggedIn]);
 
@@ -139,8 +145,24 @@ export default function JewellerySalesTerminal() {
     applyGst: false
   });
 
+  const [liveRates, setLiveRates] = useState(null);
+
   const [silverItems, setSilverItems] = useState([]);
   const [goldItems, setGoldItems] = useState([]);
+
+  useEffect(() => {
+    if (!liveRates) return;
+    let autoSilver = 0;
+    let autoGold = 0;
+    silverItems.forEach(i => autoSilver += (parseFloat(i.netWeight) || 0) * (liveRates.silverMakingPerGram || 0));
+    goldItems.forEach(i => autoGold += ((parseFloat(i.netWeight) || 0) * (liveRates.goldMakingPerGram || 0)) + (liveRates.goldHallmarking || 0));
+    
+    setSaleData(prev => ({
+      ...prev,
+      silverMakingCharges: autoSilver > 0 ? autoSilver.toFixed(2) : '',
+      goldMakingCharges: autoGold > 0 ? autoGold.toFixed(2) : ''
+    }));
+  }, [silverItems, goldItems, liveRates]);
 
   const [customerPhoto, setCustomerPhoto] = useState('');
   const [jewelleryPhoto, setJewelleryPhoto] = useState('');
@@ -393,7 +415,7 @@ export default function JewellerySalesTerminal() {
                 <button 
                   onClick={() => {
                     if (allItems.length >= 6) return showToast("Maximum 6 items allowed.", "error");
-                    setSilverItems([...silverItems, { category: 'Payal', purity: '75%', grossWeight: '', netWeight: '', rate: '' }]);
+                    setSilverItems([...silverItems, { category: 'Payal', purity: '75%', grossWeight: '', netWeight: '', rate: liveRates ? liveRates.silverRate : '' }]);
                   }}
                   className="text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
                 >
@@ -446,7 +468,7 @@ export default function JewellerySalesTerminal() {
                 <button 
                   onClick={() => {
                     if (allItems.length >= 6) return showToast("Maximum 6 items allowed.", "error");
-                    setGoldItems([...goldItems, { category: 'Ring', purity: '22K', grossWeight: '', netWeight: '', rate: '' }]);
+                    setGoldItems([...goldItems, { category: 'Ring', purity: '22K', grossWeight: '', netWeight: '', rate: liveRates ? liveRates.goldRate : '' }]);
                   }}
                   className="text-xs font-bold bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 text-yellow-700 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 shadow-sm"
                 >

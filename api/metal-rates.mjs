@@ -1,8 +1,8 @@
 // Fetch metal rates from a public Google Sheet using the Google Visualization API
 
 const SHEET_ID = '1YpeV4GpJeedrYGHQgonuSL-Rf4kuQiwpPysdZL9B-vk';
-const SHEET_NAME = 'METAL RATE'; // Ensure this matches your actual tab name
-const RANGE = 'A2:B2'; // Gold: A2, Silver: B2
+const SHEET_NAME = 'METAL RATE'; 
+const RANGE = 'A18:B20'; // Gold: A18, Silver: B18, Making Gold: A19, Silver: B19, Hallmarking Gold: A20
 
 // Construct the Google Visualization API URL
 const sheetNameEncoded = encodeURIComponent(SHEET_NAME);
@@ -13,7 +13,7 @@ let cache = {
   data: null,
   timestamp: 0,
 };
-const CACHE_DURATION_MS = 15 * 60 * 1000; // 15 minutes cache (as requested base data refresh)
+const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes cache
 
 async function fetchAndParseSheetData() {
   console.log(`Fetching public sheet data from: ${GVIZ_URL}`);
@@ -21,32 +21,30 @@ async function fetchAndParseSheetData() {
   let rawText = '[Not Fetched]';
   try {
     response = await fetch(GVIZ_URL);
-    rawText = await response.text(); // Get text content for parsing/debugging
+    rawText = await response.text(); 
 
     if (!response.ok) {
-      throw new Error(`HTTP error fetching sheet data! Status: ${response.status}. Response: ${rawText.substring(0, 200)}`);
+      throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
-    // Extract JSON from the GVIZ response format
     const jsonString = rawText.match(/google\.visualization\.Query\.setResponse\((.*)\)/s)?.[1];
     if (!jsonString) {
-      console.error("Could not extract JSON from GVIZ response:", rawText.substring(0, 500));
       throw new Error('Invalid response format from Google Visualization API.');
     }
 
     const json = JSON.parse(jsonString);
 
     if (json.status === 'error') {
-      console.error("Google Visualization API returned an error object:", json.errors);
       throw new Error(`GVIZ API Error: ${json.errors.map(e => e.detailed_message || e.message).join('; ')}`);
     }
 
-    // Extract data safely
-    const goldRate = json.table?.rows?.[0]?.c?.[0]?.v?.toString() ?? "N/A";
-    const silverRate = json.table?.rows?.[0]?.c?.[1]?.v?.toString() ?? "N/A";
+    const goldRate = parseFloat(json.table?.rows?.[0]?.c?.[0]?.v) || 0;
+    const silverRate = parseFloat(json.table?.rows?.[0]?.c?.[1]?.v) || 0;
+    const goldMakingPerGram = parseFloat(json.table?.rows?.[1]?.c?.[0]?.v) || 0;
+    const silverMakingPerGram = parseFloat(json.table?.rows?.[1]?.c?.[1]?.v) || 0;
+    const goldHallmarking = parseFloat(json.table?.rows?.[2]?.c?.[0]?.v) || 0;
 
-    console.log(`Fetched public rates - Gold: ${goldRate}, Silver: ${silverRate}`);
-    return { goldRate, silverRate };
+    return { goldRate, silverRate, goldMakingPerGram, silverMakingPerGram, goldHallmarking };
 
   } catch (error) {
     console.error('Error fetching or parsing public sheet data:', error);
