@@ -89,8 +89,9 @@ export default function InvoicePrint() {
             
             @media (max-width: 768px) {
               .print-container {
-                position: relative !important;
+                position: absolute !important;
                 height: auto !important;
+                min-height: 100% !important;
               }
             }
           }
