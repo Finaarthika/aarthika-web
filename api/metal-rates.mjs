@@ -38,8 +38,8 @@ async function fetchAndParseSheetData() {
       throw new Error(`GVIZ API Error: ${json.errors.map(e => e.detailed_message || e.message).join('; ')}`);
     }
 
-    const goldRate = parseFloat(json.table?.rows?.[0]?.c?.[0]?.v) || 0;
-    const silverRate = parseFloat(json.table?.rows?.[0]?.c?.[1]?.v) || 0;
+    const goldRate = Math.round(parseFloat(json.table?.rows?.[0]?.c?.[0]?.v) || 0);
+    const silverRate = Math.round(parseFloat(json.table?.rows?.[0]?.c?.[1]?.v) || 0);
     const goldMakingPerGram = parseFloat(json.table?.rows?.[1]?.c?.[0]?.v) || 0;
     const silverMakingPerGram = parseFloat(json.table?.rows?.[1]?.c?.[1]?.v) || 0;
     const goldHallmarking = parseFloat(json.table?.rows?.[2]?.c?.[0]?.v) || 0;
