@@ -130,6 +130,7 @@ export default async (req, res) => {
                expectedDelivery: expectedDeliveryStr,
                diffDays: diffDays,
                status: status,
+               goldsmith: row[12] || '',
                items: itemsList
             });
         }
