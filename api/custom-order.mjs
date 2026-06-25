@@ -13,12 +13,8 @@ export default async (req, res) => {
       customerName,
       customerPhone,
       customerVillage,
-      category,
-      metalType,
-      purity,
-      expectedWeight,
+      items,
       advancePaid,
-      notes,
       pdfBase64,
       staffName
     } = req.body || {};
@@ -111,8 +107,55 @@ export default async (req, res) => {
       }
     }
 
-    // Google Sheets integration temporarily disabled per user request
-    // We will build this out with row splitting later when they are ready.
+    // Append to Google Sheets (21 Column Sequence)
+    const appendUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/'${SHEET_NAME}'!A:A:append?valueInputOption=USER_ENTERED`;
+    
+    const safeItems = Array.isArray(items) ? items : [];
+    const itemSlots = [];
+    
+    // Fill up to 6 item slots
+    for (let i = 0; i < 6; i++) {
+      if (i < safeItems.length) {
+        const item = safeItems[i];
+        itemSlots.push(
+          `${item.category || ''} - ${item.metalType || ''} ${item.purity || ''}`.trim(),
+          String(item.expectedWeight || '0').trim()
+        );
+      } else {
+        itemSlots.push('', ''); // Blank type and blank weight
+      }
+    }
+
+    const appendData = {
+      values: [
+        [
+          orderId,                                    // 1: Order ID
+          date,                                       // 2: Date
+          String(customerName || '').trim(),          // 3: Customer Name
+          String(customerPhone || '').trim(),         // 4: Contact
+          String(customerVillage || '').trim(),       // 5: Village
+          String(safeItems.length),                   // 6: Total Items
+          String(advancePaid || '0').trim(),          // 7: Advance Paid
+          pdfLink,                                    // 8: PDF Link
+          String(staffName || 'System'),              // 9: Processed By
+          ...itemSlots                                // 10 to 21: Item 1-6 (Type/Wt)
+        ]
+      ]
+    };
+
+    const sheetResponse = await fetch(appendUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(appendData)
+    });
+
+    if (!sheetResponse.ok) {
+      const errText = await sheetResponse.text();
+      throw new Error(`Sheets Append Failed: ${errText}`);
+    }
 
     return res.status(200).json({ success: true, orderId, pdfLink });
 
