@@ -162,7 +162,7 @@ export default function CustomOrderTerminal() {
   };
 
   const updateItem = (id, field, value) => {
-    setOrderItems(orderItems.map(i => i.id === id ? { ...i, [field]: value } : i));
+    setOrderItems(prev => prev.map(i => i.id === id ? { ...i, [field]: value } : i));
   };
 
   const handleItemCameraCapture = async (e, id) => {
