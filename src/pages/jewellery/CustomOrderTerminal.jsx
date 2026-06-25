@@ -228,8 +228,8 @@ export default function CustomOrderTerminal() {
       const opt = {
         margin:       0,
         filename:     `${orderId}.pdf`,
-        image:        { type: 'jpeg', quality: 1.0 },
-        html2canvas:  { scale: 3, useCORS: true, scrollY: 0, windowWidth: 1040 },
+        image:        { type: 'jpeg', quality: 0.8 },
+        html2canvas:  { scale: 1.5, useCORS: true, scrollY: 0, windowWidth: 1040 },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape', compress: true }
       };
       
@@ -239,12 +239,21 @@ export default function CustomOrderTerminal() {
       root.unmount();
       document.body.removeChild(tempDiv);
 
-      // 2. Send to Backend to sync to Drive (Google Sheets disabled for now)
+      // Strip heavy designPhotos from the backend payload to prevent 413 Payload Too Large errors
+      const backendPayload = {
+        ...payload,
+        items: payload.items.map(item => {
+          const { designPhoto, ...rest } = item;
+          return rest;
+        })
+      };
+
+      // 2. Send to Backend to sync to Drive & Sheets
       const res = await fetch('/api/custom-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...payload,
+          ...backendPayload,
           pdfBase64: pdfBase64Data
         })
       });
