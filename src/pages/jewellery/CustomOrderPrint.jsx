@@ -2,92 +2,155 @@ import React from 'react';
 import logoTextUrl from '../../assets/Aarthika (1).png';
 
 export default function CustomOrderPrint({ data }) {
-  if (!data) return null;
+  if (!data || !data.items) return null;
 
   const formatINR = (amount) => {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(amount);
   };
 
   return (
-    <div id="custom-order-receipt" className="bg-white w-[148mm] h-[210mm] overflow-hidden relative font-inter flex flex-col box-border border-b-[8px] border-indigo-900">
-      
-      {/* Header */}
-      <div className="bg-[#1B1464] text-white p-6 relative">
-        <div className="flex justify-between items-start relative z-10">
-          <div>
-            <img src={logoTextUrl} alt="Aarthika" className="h-6 object-contain mb-2 brightness-0 invert opacity-90" />
-            <h1 className="text-xl font-black tracking-tight font-nirand">MISHRA JEWELLER'S</h1>
-            <p className="text-[10px] text-white/70 font-semibold uppercase tracking-widest mt-1">Custom Order Slip</p>
-          </div>
-          <div className="text-right">
-            <div className="text-[10px] text-white/60 font-bold uppercase mb-1">Order ID</div>
-            <div className="text-sm font-black tracking-wider bg-white/10 px-3 py-1 rounded-md border border-white/20">{data.orderId}</div>
-            <div className="text-[9px] text-white/60 font-medium mt-2">{data.date}</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex-grow p-6 flex flex-col gap-6">
-        
-        {/* Customer & Spec Grid */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-            <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Customer Details</h3>
-            <div className="text-sm font-black text-gray-800 uppercase mb-1">{data.customerName}</div>
-            <div className="text-xs font-semibold text-gray-600 mb-1">{data.customerPhone}</div>
-            {data.customerVillage && <div className="text-[10px] font-medium text-gray-500 uppercase">{data.customerVillage}</div>}
-          </div>
-          <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4">
-            <h3 className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-3">Order Specs</h3>
-            <div className="flex justify-between mb-2">
-              <span className="text-[11px] font-semibold text-gray-500">Category:</span>
-              <span className="text-[11px] font-black text-indigo-900 uppercase">{data.category}</span>
+    <div id="custom-order-receipt" className="font-inter flex flex-col bg-gray-100">
+      {data.items.map((item, index) => (
+        <div 
+          key={item.id || index} 
+          className="bg-white w-[297mm] h-[210mm] relative box-border flex flex-col page-break-after-always overflow-hidden"
+          style={{ pageBreakAfter: 'always' }}
+        >
+          {/* Header */}
+          <div className="bg-[#1B1464] text-white px-8 py-5 flex justify-between items-center shrink-0">
+            <div className="flex items-center gap-6">
+              <img src={logoTextUrl} alt="Aarthika" className="h-10 object-contain brightness-0 invert opacity-90" />
+              <div className="border-l border-white/20 pl-6">
+                <h1 className="text-2xl font-black tracking-widest font-nirand">MISHRA JEWELLER'S</h1>
+                <p className="text-[11px] text-white/70 font-bold uppercase tracking-[0.2em] mt-1">Enterprise Custom Workshop Slip</p>
+              </div>
             </div>
-            <div className="flex justify-between mb-2">
-              <span className="text-[11px] font-semibold text-gray-500">Metal:</span>
-              <span className="text-[11px] font-black text-indigo-900">{data.metalType} ({data.purity})</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[11px] font-semibold text-gray-500">Expected Wt:</span>
-              <span className="text-[11px] font-black text-indigo-900">{data.expectedWeight} g</span>
+            <div className="text-right">
+              <div className="text-[10px] text-white/60 font-bold uppercase mb-1">Order ID / Slip No.</div>
+              <div className="text-xl font-black tracking-wider bg-white/10 px-4 py-1.5 rounded-lg border border-white/20">
+                {data.orderId} <span className="text-white/50 font-medium text-sm ml-2">[{index + 1}/{data.items.length}]</span>
+              </div>
+              <div className="text-[11px] text-white/60 font-bold mt-2 uppercase tracking-widest">{data.date}</div>
             </div>
           </div>
-        </div>
 
-        {/* Instructions */}
-        <div className="flex-grow flex flex-col">
-          <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 px-1">Design Instructions</h3>
-          <div className="flex-grow bg-white border border-gray-200 rounded-xl p-4 text-sm font-medium text-gray-700 whitespace-pre-wrap leading-relaxed shadow-inner">
-            {data.notes || "No special instructions provided."}
+          <div className="flex-grow flex w-full relative">
+            
+            {/* LEFT COLUMN: Specs & Financials */}
+            <div className="w-[45%] border-r-2 border-dashed border-gray-200 bg-[#FDFBF7] p-8 flex flex-col h-full">
+              
+              <div className="mb-8">
+                <div className="inline-block bg-indigo-100 text-indigo-800 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full mb-4 border border-indigo-200">
+                  Customer Profile
+                </div>
+                <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+                  <div className="text-xl font-black text-gray-900 uppercase tracking-wide mb-1">{data.customerName}</div>
+                  <div className="text-sm font-bold text-gray-600 tracking-wider mb-2">{data.customerPhone}</div>
+                  {data.customerVillage && (
+                    <div className="text-xs font-semibold text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                      {data.customerVillage}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="mb-8">
+                <div className="inline-block bg-purple-100 text-purple-800 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full mb-4 border border-purple-200">
+                  Target Specifications
+                </div>
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                  <div className="flex border-b border-gray-100">
+                    <div className="w-1/2 p-4 border-r border-gray-100 bg-gray-50/50">
+                      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Category</div>
+                      <div className="text-lg font-black text-gray-800 uppercase tracking-wide">{item.category}</div>
+                    </div>
+                    <div className="w-1/2 p-4 bg-gray-50/50">
+                      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Metal</div>
+                      <div className="text-lg font-black text-gray-800 uppercase tracking-wide">{item.metalType}</div>
+                    </div>
+                  </div>
+                  <div className="flex">
+                    <div className="w-1/2 p-4 border-r border-gray-100">
+                      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Purity</div>
+                      <div className="text-lg font-black text-gray-800 uppercase tracking-wide">{item.purity}</div>
+                    </div>
+                    <div className="w-1/2 p-4 bg-indigo-50/30">
+                      <div className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Expected Weight</div>
+                      <div className="text-xl font-black text-indigo-900 tracking-wide">{item.expectedWeight} <span className="text-sm font-bold text-indigo-600">g</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-auto">
+                <div className="bg-green-50 rounded-2xl border border-green-200 p-5 flex items-center justify-between">
+                  <div>
+                    <div className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">Total Advance Deposit</div>
+                    <div className="text-xs font-semibold text-green-700/70">(Applied to entire order)</div>
+                  </div>
+                  <div className="text-2xl font-black text-green-800">
+                    {formatINR(parseFloat(data.advancePaid) || 0)}
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* RIGHT COLUMN: Instructions & Photo */}
+            <div className="w-[55%] p-8 flex flex-col h-full bg-white">
+              
+              <div className="mb-6 h-[40%] flex flex-col">
+                <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-800 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full mb-3 border border-blue-100 self-start">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                  Custom Design Instructions
+                </div>
+                <div className="flex-grow bg-gray-50 border border-gray-200 rounded-2xl p-5 shadow-inner relative">
+                  {item.notes ? (
+                    <p className="text-sm font-semibold text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {item.notes}
+                    </p>
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center text-gray-300 font-bold uppercase tracking-widest text-sm">
+                      No Written Instructions
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex-grow flex flex-col h-[60%]">
+                <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-800 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full mb-3 border border-amber-200 self-start">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
+                  Visual Reference
+                </div>
+                <div className="flex-grow bg-gray-900 rounded-2xl border-4 border-gray-800 overflow-hidden flex items-center justify-center relative shadow-xl">
+                  {item.designPhoto ? (
+                    <img src={item.designPhoto} alt="Design Reference" className="w-full h-full object-contain" />
+                  ) : (
+                    <div className="text-gray-700 flex flex-col items-center">
+                      <svg className="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                      <span className="font-bold uppercase tracking-widest text-sm opacity-50">No Reference Photo Captured</span>
+                    </div>
+                  )}
+                  <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-4 py-2 rounded-lg border border-white/10 text-white flex flex-col items-end">
+                     <span className="text-[9px] font-bold text-white/50 uppercase tracking-widest">Target Item</span>
+                     <span className="text-sm font-black uppercase tracking-wider">{item.category}</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
           </div>
-        </div>
-
-        {/* Design Photo */}
-        <div className="h-[200px] border border-gray-200 rounded-xl overflow-hidden flex items-center justify-center bg-gray-50 relative">
-          <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full border border-gray-200 text-[9px] font-bold text-gray-500 uppercase tracking-widest z-10">
-            Design Reference
+          
+          {/* Footer */}
+          <div className="bg-[#1B1464] h-8 shrink-0 flex items-center px-8">
+             <span className="text-[9px] font-bold text-white/30 uppercase tracking-[0.2em] w-full text-center">
+                INTERNAL WORKSHOP DOCUMENT • AARTHIKA SECURE LOG
+             </span>
           </div>
-          {data.designPhoto ? (
-             <img src={data.designPhoto} alt="Design" className="w-full h-full object-contain" />
-          ) : (
-             <span className="text-gray-300 font-bold text-sm uppercase tracking-widest">No Reference Photo</span>
-          )}
-        </div>
 
-      </div>
-
-      {/* Footer Financials */}
-      <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-between items-center shrink-0">
-        <div>
-          <div className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Processed By</div>
-          <div className="text-xs font-black text-gray-800 uppercase">{data.staffName || 'System'}</div>
         </div>
-        <div className="text-right">
-          <div className="text-[9px] font-bold text-green-600 uppercase tracking-widest mb-1">Advance Deposit Received</div>
-          <div className="text-xl font-black text-green-700">{formatINR(parseFloat(data.advancePaid) || 0)}</div>
-        </div>
-      </div>
-
+      ))}
     </div>
   );
 }

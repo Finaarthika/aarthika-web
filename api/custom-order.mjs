@@ -111,43 +111,8 @@ export default async (req, res) => {
       }
     }
 
-    // Append to Google Sheets
-    const appendUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/'${SHEET_NAME}'!A:A:append?valueInputOption=USER_ENTERED`;
-    
-    // Columns: A: Order ID, B: Date, C: Customer Name, D: Phone, E: Location, F: Jewellery Type, G: Metal & Purity, H: Expected Weight, I: Advance Paid, J: Instructions, K: Design Photo URL, L: Status, M: Staff
-    const appendData = {
-      values: [
-        [
-          orderId,
-          date,
-          String(customerName || '').trim(),
-          String(customerPhone || '').trim(),
-          String(customerVillage || '').trim(),
-          String(category || '').trim(),
-          `${metalType} ${purity}`,
-          String(expectedWeight || '0').trim(),
-          String(advancePaid || '0').trim(),
-          String(notes || '').trim(),
-          pdfLink,
-          'PENDING',
-          String(staffName || 'System')
-        ]
-      ]
-    };
-
-    const sheetResponse = await fetch(appendUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(appendData)
-    });
-
-    if (!sheetResponse.ok) {
-      const errText = await sheetResponse.text();
-      throw new Error(`Sheets Append Failed: ${errText}`);
-    }
+    // Google Sheets integration temporarily disabled per user request
+    // We will build this out with row splitting later when they are ready.
 
     return res.status(200).json({ success: true, orderId, pdfLink });
 

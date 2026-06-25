@@ -124,18 +124,48 @@ export default function CustomOrderTerminal() {
     customerName: '',
     customerPhone: '',
     customerVillage: '',
-    category: '',
-    metalType: 'Gold',
-    purity: '22K',
-    expectedWeight: '',
-    advancePaid: '',
-    notes: ''
+    advancePaid: ''
   });
 
-  const [designPhoto, setDesignPhoto] = useState('');
+  const [orderItems, setOrderItems] = useState([
+    {
+      id: Date.now(),
+      category: '',
+      metalType: 'Gold',
+      purity: '22K',
+      expectedWeight: '',
+      notes: '',
+      designPhoto: ''
+    }
+  ]);
+
   const [createLoading, setCreateLoading] = useState(false);
 
-  const handleCameraCapture = async (e) => {
+  const addItem = () => {
+    if (orderItems.length >= 6) {
+      return showToast("Maximum 6 items allowed per order.", "error");
+    }
+    setOrderItems([...orderItems, {
+      id: Date.now(),
+      category: '',
+      metalType: 'Gold',
+      purity: '22K',
+      expectedWeight: '',
+      notes: '',
+      designPhoto: ''
+    }]);
+  };
+
+  const removeItem = (id) => {
+    if (orderItems.length === 1) return showToast("At least one item is required.", "error");
+    setOrderItems(orderItems.filter(i => i.id !== id));
+  };
+
+  const updateItem = (id, field, value) => {
+    setOrderItems(orderItems.map(i => i.id === id ? { ...i, [field]: value } : i));
+  };
+
+  const handleItemCameraCapture = async (e, id) => {
     const file = e.target.files[0];
     if (!file) return;
     try {
@@ -146,15 +176,21 @@ export default function CustomOrderTerminal() {
       canvas.width = width; canvas.height = height;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(bmp, 0, 0, width, height);
-      setDesignPhoto(canvas.toDataURL('image/jpeg', 0.7));
+      updateItem(id, 'designPhoto', canvas.toDataURL('image/jpeg', 0.7));
     } catch (err) {
       showToast("Error processing camera image.", "error");
     }
   };
 
   const submitOrder = async () => {
-    if (!orderData.customerName || !orderData.customerPhone || !orderData.category || !orderData.expectedWeight) {
-      return showToast("Please fill all required customer and order details.", "error");
+    if (!orderData.customerName || !orderData.customerPhone) {
+      return showToast("Please fill all required customer details.", "error");
+    }
+
+    for (let item of orderItems) {
+      if (!item.category || !item.expectedWeight) {
+        return showToast("Please fill Category and Expected Weight for all items.", "error");
+      }
     }
 
     setCreateLoading(true);
@@ -169,7 +205,7 @@ export default function CustomOrderTerminal() {
         orderId,
         date: dateObj.toLocaleDateString('en-GB'),
         ...orderData,
-        designPhoto,
+        items: orderItems,
         staffName: officerAuth.staffName
       };
 
@@ -186,15 +222,15 @@ export default function CustomOrderTerminal() {
       const root = createRoot(tempDiv);
       root.render(React.createElement(CustomOrderPrint, { data: payload }));
       
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Wait for all images
       
       const element = document.getElementById('custom-order-receipt');
       const opt = {
         margin:       0,
         filename:     `${orderId}.pdf`,
         image:        { type: 'jpeg', quality: 1.0 },
-        html2canvas:  { scale: 4, useCORS: true, scrollY: 0 },
-        jsPDF:        { unit: 'mm', format: 'a5', orientation: 'portrait', compress: true }
+        html2canvas:  { scale: 3, useCORS: true, scrollY: 0, windowWidth: 1040 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape', compress: true }
       };
       
       const base64Pdf = await html2pdf().set(opt).from(element).output('datauristring');
@@ -203,7 +239,7 @@ export default function CustomOrderTerminal() {
       root.unmount();
       document.body.removeChild(tempDiv);
 
-      // 2. Send to Backend to sync to Sheets & Drive
+      // 2. Send to Backend to sync to Drive (Google Sheets disabled for now)
       const res = await fetch('/api/custom-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -222,21 +258,11 @@ export default function CustomOrderTerminal() {
       link.download = `${orderId}_Internal.pdf`;
       link.click();
 
-      showToast(`Order Secured: ${orderId}. Synced to Drive & Sheets!`);
+      showToast(`Order Secured: ${orderId}. Synced to Drive!`);
       
       // Reset
-      setOrderData({
-        customerName: '',
-        customerPhone: '',
-        customerVillage: '',
-        category: '',
-        metalType: 'Gold',
-        purity: '22K',
-        expectedWeight: '',
-        advancePaid: '',
-        notes: ''
-      });
-      setDesignPhoto('');
+      setOrderData({ customerName: '', customerPhone: '', customerVillage: '', advancePaid: '' });
+      setOrderItems([{ id: Date.now(), category: '', metalType: 'Gold', purity: '22K', expectedWeight: '', notes: '', designPhoto: '' }]);
 
     } catch (err) {
       console.error(err);
@@ -286,13 +312,6 @@ export default function CustomOrderTerminal() {
       {/* Toast Notification */}
       {toast.visible && (
         <div className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-xl border border-white/20 animate-fade-in-up ${toast.type === 'error' ? 'bg-red-500/90 text-white' : 'bg-green-500/90 text-white'}`}>
-          <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            {toast.type === 'error' ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-            )}
-          </svg>
           <span className="font-bold tracking-wide text-sm">{toast.message}</span>
         </div>
       )}
@@ -327,85 +346,91 @@ export default function CustomOrderTerminal() {
               </div>
             </div>
 
-            {/* Order Specifications Card */}
-            <div className="bg-white rounded-[24px] shadow-sm border border-indigo-100/50 p-6 sm:p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
-                </div>
-                <h2 className="text-sm font-black text-purple-900 tracking-widest uppercase">Order Specifications</h2>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Jewellery Type (Category) <span className="text-red-500">*</span></label>
-                  <input type="text" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all bg-gray-50/50" value={orderData.category} onChange={e => setOrderData({...orderData, category: e.target.value})} placeholder="e.g. Necklace, Ring, Payal" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Expected Weight (g) <span className="text-red-500">*</span></label>
-                  <input type="number" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all bg-gray-50/50" value={orderData.expectedWeight} onChange={e => setOrderData({...orderData, expectedWeight: e.target.value})} placeholder="0.00" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Metal Type</label>
-                  <select className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:border-indigo-500 bg-gray-50/50" value={orderData.metalType} onChange={e => setOrderData({...orderData, metalType: e.target.value, purity: e.target.value === 'Gold' ? '22K' : '75%'})}>
-                    <option value="Gold">Gold</option>
-                    <option value="Silver">Silver</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Expected Purity</label>
-                  {orderData.metalType === 'Gold' ? (
-                    <select className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:border-indigo-500 bg-gray-50/50" value={orderData.purity} onChange={e => setOrderData({...orderData, purity: e.target.value})}>
-                      <option value="18K">18K</option>
-                      <option value="20K">20K</option>
-                      <option value="22K">22K</option>
-                      <option value="24K">24K</option>
-                    </select>
-                  ) : (
-                    <select className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:border-indigo-500 bg-gray-50/50" value={orderData.purity} onChange={e => setOrderData({...orderData, purity: e.target.value})}>
-                      <option value="75%">75%</option>
-                      <option value="80%">80%</option>
-                      <option value="85%">85%</option>
-                      <option value="90%">90%</option>
-                      <option value="100%">100%</option>
-                    </select>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Custom Instructions & Design Notes</label>
-                <textarea className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all bg-gray-50/50 min-h-[100px]" value={orderData.notes} onChange={e => setOrderData({...orderData, notes: e.target.value})} placeholder="Note down size, specific patterns, deadlines, etc..."></textarea>
-              </div>
-            </div>
-
-            {/* Design Reference Photo */}
-            <div className="bg-white rounded-[24px] shadow-sm border border-indigo-100/50 p-6 sm:p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                </div>
-                <h2 className="text-sm font-black text-blue-900 tracking-widest uppercase">Design Reference Photo (Optional)</h2>
-              </div>
-              
-              <div className="relative group w-full aspect-video sm:aspect-[21/9] bg-gray-100 border-2 border-dashed border-gray-300 rounded-2xl overflow-hidden hover:border-indigo-400 transition-colors cursor-pointer flex flex-col items-center justify-center">
-                <input type="file" accept="image/*" capture="environment" onChange={(e) => handleCameraCapture(e)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" />
-                {designPhoto ? (
-                  <img src={designPhoto} alt="Design Reference" className="w-full h-full object-cover z-10" />
-                ) : (
-                  <div className="flex flex-col items-center text-gray-400 group-hover:text-indigo-500 transition-colors p-4 text-center">
-                    <svg className="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                    <span className="text-sm font-bold uppercase tracking-wider">Tap to Capture Design</span>
-                    <span className="text-[10px] font-medium text-gray-400 mt-1">Take a photo of their sample or phone screen</span>
-                  </div>
+            {/* Dynamic Items Array */}
+            {orderItems.map((item, index) => (
+              <div key={item.id} className="bg-white rounded-[24px] shadow-sm border border-purple-100 p-6 sm:p-8 relative">
+                
+                {/* Delete Item Button */}
+                {orderItems.length > 1 && (
+                  <button onClick={() => removeItem(item.id)} className="absolute top-6 right-6 text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  </button>
                 )}
-                {designPhoto && (
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex items-center justify-center pointer-events-none">
-                    <span className="text-white font-bold text-sm tracking-widest bg-black/50 px-4 py-2 rounded-full backdrop-blur-sm">TAP TO RETAKE</span>
+
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center">
+                    <span className="text-purple-600 font-black text-sm">{index + 1}</span>
                   </div>
-                )}
+                  <h2 className="text-sm font-black text-purple-900 tracking-widest uppercase">Order Item {index + 1}</h2>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Jewellery Type (Category) <span className="text-red-500">*</span></label>
+                    <input type="text" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:border-indigo-500 bg-gray-50/50" value={item.category} onChange={e => updateItem(item.id, 'category', e.target.value)} placeholder="e.g. Necklace, Ring, Payal" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Expected Weight (g) <span className="text-red-500">*</span></label>
+                    <input type="number" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:border-indigo-500 bg-gray-50/50" value={item.expectedWeight} onChange={e => updateItem(item.id, 'expectedWeight', e.target.value)} placeholder="0.00" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Metal Type</label>
+                    <select className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:border-indigo-500 bg-gray-50/50" value={item.metalType} onChange={e => { updateItem(item.id, 'metalType', e.target.value); updateItem(item.id, 'purity', e.target.value === 'Gold' ? '22K' : '75%'); }}>
+                      <option value="Gold">Gold</option>
+                      <option value="Silver">Silver</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Expected Purity</label>
+                    {item.metalType === 'Gold' ? (
+                      <select className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:border-indigo-500 bg-gray-50/50" value={item.purity} onChange={e => updateItem(item.id, 'purity', e.target.value)}>
+                        <option value="18K">18K</option>
+                        <option value="20K">20K</option>
+                        <option value="22K">22K</option>
+                        <option value="24K">24K</option>
+                      </select>
+                    ) : (
+                      <select className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:border-indigo-500 bg-gray-50/50" value={item.purity} onChange={e => updateItem(item.id, 'purity', e.target.value)}>
+                        <option value="75%">75%</option>
+                        <option value="80%">80%</option>
+                        <option value="85%">85%</option>
+                        <option value="90%">90%</option>
+                        <option value="100%">100%</option>
+                      </select>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-5 mt-6 border-t border-gray-100 pt-6">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Custom Instructions & Design Notes</label>
+                    <textarea className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:border-indigo-500 bg-gray-50/50 h-32 resize-none" value={item.notes} onChange={e => updateItem(item.id, 'notes', e.target.value)} placeholder="Note down size, specific patterns, deadlines, etc..."></textarea>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Design Reference (Optional)</label>
+                    <div className="relative group w-full h-32 bg-gray-100 border-2 border-dashed border-gray-300 rounded-xl overflow-hidden hover:border-indigo-400 transition-colors cursor-pointer flex flex-col items-center justify-center">
+                      <input type="file" accept="image/*" capture="environment" onChange={(e) => handleItemCameraCapture(e, item.id)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" />
+                      {item.designPhoto ? (
+                        <img src={item.designPhoto} alt="Design" className="w-full h-full object-cover z-10" />
+                      ) : (
+                        <div className="flex flex-col items-center text-gray-400 group-hover:text-indigo-500 transition-colors p-4 text-center">
+                          <svg className="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
+                          <span className="text-[10px] font-bold uppercase tracking-wider">Tap to Capture</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
+            ))}
+
+            {/* Add Item Button */}
+            {orderItems.length < 6 && (
+              <button onClick={addItem} className="w-full border-2 border-dashed border-indigo-200 bg-indigo-50/50 hover:bg-indigo-100 text-indigo-600 font-bold py-4 rounded-[24px] transition-all flex items-center justify-center gap-2 uppercase tracking-widest text-sm">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+                Add Another Jewellery Item
+              </button>
+            )}
 
           </div>
 
@@ -420,6 +445,12 @@ export default function CustomOrderTerminal() {
               </h3>
 
               <div className="space-y-5 mb-8">
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-[11px] font-bold text-indigo-200/60 uppercase">Total Items in Order</label>
+                    <span className="text-sm font-black text-white">{orderItems.length} Items</span>
+                  </div>
+                </div>
                 <div>
                   <label className="block text-[11px] font-bold text-indigo-200/60 uppercase mb-2">Advance Deposit Paid (₹)</label>
                   <div className="relative">
@@ -445,7 +476,7 @@ export default function CustomOrderTerminal() {
               </button>
 
               <div className="mt-6 p-4 bg-white/5 rounded-xl border border-white/5 text-[10px] text-white/50 leading-relaxed font-medium">
-                This will save the order details to your Google Sheet and generate an internal A5 slip containing the design photo and notes for your craftsmen.
+                This will save the order details to your Google Drive and generate a multi-page A4 internal slip containing the design photos and notes for your craftsmen.
               </div>
             </div>
           </div>
