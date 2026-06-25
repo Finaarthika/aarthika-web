@@ -404,6 +404,7 @@ export default function JewellerySalesTerminal() {
   }
 
   return (
+    <>
     <div className="bg-[#f8f9fa] min-h-screen font-sans pb-20">
       <ToastComponent />
       <OfficerHeader officerName={officerAuth.staffName} onLogout={handleLogout} />
@@ -814,8 +815,10 @@ export default function JewellerySalesTerminal() {
                 </div>
               )}
             </div>
+            </div>
           </div>
         </div>
       )}
+    </>
   );
 }
