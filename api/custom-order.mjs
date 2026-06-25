@@ -129,16 +129,18 @@ export default async (req, res) => {
     const appendData = {
       values: [
         [
-          orderId,                                    // 1: Order ID
-          date,                                       // 2: Date
-          String(customerName || '').trim(),          // 3: Customer Name
-          String(customerPhone || '').trim(),         // 4: Contact
-          String(customerVillage || '').trim(),       // 5: Village
-          String(safeItems.length),                   // 6: Total Items
-          String(advancePaid || '0').trim(),          // 7: Advance Paid
-          pdfLink,                                    // 8: PDF Link
-          String(staffName || 'System'),              // 9: Processed By
-          ...itemSlots                                // 10 to 21: Item 1-6 (Type/Wt)
+          '',                                         // 1: Check Box
+          orderId,                                    // 2: Order ID
+          date,                                       // 3: Date
+          String(customerName || '').trim(),          // 4: Customer Name
+          String(customerPhone || '').trim(),         // 5: Contact
+          String(customerVillage || '').trim(),       // 6: Village
+          String(safeItems.length),                   // 7: Total Items
+          String(advancePaid || '0').trim(),          // 8: Advance Paid
+          '',                                         // 9: Date Of Fullfillment
+          pdfLink,                                    // 10: PDF Link
+          String(staffName || 'System'),              // 11: Processed By
+          ...itemSlots                                // 12 to 23: Item 1-6 (Type/Wt)
         ]
       ]
     };
