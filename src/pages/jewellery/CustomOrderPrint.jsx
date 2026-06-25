@@ -99,12 +99,12 @@ export default function CustomOrderPrint({ data }) {
             {/* RIGHT COLUMN: Instructions & Photo */}
             <div className="w-[55%] p-8 flex flex-col h-full bg-white">
               
-              <div className="mb-6 h-[25%] flex flex-col">
-                <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-800 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full mb-3 border border-blue-100 self-start">
+              <div className="mb-6 h-[120px] flex flex-col">
+                <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-800 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full mb-3 border border-blue-100 self-start shrink-0">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                   Custom Design Instructions
                 </div>
-                <div className="flex-grow bg-gray-50 border border-gray-200 rounded-2xl p-5 shadow-inner relative">
+                <div className="flex-grow bg-gray-50 border border-gray-200 rounded-2xl p-4 shadow-inner relative overflow-hidden">
                   {item.notes ? (
                     <p className="text-sm font-semibold text-gray-700 leading-relaxed whitespace-pre-wrap">
                       {item.notes}
@@ -117,15 +117,15 @@ export default function CustomOrderPrint({ data }) {
                 </div>
               </div>
 
-              <div className="flex-grow flex flex-col min-h-0 h-[70%]">
-                <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-800 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full mb-3 border border-amber-200 self-start">
+              <div className="h-[430px] flex flex-col">
+                <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-800 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full mb-3 border border-amber-200 self-start shrink-0">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
                   Visual Reference
                 </div>
-                <div className="flex-grow relative w-full flex items-start justify-start">
+                <div className="flex-grow relative w-full flex items-start justify-start overflow-hidden">
                   {item.designPhoto ? (
                     <div className="relative inline-block h-full w-full">
-                       <img src={item.designPhoto} alt="Design Reference" className="max-w-full max-h-full object-contain rounded-xl shadow-lg border border-gray-200" />
+                       <img src={item.designPhoto} alt="Design Reference" className="max-w-full h-full object-contain rounded-xl shadow-sm border border-gray-200" />
                        <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/20 text-white flex flex-col items-start shadow-xl">
                          <span className="text-[8px] font-bold text-white/70 uppercase tracking-widest">Target Item</span>
                          <span className="text-xs font-black uppercase tracking-wider">{item.category}</span>
