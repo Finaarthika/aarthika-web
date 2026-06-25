@@ -185,7 +185,7 @@ export default function CustomOrderTerminal() {
 
   const submitOrder = async () => {
     if (!orderData.customerName || !orderData.customerPhone || !orderData.expectedDelivery) {
-      return showToast("Please fill all required customer details (including delivery date).", "error");
+      return showToast("Please fill all required customer details (including delivery days).", "error");
     }
 
     for (let item of orderItems) {
@@ -202,10 +202,18 @@ export default function CustomOrderTerminal() {
       const randHex = Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
       const orderId = `ORD-${ymdStr}-${randHex}`;
       
+      let finalDeliveryDate = '';
+      if (orderData.expectedDelivery) {
+        const deliveryObj = new Date(dateObj);
+        deliveryObj.setDate(deliveryObj.getDate() + parseInt(orderData.expectedDelivery));
+        finalDeliveryDate = deliveryObj.toISOString();
+      }
+
       const payload = {
         orderId,
         date: dateObj.toLocaleDateString('en-GB'),
         ...orderData,
+        expectedDelivery: finalDeliveryDate,
         items: orderItems,
         staffName: officerAuth.staffName
       };
@@ -355,8 +363,8 @@ export default function CustomOrderTerminal() {
                   <input type="text" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all bg-gray-50/50" value={orderData.customerVillage} onChange={e => setOrderData({...orderData, customerVillage: e.target.value})} placeholder="Location" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Expected Delivery Date <span className="text-red-500">*</span></label>
-                  <input type="date" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all bg-gray-50/50 uppercase" value={orderData.expectedDelivery} onChange={e => setOrderData({...orderData, expectedDelivery: e.target.value})} required />
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Expected Delivery (Days) <span className="text-red-500">*</span></label>
+                  <input type="number" min="1" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all bg-gray-50/50" value={orderData.expectedDelivery} onChange={e => setOrderData({...orderData, expectedDelivery: e.target.value})} placeholder="e.g. 5, 10, 15" required />
                 </div>
               </div>
             </div>
