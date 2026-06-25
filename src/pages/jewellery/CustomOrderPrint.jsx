@@ -43,14 +43,26 @@ export default function CustomOrderPrint({ data }) {
                   Customer Profile
                 </div>
                 <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
-                  <div className="text-xl font-black text-gray-900 uppercase tracking-wide mb-1">{data.customerName}</div>
-                  <div className="text-sm font-bold text-gray-600 tracking-wider mb-2">{data.customerPhone}</div>
-                  {data.customerVillage && (
-                    <div className="text-xs font-semibold text-gray-400 uppercase tracking-widest flex items-center gap-1">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                      {data.customerVillage}
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="text-xl font-black text-gray-900 uppercase tracking-wide mb-1">{data.customerName}</div>
+                      <div className="text-sm font-bold text-gray-600 tracking-wider mb-2">{data.customerPhone}</div>
+                      {data.customerVillage && (
+                        <div className="text-xs font-semibold text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                          {data.customerVillage}
+                        </div>
+                      )}
                     </div>
-                  )}
+                    {data.expectedDelivery && (
+                      <div className="text-right flex flex-col items-end">
+                        <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Expected Delivery</div>
+                        <div className="text-sm font-black text-rose-600 bg-rose-50 px-3 py-1 rounded-lg border border-rose-100 shadow-sm">
+                          {new Date(data.expectedDelivery).toLocaleDateString('en-GB')}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 

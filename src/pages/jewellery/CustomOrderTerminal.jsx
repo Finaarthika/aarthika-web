@@ -124,7 +124,8 @@ export default function CustomOrderTerminal() {
     customerName: '',
     customerPhone: '',
     customerVillage: '',
-    advancePaid: ''
+    advancePaid: '',
+    expectedDelivery: ''
   });
 
   const [orderItems, setOrderItems] = useState([
@@ -183,8 +184,8 @@ export default function CustomOrderTerminal() {
   };
 
   const submitOrder = async () => {
-    if (!orderData.customerName || !orderData.customerPhone) {
-      return showToast("Please fill all required customer details.", "error");
+    if (!orderData.customerName || !orderData.customerPhone || !orderData.expectedDelivery) {
+      return showToast("Please fill all required customer details (including delivery date).", "error");
     }
 
     for (let item of orderItems) {
@@ -271,7 +272,7 @@ export default function CustomOrderTerminal() {
       showToast(`Order Secured: ${orderId}. Synced to Drive!`);
       
       // Reset
-      setOrderData({ customerName: '', customerPhone: '', customerVillage: '', advancePaid: '' });
+      setOrderData({ customerName: '', customerPhone: '', customerVillage: '', advancePaid: '', expectedDelivery: '' });
       setOrderItems([{ id: Date.now(), category: '', metalType: 'Gold', purity: '22K', expectedWeight: '', notes: '', designPhoto: '' }]);
 
     } catch (err) {
@@ -349,9 +350,13 @@ export default function CustomOrderTerminal() {
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Phone Number <span className="text-red-500">*</span></label>
                   <input type="tel" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all bg-gray-50/50" value={orderData.customerPhone} onChange={e => setOrderData({...orderData, customerPhone: e.target.value})} placeholder="10-digit number" />
                 </div>
-                <div className="md:col-span-2">
+                <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Village / City (Optional)</label>
                   <input type="text" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all bg-gray-50/50" value={orderData.customerVillage} onChange={e => setOrderData({...orderData, customerVillage: e.target.value})} placeholder="Location" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Expected Delivery Date <span className="text-red-500">*</span></label>
+                  <input type="date" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all bg-gray-50/50 uppercase" value={orderData.expectedDelivery} onChange={e => setOrderData({...orderData, expectedDelivery: e.target.value})} required />
                 </div>
               </div>
             </div>
