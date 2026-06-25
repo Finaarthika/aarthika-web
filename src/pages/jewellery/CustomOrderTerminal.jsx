@@ -229,8 +229,9 @@ export default function CustomOrderTerminal() {
         margin:       0,
         filename:     `${orderId}.pdf`,
         image:        { type: 'jpeg', quality: 0.8 },
-        html2canvas:  { scale: 1.5, useCORS: true, scrollY: 0, windowWidth: 1040 },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape', compress: true }
+        html2canvas:  { scale: 2, useCORS: true, scrollY: 0, windowWidth: 1123 },
+        jsPDF:        { unit: 'px', format: [1123, 794], orientation: 'landscape', compress: true },
+        pagebreak:    { mode: 'css', before: '.page-break' }
       };
       
       const base64Pdf = await html2pdf().set(opt).from(element).output('datauristring');

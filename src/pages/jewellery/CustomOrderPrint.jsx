@@ -9,12 +9,11 @@ export default function CustomOrderPrint({ data }) {
   };
 
   return (
-    <div id="custom-order-receipt" className="font-inter flex flex-col bg-gray-100">
+    <div id="custom-order-receipt" className="font-inter block">
       {data.items.map((item, index) => (
         <div 
           key={item.id || index} 
-          className="bg-white w-[297mm] h-[210mm] relative box-border flex flex-col page-break-after-always overflow-hidden"
-          style={{ pageBreakAfter: 'always' }}
+          className={`bg-white w-[1123px] h-[794px] relative box-border flex flex-col overflow-hidden ${index !== 0 ? 'page-break' : ''}`}
         >
           {/* Header */}
           <div className="bg-[#1B1464] text-white px-8 py-5 flex justify-between items-center shrink-0">
