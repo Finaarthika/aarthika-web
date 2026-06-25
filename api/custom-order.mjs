@@ -108,16 +108,32 @@ export default async (req, res) => {
     }
 
     // 2. Find the true last row by checking Column B (Order ID)
-    // We avoid 'append' because empty checkboxes in Column A trick Google Sheets into thinking the row is filled.
+    // We search from top to bottom to find the FIRST empty gap. This fixes the issue where
+    // previous orders were appended to the bottom (e.g. row 870) leaving rows 2-869 empty.
     const getUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/'${SHEET_NAME}'!B:B`;
     const getRes = await fetch(getUrl, {
       headers: { 'Authorization': `Bearer ${accessToken}` }
     });
     
-    let nextRow = 2; // Default to row 2 if sheet is empty (assuming row 1 is headers)
+    let nextRow = 2; // Default to row 2
     if (getRes.ok) {
       const getData = await getRes.json();
-      nextRow = (getData.values ? getData.values.length : 0) + 1;
+      const bValues = getData.values || [];
+      
+      let foundEmpty = false;
+      // Start from 1 to skip header (index 0 is Row 1)
+      for (let i = 1; i < bValues.length; i++) {
+        if (!bValues[i] || !bValues[i][0] || String(bValues[i][0]).trim() === '') {
+          nextRow = i + 1; // i is 0-indexed, so row is i + 1
+          foundEmpty = true;
+          break;
+        }
+      }
+      
+      // If no empty row found in the middle, target the very bottom
+      if (!foundEmpty) {
+        nextRow = bValues.length + 1;
+      }
     }
     
     // 3. Update the specific target row directly using PUT
@@ -158,7 +174,7 @@ export default async (req, res) => {
       ]
     };
 
-    const sheetResponse = await fetch(updateUrl, {
+    let sheetResponse = await fetch(updateUrl, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -167,9 +183,23 @@ export default async (req, res) => {
       body: JSON.stringify(appendData)
     });
 
+    // 4. Fallback if the sheet is completely full and needs to grow
+    // If PUT throws 400 (exceeds grid limits), we use append to grow the sheet.
+    if (sheetResponse.status === 400) {
+      const fallbackAppendUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/'${SHEET_NAME}'!A:A:append?valueInputOption=USER_ENTERED`;
+      sheetResponse = await fetch(fallbackAppendUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(appendData)
+      });
+    }
+
     if (!sheetResponse.ok) {
       const errText = await sheetResponse.text();
-      throw new Error(`Sheets Append Failed: ${errText}`);
+      throw new Error(`Sheets Sync Failed: ${errText}`);
     }
 
     return res.status(200).json({ success: true, orderId, pdfLink });
