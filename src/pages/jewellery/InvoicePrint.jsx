@@ -224,7 +224,7 @@ export default function InvoicePrint() {
               </div>
 
               {/* Table */}
-              <div className="w-full mb-2 border border-gray-200 flex flex-col flex-grow min-h-0">
+              <div className="w-full mb-1 border border-gray-200 flex flex-col flex-grow min-h-0">
                 {/* Table Header */}
                 <div className="grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] bg-[#F8F9FA] py-1 px-3 border-b border-gray-200">
                   <div className="text-[10px] font-bold text-gray-600 uppercase font-nirand">Descriptions</div>
@@ -284,13 +284,13 @@ export default function InvoicePrint() {
 
               {/* Totals Section (Left Side) */}
               <div className="mt-0 pb-1 shrink-0">
-                <div className="bg-[#F8F9FA] px-4 py-1.5 rounded-xl border border-gray-200 shadow-sm">
-                  <div className="flex justify-between py-1 text-[12px] font-bold text-black border-b border-gray-200 pb-1 mb-1">
+                <div className="bg-[#F8F9FA] px-4 py-1 rounded-xl border border-gray-200 shadow-sm">
+                  <div className="flex justify-between py-0.5 text-[11px] font-bold text-black border-b border-gray-200 pb-0.5 mb-1">
                     <span className="font-nirand uppercase tracking-wide text-gray-500">TOTAL AMOUNT</span>
                     <span className="font-extrabold">{formatINR(data.metalValue)}</span>
                   </div>
                   
-                  <div className="space-y-1">
+                  <div className="space-y-0.5">
                     {parseFloat(data.silverMakingCharges) > 0 && (
                       <div className="flex justify-between text-[11px]">
                         <span className="font-nirand text-gray-600 font-semibold">Silver Making Charges</span>
@@ -317,24 +317,24 @@ export default function InvoicePrint() {
                     )}
                   </div>
                   
-                  <div className="flex justify-between items-center pt-1.5 mt-1.5 border-t border-gray-300">
-                    <span className="font-nirand font-bold text-[14px] tracking-wide text-gray-500 uppercase">SUB TOTAL</span>
-                    <span className="font-extrabold text-[14px] text-gray-600">₹ {formatINR(data.grandTotal)}</span>
+                  <div className="flex justify-between items-center pt-1 mt-1 border-t border-gray-300">
+                    <span className="font-nirand font-bold text-[13px] tracking-wide text-gray-500 uppercase">SUB TOTAL</span>
+                    <span className="font-extrabold text-[13px] text-gray-600">₹ {formatINR(data.grandTotal)}</span>
                   </div>
                   {data.linkedAdvanceAmount > 0 && (
-                    <div className="flex justify-between items-center pt-1 mt-1 border-t border-dashed border-gray-300">
-                      <span className="font-nirand font-bold text-[12px] tracking-wide text-amber-600">LESS: CUSTOM ORDER ADVANCE (PAID {data.linkedAdvanceDate})</span>
-                      <span className="font-extrabold text-[12px] text-red-600">-₹ {formatINR(data.linkedAdvanceAmount)}</span>
+                    <div className="flex justify-between items-center pt-0.5 mt-0.5 border-t border-dashed border-gray-300">
+                      <span className="font-nirand font-bold text-[11px] tracking-wide text-amber-600">LESS: CUSTOM ORDER ADVANCE (PAID {data.linkedAdvanceDate})</span>
+                      <span className="font-extrabold text-[11px] text-red-600">-₹ {formatINR(data.linkedAdvanceAmount)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between items-center pt-1.5 mt-1.5 border-t-2 border-[#1B1464]">
-                    <span className="font-nirand font-bold text-[15px] tracking-wide text-[#1B1464] uppercase">FINAL DUE</span>
-                    <span className="font-extrabold text-[16px] text-[#1B1464]">₹ {formatINR(data.finalDue !== undefined ? data.finalDue : data.grandTotal)}</span>
+                  <div className="flex justify-between items-center pt-1 mt-1 border-t-2 border-[#1B1464]">
+                    <span className="font-nirand font-bold text-[14px] tracking-wide text-[#1B1464] uppercase">FINAL DUE</span>
+                    <span className="font-extrabold text-[15px] text-[#1B1464]">₹ {formatINR(data.finalDue !== undefined ? data.finalDue : data.grandTotal)}</span>
                   </div>
                 </div>
 
                 {/* Payment Tracking */}
-                <div className="border border-gray-200 rounded-lg py-1.5 px-5 bg-white flex justify-between items-center mt-1.5">
+                <div className="border border-gray-200 rounded-lg py-1 px-5 bg-white flex justify-between items-center mt-1">
                   <div className="text-[11px] flex items-center gap-2">
                     <span className="text-gray-500 font-bold uppercase tracking-wider">Gross Total:</span> 
                     <span className="font-extrabold text-gray-500 line-through">₹ {formatINR(data.grandTotal)} /-</span>
