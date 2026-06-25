@@ -107,8 +107,21 @@ export default async (req, res) => {
       }
     }
 
-    // Append to Google Sheets (21 Column Sequence)
-    const appendUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/'${SHEET_NAME}'!A:A:append?valueInputOption=USER_ENTERED`;
+    // 2. Find the true last row by checking Column B (Order ID)
+    // We avoid 'append' because empty checkboxes in Column A trick Google Sheets into thinking the row is filled.
+    const getUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/'${SHEET_NAME}'!B:B`;
+    const getRes = await fetch(getUrl, {
+      headers: { 'Authorization': `Bearer ${accessToken}` }
+    });
+    
+    let nextRow = 2; // Default to row 2 if sheet is empty (assuming row 1 is headers)
+    if (getRes.ok) {
+      const getData = await getRes.json();
+      nextRow = (getData.values ? getData.values.length : 0) + 1;
+    }
+    
+    // 3. Update the specific target row directly using PUT
+    const updateUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/'${SHEET_NAME}'!A${nextRow}:W${nextRow}?valueInputOption=USER_ENTERED`;
     
     const safeItems = Array.isArray(items) ? items : [];
     const itemSlots = [];
@@ -145,8 +158,8 @@ export default async (req, res) => {
       ]
     };
 
-    const sheetResponse = await fetch(appendUrl, {
-      method: 'POST',
+    const sheetResponse = await fetch(updateUrl, {
+      method: 'PUT',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
