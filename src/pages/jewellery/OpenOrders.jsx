@@ -221,8 +221,8 @@ export default function OpenOrders() {
   const unassignedOrders = orders.filter(o => !o.goldsmith || String(o.goldsmith).trim() === '');
   const assignedOrders = orders.filter(o => o.goldsmith && String(o.goldsmith).trim() !== '');
 
-  const OrderCard = ({ order, isUnassigned }) => (
-    <div className="bg-white rounded-[24px] border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 p-6 flex flex-col group relative overflow-hidden h-full">
+  const renderOrderCard = (order, isUnassigned, keyPrefix) => (
+    <div key={`${keyPrefix}-${order.orderId}`} className="bg-white rounded-[24px] border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 p-6 flex flex-col group relative overflow-hidden h-full">
         <div className="absolute top-0 right-0 w-24 h-24 bg-gray-50 rounded-bl-full -mr-10 -mt-10 opacity-50 group-hover:scale-110 transition-transform"></div>
         
         <div className="flex justify-between items-start mb-4 relative z-10">
@@ -382,8 +382,8 @@ export default function OpenOrders() {
                             <h2 className="text-xl font-black text-[#1B1464] tracking-tight uppercase">New Custom Orders <span className="text-sm bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full ml-2">{unassignedOrders.length}</span></h2>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {unassignedOrders.map((order, idx) => (
-                                <OrderCard key={`unassigned-${idx}`} order={order} isUnassigned={true} />
+                            {unassignedOrders.map((order) => (
+                                renderOrderCard(order, true, 'unassigned')
                             ))}
                         </div>
                     </section>
@@ -397,8 +397,8 @@ export default function OpenOrders() {
                             <h2 className="text-xl font-black text-[#1B1464] tracking-tight uppercase">In Progress (Assigned) <span className="text-sm bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full ml-2">{assignedOrders.length}</span></h2>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {assignedOrders.map((order, idx) => (
-                                <OrderCard key={`assigned-${idx}`} order={order} isUnassigned={false} />
+                            {assignedOrders.map((order) => (
+                                renderOrderCard(order, false, 'assigned')
                             ))}
                         </div>
                     </section>
