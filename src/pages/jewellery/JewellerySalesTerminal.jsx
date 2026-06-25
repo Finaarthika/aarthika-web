@@ -815,7 +815,6 @@ export default function JewellerySalesTerminal() {
                 </div>
               )}
             </div>
-            </div>
           </div>
         </div>
       )}
