@@ -58,7 +58,7 @@ export default function CustomOrderPrint({ data }) {
                       <div className="text-right flex flex-col items-end">
                         <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Expected Delivery</div>
                         <div className="text-sm font-black text-rose-600 bg-rose-50 px-3 py-1 rounded-lg border border-rose-100 shadow-sm">
-                          {new Date(data.expectedDelivery).toLocaleDateString('en-GB')}
+                          {data.expectedDelivery}
                         </div>
                       </div>
                     )}

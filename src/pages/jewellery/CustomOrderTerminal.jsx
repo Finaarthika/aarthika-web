@@ -206,7 +206,7 @@ export default function CustomOrderTerminal() {
       if (orderData.expectedDelivery) {
         const deliveryObj = new Date(dateObj);
         deliveryObj.setDate(deliveryObj.getDate() + parseInt(orderData.expectedDelivery));
-        finalDeliveryDate = deliveryObj.toISOString();
+        finalDeliveryDate = deliveryObj.toLocaleDateString('en-GB'); // DD/MM/YYYY
       }
 
       const payload = {
