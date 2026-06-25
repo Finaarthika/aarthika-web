@@ -150,6 +150,22 @@ export default function JewellerySalesTerminal() {
   const [silverItems, setSilverItems] = useState([]);
   const [goldItems, setGoldItems] = useState([]);
 
+  const [openOrders, setOpenOrders] = useState([]);
+  const [selectedAdvance, setSelectedAdvance] = useState(null);
+  const [isAdvanceModalOpen, setIsAdvanceModalOpen] = useState(false);
+  const [advanceSearch, setAdvanceSearch] = useState('');
+
+  useEffect(() => {
+    if (officerAuth.loggedIn) {
+        fetch('/api/open-orders')
+          .then(res => res.json())
+          .then(data => {
+              if (data.openOrders) setOpenOrders(data.openOrders);
+          })
+          .catch(console.error);
+    }
+  }, [officerAuth.loggedIn]);
+
   useEffect(() => {
     if (!liveRates) return;
     let autoSilver = 0;
@@ -194,11 +210,15 @@ export default function JewellerySalesTerminal() {
   const goldMakingNum = parseFloat(saleData.goldMakingCharges) || 0;
   const silverMakingNum = parseFloat(saleData.silverMakingCharges) || 0;
   const discountNum = parseFloat(saleData.discount) || 0;
+  const advanceDeductionNum = selectedAdvance ? (parseFloat(selectedAdvance.advancePaid) || 0) : 0;
 
   let subtotal = metalValue + goldMakingNum + silverMakingNum - discountNum;
   if (subtotal < 0) subtotal = 0;
   const gstAmount = saleData.applyGst ? (subtotal * 0.03) : 0;
   const grandTotal = subtotal + gstAmount;
+  
+  let finalDue = grandTotal - advanceDeductionNum;
+  if (finalDue < 0) finalDue = 0;
 
   const allItems = [
     ...silverItems.map(i => ({ ...i, metalType: 'Silver' })),
@@ -265,6 +285,10 @@ export default function JewellerySalesTerminal() {
         discount: discountNum,
         gstAmount: gstAmount,
         grandTotal: grandTotal,
+        linkedAdvanceOrderId: selectedAdvance ? selectedAdvance.orderId : null,
+        linkedAdvanceAmount: advanceDeductionNum,
+        linkedAdvanceDate: selectedAdvance ? selectedAdvance.orderDate : null,
+        finalDue: finalDue,
         customerPhoto,
         jewelleryPhoto
       };
@@ -601,12 +625,39 @@ export default function JewellerySalesTerminal() {
                   </div>
                   <span className={`font-mono text-sm ${saleData.applyGst ? 'text-amber-400' : 'text-gray-500'}`}>{formatINR(gstAmount)}</span>
                 </div>
+
+                <div className="pt-4 border-t border-gray-700">
+                   <button 
+                     onClick={() => setIsAdvanceModalOpen(true)}
+                     className="w-full text-xs font-bold text-amber-500 border border-dashed border-amber-500/50 hover:bg-amber-500/10 py-2 rounded-lg transition-colors flex items-center justify-center gap-2 uppercase tracking-wide"
+                   >
+                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                     {selectedAdvance ? 'Change Linked Advance' : 'Link Custom Order Advance'}
+                   </button>
+                   
+                   {selectedAdvance && (
+                     <div className="mt-3 bg-gray-800 border border-amber-500/30 rounded-lg p-3 relative">
+                       <button onClick={() => setSelectedAdvance(null)} className="absolute top-2 right-2 text-gray-500 hover:text-red-400"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg></button>
+                       <div className="text-[9px] text-amber-400 font-bold uppercase tracking-widest mb-1">Advance Linked • {selectedAdvance.orderId}</div>
+                       <div className="text-sm font-bold text-white">{selectedAdvance.customerName}</div>
+                       <div className="flex justify-between items-end mt-1 text-xs">
+                         <span className="text-gray-400">{selectedAdvance.orderDate}</span>
+                         <span className="font-mono text-red-400 font-bold">- {formatINR(selectedAdvance.advancePaid)}</span>
+                       </div>
+                     </div>
+                   )}
+                </div>
+
               </div>
 
               <div className="p-6 bg-gray-900">
-                <div className="flex justify-between items-end mb-6">
+                <div className="flex justify-between items-end mb-2">
                   <span className="text-sm font-bold text-gray-400 uppercase tracking-widest">Grand Total</span>
-                  <span className="text-3xl font-black text-amber-500 tracking-tighter">{formatINR(grandTotal)}</span>
+                  <span className="text-lg font-black text-gray-300 tracking-tighter line-through">{formatINR(grandTotal)}</span>
+                </div>
+                <div className="flex justify-between items-end mb-6 border-t border-gray-700 pt-2">
+                  <span className="text-sm font-bold text-amber-500 uppercase tracking-widest">Final Due</span>
+                  <span className="text-3xl font-black text-amber-500 tracking-tighter">{formatINR(finalDue)}</span>
                 </div>
 
                 <button 
@@ -715,5 +766,56 @@ export default function JewellerySalesTerminal() {
 
 
     </div>
+
+      {isAdvanceModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div className="bg-[#1B1464] px-6 py-4 flex justify-between items-center text-white">
+              <h3 className="font-black text-lg tracking-widest uppercase">Link Custom Order</h3>
+              <button onClick={() => setIsAdvanceModalOpen(false)} className="hover:text-red-400">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            
+            <div className="p-6 border-b border-gray-100">
+              <div className="relative">
+                <svg className="w-5 h-5 absolute left-3 top-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                <input 
+                  type="text"
+                  placeholder="Search by Customer Name or Order ID..."
+                  value={advanceSearch}
+                  onChange={e => setAdvanceSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-[#1B1464] focus:ring-2 focus:ring-[#1B1464]/20 outline-none font-bold"
+                />
+              </div>
+            </div>
+
+            <div className="flex-grow overflow-y-auto p-6 bg-gray-50/50">
+              {openOrders.length === 0 ? (
+                 <div className="text-center text-gray-500 py-10 font-bold uppercase tracking-widest">No active custom orders found</div>
+              ) : (
+                <div className="space-y-4">
+                  {openOrders
+                    .filter(o => o.orderId.toLowerCase().includes(advanceSearch.toLowerCase()) || o.customerName.toLowerCase().includes(advanceSearch.toLowerCase()))
+                    .map((order, idx) => (
+                      <div key={idx} onClick={() => { setSelectedAdvance(order); setIsAdvanceModalOpen(false); }} className="bg-white border border-gray-200 rounded-xl p-4 cursor-pointer hover:border-amber-500 hover:shadow-md transition-all flex justify-between items-center group">
+                         <div>
+                           <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{order.orderId}</div>
+                           <div className="font-bold text-gray-900">{order.customerName}</div>
+                           <div className="text-xs text-gray-500">{order.customerPhone} {order.customerVillage ? `• ${order.customerVillage}` : ''}</div>
+                         </div>
+                         <div className="text-right">
+                           <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Advance Paid</div>
+                           <div className="font-black text-emerald-600 text-lg">₹{order.advancePaid}</div>
+                           <button className="text-[10px] bg-amber-100 text-amber-700 px-3 py-1 rounded font-bold uppercase mt-1 group-hover:bg-amber-500 group-hover:text-white transition-colors">LINK TO BILL</button>
+                         </div>
+                      </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
   );
 }

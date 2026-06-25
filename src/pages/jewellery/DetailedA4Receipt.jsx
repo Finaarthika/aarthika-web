@@ -172,20 +172,30 @@ export default function DetailedA4Receipt({ data, id = "detailed-a4-receipt" }) 
                   )}
                 </div>
                 <div className="flex justify-between items-center pt-1.5 mt-1.5 border-t border-gray-300">
-                  <span className="font-nirand font-bold text-[14px] tracking-wide text-[#1B1464] uppercase">GRAND TOTAL</span>
-                  <span className="font-extrabold text-[16px] text-[#1B1464]">₹ {formatINR(data.grandTotal)}</span>
+                  <span className="font-nirand font-bold text-[14px] tracking-wide text-gray-500 uppercase">SUB TOTAL</span>
+                  <span className="font-extrabold text-[14px] text-gray-600">₹ {formatINR(data.grandTotal)}</span>
+                </div>
+                {data.linkedAdvanceAmount > 0 && (
+                  <div className="flex justify-between items-center pt-1 mt-1 border-t border-dashed border-gray-300">
+                    <span className="font-nirand font-bold text-[12px] tracking-wide text-amber-600">LESS: CUSTOM ORDER ADVANCE (PAID {data.linkedAdvanceDate})</span>
+                    <span className="font-extrabold text-[12px] text-red-600">-₹ {formatINR(data.linkedAdvanceAmount)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center pt-1.5 mt-1.5 border-t-2 border-[#1B1464]">
+                  <span className="font-nirand font-bold text-[15px] tracking-wide text-[#1B1464] uppercase">FINAL DUE</span>
+                  <span className="font-extrabold text-[16px] text-[#1B1464]">₹ {formatINR(data.finalDue !== undefined ? data.finalDue : data.grandTotal)}</span>
                 </div>
               </div>
 
               <div className="border border-gray-200 rounded-lg py-1.5 px-5 bg-white flex justify-between items-center mt-1.5">
                 <div className="text-[11px] flex items-center gap-2">
-                  <span className="text-gray-500 font-bold uppercase tracking-wider">Paid:</span> 
-                  <span className="font-extrabold text-black">₹ {formatINR(data.grandTotal)} /-</span>
+                  <span className="text-gray-500 font-bold uppercase tracking-wider">Gross Total:</span> 
+                  <span className="font-extrabold text-gray-500 line-through">₹ {formatINR(data.grandTotal)} /-</span>
                 </div>
                 <div className="h-4 w-px bg-gray-300"></div>
                 <div className="text-[12px] flex items-center gap-2 text-[#1B1464]">
-                  <span className="font-bold uppercase tracking-wider">Total Paid:</span> 
-                  <span className="font-extrabold">₹ {formatINR(data.grandTotal)} /-</span>
+                  <span className="font-bold uppercase tracking-wider">Final Paid:</span> 
+                  <span className="font-extrabold">₹ {formatINR(data.finalDue !== undefined ? data.finalDue : data.grandTotal)} /-</span>
                 </div>
               </div>
             </div>
