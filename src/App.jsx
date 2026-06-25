@@ -28,6 +28,7 @@ import SearchGrid from './pages/passbook/SearchGrid'
 import JewelleryHub from './pages/jewellery/JewelleryHub'
 import JewellerySalesTerminal from './pages/jewellery/JewellerySalesTerminal'
 import CustomOrderTerminal from './pages/jewellery/CustomOrderTerminal'
+import OpenOrders from './pages/jewellery/OpenOrders'
 import InvoicePrint from './pages/jewellery/InvoicePrint'
 import './App.css'
 
@@ -125,6 +126,7 @@ function App() {
         <Route path="/jewellery" element={<JewelleryHub />} />
         <Route path="/jewellery/retail" element={<JewellerySalesTerminal />} />
         <Route path="/jewellery/custom-order" element={<CustomOrderTerminal />} />
+        <Route path="/jewellery/open-orders" element={<OpenOrders />} />
         <Route path="/jewellery/print" element={<InvoicePrint />} />
       </Routes>
       {isJoinFormVisible && <JoinAarthika onClose={toggleJoinForm} />}

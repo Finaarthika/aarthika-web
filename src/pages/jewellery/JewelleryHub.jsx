@@ -28,7 +28,7 @@ export default function JewelleryHub() {
       <OfficerHeader />
       
       <div className="flex-grow flex items-center justify-center p-6">
-        <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-3 gap-8">
           
           {/* Retail Billing Terminal Card */}
           <div 
@@ -66,6 +66,26 @@ export default function JewelleryHub() {
               </p>
             </div>
             <div className="mt-8 flex items-center text-indigo-600 font-bold text-sm tracking-wide group-hover:translate-x-2 transition-transform">
+              OPEN TERMINAL <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+            </div>
+          </div>
+
+          {/* Open Orders Tracker Card */}
+          <div 
+            onClick={() => navigate('/jewellery/open-orders')}
+            className="group relative bg-white border border-gray-200 rounded-3xl p-8 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 cursor-pointer overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-100 rounded-bl-full -mr-10 -mt-10 opacity-50 group-hover:bg-emerald-200 transition-colors"></div>
+            <div className="relative z-10">
+              <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg mb-6">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+              </div>
+              <h2 className="text-2xl font-black text-[#1B1464] mb-2 tracking-tight">Active Orders Tracker</h2>
+              <p className="text-gray-500 text-sm font-medium leading-relaxed">
+                Track pending custom orders. Monitor target deadlines, view attached PDFs, and stay on top of overdue or urgent deliveries.
+              </p>
+            </div>
+            <div className="mt-8 flex items-center text-emerald-600 font-bold text-sm tracking-wide group-hover:translate-x-2 transition-transform">
               OPEN TERMINAL <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
             </div>
           </div>
