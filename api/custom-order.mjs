@@ -138,7 +138,7 @@ export default async (req, res) => {
     }
     
     // 3. Update the specific target row directly using PUT
-    const updateUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/'${SHEET_NAME}'!A${nextRow}:X${nextRow}?valueInputOption=USER_ENTERED`;
+    const updateUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/'${SHEET_NAME}'!A${nextRow}:Y${nextRow}?valueInputOption=USER_ENTERED`;
     
     const safeItems = Array.isArray(items) ? items : [];
     const itemSlots = [];
@@ -171,7 +171,8 @@ export default async (req, res) => {
           pdfLink,                                    // 10: PDF Link
           String(staffName || 'System'),              // 11: Processed By
           String(expectedDelivery || '').trim(),      // 12: Expected Delivery
-          ...itemSlots                                // 13 to 24: Item 1-6 (Type/Wt)
+          '',                                         // 13: Goldsmith (Left Blank)
+          ...itemSlots                                // 14 to 25: Item 1-6 (Type/Wt)
         ]
       ]
     };

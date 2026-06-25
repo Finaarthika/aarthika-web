@@ -49,7 +49,7 @@ export default async (req, res) => {
     const SHEET_ID = '1G1Q-OcKpk3iQ_yHi8Ec0sKYApqxquffSD4oS-e6Mvmo';
     const SHEET_NAME = 'CUSTOM_ORDER';
 
-    const getUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/'${SHEET_NAME}'!A:X`;
+    const getUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/'${SHEET_NAME}'!A:Y`;
     const getRes = await fetch(getUrl, {
       headers: { 'Authorization': `Bearer ${accessToken}` }
     });
@@ -109,8 +109,8 @@ export default async (req, res) => {
 
             const itemsList = [];
             for(let j=0; j<6; j++){
-               const typeCol = 12 + (j*2);
-               const wtCol = 13 + (j*2);
+               const typeCol = 13 + (j*2);
+               const wtCol = 14 + (j*2);
                if(row[typeCol] && String(row[typeCol]).trim() !== '') {
                   itemsList.push({ type: row[typeCol], weight: row[wtCol] });
                }
