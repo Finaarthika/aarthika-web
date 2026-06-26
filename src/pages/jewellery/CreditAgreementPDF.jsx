@@ -10,7 +10,7 @@ export default function CreditAgreementPDF({ data, id = "credit-agreement-pdf" }
   };
 
   return (
-    <div id={id} className="w-[794px] h-[1123px] bg-white text-black flex flex-col relative overflow-hidden box-border mx-auto p-12" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>
+    <div id={id} className="w-[794px] h-[1123px] bg-white text-black flex flex-col relative overflow-hidden box-border mx-auto p-10" style={{ fontFamily: '"Arial Nova", Arial, sans-serif' }}>
       
       <style>
         {`
@@ -28,7 +28,7 @@ export default function CreditAgreementPDF({ data, id = "credit-agreement-pdf" }
       <div className="relative z-10 w-full flex flex-col h-full">
         
         {/* Header */}
-        <div className="flex justify-between items-start border-b-4 border-[#1B1464] pb-6 mb-8">
+        <div className="flex justify-between items-start border-b-4 border-[#1B1464] pb-5 mb-5">
           <div>
             <h1 className="text-4xl font-black font-redhat text-[#1B1464] tracking-tight uppercase">Mishra Jeweler's</h1>
             <p className="text-sm font-bold tracking-widest text-amber-600 uppercase mt-2">Official Credit Financing Agreement</p>
@@ -40,7 +40,7 @@ export default function CreditAgreementPDF({ data, id = "credit-agreement-pdf" }
         </div>
 
         {/* Financial Summary */}
-        <div className="bg-[#F8F9FA] border-2 border-[#1B1464] rounded-2xl p-6 mb-8 shadow-sm">
+        <div className="bg-[#F8F9FA] border-2 border-[#1B1464] rounded-2xl p-5 mb-5 shadow-sm">
           <h2 className="text-sm font-extrabold tracking-widest text-[#1B1464] uppercase mb-4 border-b border-gray-300 pb-2">Financial Obligation Summary</h2>
           <div className="grid grid-cols-3 gap-6">
             <div className="flex flex-col">
@@ -60,7 +60,7 @@ export default function CreditAgreementPDF({ data, id = "credit-agreement-pdf" }
 
         {/* KYC & Biometric Data */}
         <h2 className="text-sm font-extrabold tracking-widest text-[#1B1464] uppercase mb-4 border-b-2 border-gray-200 pb-2">Identity & Biometric Verification</h2>
-        <div className="grid grid-cols-2 gap-8 mb-8">
+        <div className="grid grid-cols-2 gap-6 mb-5">
           {/* Customer Info */}
           <div className="flex flex-col gap-3 text-sm">
             <div className="flex bg-gray-50 p-2 rounded border border-gray-200"><strong className="w-24 text-gray-500">Name:</strong> <span>{data.customerName}</span></div>
@@ -87,18 +87,27 @@ export default function CreditAgreementPDF({ data, id = "credit-agreement-pdf" }
         </div>
 
         {/* Terms and Conditions */}
-        <h2 className="text-sm font-extrabold tracking-widest text-[#1B1464] uppercase mb-4 border-b-2 border-gray-200 pb-2">Terms & Conditions of Credit</h2>
-        <div className="text-xs text-gray-700 leading-relaxed space-y-3 mb-10 text-justify border border-gray-200 bg-gray-50 p-6 rounded-xl">
+        <h2 className="text-sm font-extrabold tracking-widest text-[#1B1464] uppercase mb-3 border-b-2 border-gray-200 pb-2">Terms & Conditions of Credit</h2>
+        <div className="text-xs text-gray-700 leading-relaxed space-y-2 mb-4 text-justify border border-gray-200 bg-gray-50 p-5 rounded-xl">
           <p><strong>1. ACKNOWLEDGMENT OF DEBT:</strong> The Customer hereby acknowledges borrowing and taking possession of the specified jewellery items against the stated Credit Financed amount of {formatINR(data.creditAmount)} on the date {data.date}.</p>
-          <p><strong>2. PAYMENT OBLIGATION:</strong> The Customer agrees to repay the full Credit Financed amount to Aarthika / Mishra Jeweler's within the verbally or written stipulated timeframe. Failure to repay will result in standard legal recovery proceedings.</p>
-          <p><strong>3. BIOMETRIC & IDENTITY CONSENT:</strong> The Customer explicitly consents to the secure capture, algorithmic extraction (512D Vector mapping), and storage of their live facial photograph, Government ID, and Signature for anti-fraud and recovery purposes. This data will be maintained under strict internal security protocols.</p>
-          <p><strong>4. OWNERSHIP:</strong> While physical possession of the jewellery is transferred to the Customer, the full legal title remains with Aarthika / Mishra Jeweler's until the outstanding credit balance is fully settled.</p>
+          <p><strong>2. PAYMENT OBLIGATION & TIMELINE:</strong> The Customer agrees to repay the full Credit Financed amount to Aarthika / Mishra Jeweler's within a strict timeline of <strong>30 days</strong> from the date of purchase. Failure to repay will result in standard legal recovery proceedings.</p>
+          <p><strong>3. INTEREST PENALTY:</strong> If the due amount is not paid within the stipulated timeline, a penalty interest rate of <strong>2% per month</strong> will be levied on the outstanding Credit Financed amount until fully settled.</p>
+          <p><strong>4. BIOMETRIC & IDENTITY CONSENT:</strong> The Customer explicitly consents to the secure capture, algorithmic extraction (512D Vector mapping), and storage of their live facial photograph, Government ID, and Signature for anti-fraud and recovery purposes.</p>
+          <p><strong>5. OWNERSHIP:</strong> While physical possession of the jewellery is transferred to the Customer, the full legal title remains with Aarthika / Mishra Jeweler's until the outstanding credit balance is fully settled.</p>
+          
+          <div className="mt-4 pt-3 border-t border-gray-300 text-[10px] font-bold text-black flex items-center justify-between">
+            <span>I acknowledge that these terms were fully read, explained to me in my vernacular language, and I accept all conditions voluntarily.</span>
+            <div className="flex items-end text-[9px] text-gray-500 uppercase">
+              <span>Customer Sign:</span>
+              <span className="inline-block w-28 border-b border-black h-4 ml-2"></span>
+            </div>
+          </div>
         </div>
 
         <div className="flex-grow"></div>
 
         {/* Signatures */}
-        <div className="flex justify-between items-end mt-12 pt-8 border-t-2 border-gray-300">
+        <div className="flex justify-between items-end mt-4 pt-6 border-t-2 border-gray-300">
           <div className="flex flex-col items-center w-64">
             <div className="h-24 w-full border-b border-gray-400 flex items-center justify-center mb-2 bg-gray-50 relative rounded-t-lg">
               <div className="absolute inset-0 flex items-center justify-center opacity-10 font-bold text-xl uppercase tracking-widest pointer-events-none">OFFICIAL SEAL</div>
