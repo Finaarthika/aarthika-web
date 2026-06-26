@@ -184,6 +184,93 @@ export default function JewellerySalesTerminal() {
   const [jewelleryPhoto, setJewelleryPhoto] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
 
+  // Biometrics State
+  const [faceVectorStr, setFaceVectorStr] = useState('');
+  const [modelsLoaded, setModelsLoaded] = useState(false);
+  const [customFaceNet, setCustomFaceNet] = useState(null);
+  const [biometricStatus, setBiometricStatus] = useState('');
+  
+  const getCachedModelUrl = async (setStatus) => {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('AarthikaBiometricDB', 1);
+      request.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains('models')) {
+          db.createObjectStore('models');
+        }
+      };
+      request.onsuccess = async (e) => {
+        const db = e.target.result;
+        const transaction = db.transaction(['models'], 'readonly');
+        const store = transaction.objectStore('models');
+        const getReq = store.get('facenet_512');
+        getReq.onsuccess = async () => {
+          if (getReq.result) {
+            const blob = new Blob([getReq.result], { type: 'application/octet-stream' });
+            resolve(URL.createObjectURL(blob));
+          } else {
+            try {
+              const response = await fetch('/facenet_512.tflite');
+              if (!response.ok) throw new Error("Failed to fetch model");
+              const buffer = await response.arrayBuffer();
+              const writeTx = db.transaction(['models'], 'readwrite');
+              const writeStore = writeTx.objectStore('models');
+              writeStore.put(buffer, 'facenet_512');
+              const blob = new Blob([buffer], { type: 'application/octet-stream' });
+              resolve(URL.createObjectURL(blob));
+            } catch (err) {
+              reject(err);
+            }
+          }
+        };
+        getReq.onerror = () => reject(getReq.error);
+      };
+      request.onerror = () => reject(request.error);
+    });
+  };
+
+  useEffect(() => {
+    const loadScript = async () => {
+      if (!window.faceapi) {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js';
+        script.async = true;
+        document.body.appendChild(script);
+        await new Promise((resolve) => { script.onload = resolve; });
+      }
+      try {
+        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+        await Promise.all([
+          window.faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+          window.faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL)
+        ]);
+      } catch (err) {}
+      
+      try {
+        if (!window.tf) {
+          const tfScript = document.createElement('script');
+          tfScript.src = 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js';
+          document.body.appendChild(tfScript);
+          await new Promise((resolve) => { tfScript.onload = resolve; });
+        }
+        if (!window.tflite) {
+          const tfliteScript = document.createElement('script');
+          tfliteScript.src = 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/dist/tf-tflite.min.js';
+          document.body.appendChild(tfliteScript);
+          await new Promise((resolve) => { tfliteScript.onload = resolve; });
+        }
+        const modelUrl = await getCachedModelUrl(setBiometricStatus);
+        window.tflite.setWasmPath('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/wasm/');
+        const tfliteModel = await window.tflite.loadTFLiteModel(modelUrl);
+        setCustomFaceNet(tfliteModel);
+        setModelsLoaded(true);
+      } catch (err) {
+        console.error("Biometric init error:", err);
+      }
+    };
+    loadScript();
+  }, []);
+
   const getPurityMultiplier = (purity) => {
     if (!purity) return 1;
     if (purity.includes('%')) return parseFloat(purity) / 100;
@@ -229,7 +316,48 @@ export default function JewellerySalesTerminal() {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(amount);
   };
 
-  const handleCameraCapture = async (e, setter) => {
+  const extractFaceVector = async (imgDataUrl) => {
+    if (!modelsLoaded || !customFaceNet || !window.faceapi || !window.tf) return;
+    setBiometricStatus("SCANNING FACE...");
+    const img = new Image();
+    img.onload = async () => {
+      const options = new window.faceapi.TinyFaceDetectorOptions({ inputSize: 512, scoreThreshold: 0.2 });
+      try {
+        const detection = await window.faceapi.detectSingleFace(img, options);
+        if (!detection) {
+          setBiometricStatus("NO FACE DETECTED");
+          setFaceVectorStr('');
+          return;
+        }
+        setBiometricStatus("COMPUTING 512D VECTOR...");
+        const box = detection.box;
+        const faceCanvas = document.createElement('canvas');
+        faceCanvas.width = 160;
+        faceCanvas.height = 160;
+        const faceCtx = faceCanvas.getContext('2d');
+        faceCtx.drawImage(img, box.x, box.y, box.width, box.height, 0, 0, 160, 160);
+        
+        let tensor = window.tf.browser.fromPixels(faceCanvas);
+        tensor = window.tf.cast(tensor, 'float32').sub(127.5).div(127.5).expandDims(0);
+        const output = customFaceNet.predict(tensor);
+        const rawVectorArray = Array.from(output.dataSync());
+        tensor.dispose(); output.dispose();
+        
+        let sumSq = 0;
+        for (let i = 0; i < rawVectorArray.length; i++) sumSq += rawVectorArray[i] * rawVectorArray[i];
+        const magnitude = Math.sqrt(sumSq) || 1;
+        const vectorArray = rawVectorArray.map(val => val / magnitude);
+        setFaceVectorStr(vectorArray.join(','));
+        setBiometricStatus("FACE VECTOR EXTRACTED");
+      } catch (e) {
+        console.error("Vector extraction error", e);
+        setBiometricStatus("ERROR EXTRACTING");
+      }
+    };
+    img.src = imgDataUrl;
+  };
+
+  const handleCameraCapture = async (e, setter, isCustomerPhoto = false) => {
     const file = e.target.files[0];
     if (!file) return;
     try {
@@ -240,7 +368,12 @@ export default function JewellerySalesTerminal() {
       canvas.width = width; canvas.height = height;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(bmp, 0, 0, width, height);
-      setter(canvas.toDataURL('image/jpeg', 0.7));
+      const imgDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+      setter(imgDataUrl);
+      
+      if (isCustomerPhoto) {
+        extractFaceVector(imgDataUrl);
+      }
     } catch (err) {
       showToast("Error processing camera image.", "error");
     }
@@ -552,10 +685,15 @@ export default function JewellerySalesTerminal() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-3 text-center">Customer Photo</label>
-                  <input type="file" accept="image/*" capture="environment" id="cam-cust" className="hidden" onChange={(e) => handleCameraCapture(e, setCustomerPhoto)} />
-                  <div onClick={() => document.getElementById('cam-cust').click()} className={`w-full aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-colors ${customerPhoto ? 'border-green-500' : 'border-gray-300 hover:border-amber-400 bg-gray-50'}`}>
+                  <input type="file" accept="image/*" capture="environment" id="cam-cust" className="hidden" onChange={(e) => handleCameraCapture(e, setCustomerPhoto, true)} />
+                  <div onClick={() => document.getElementById('cam-cust').click()} className={`w-full aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-colors ${customerPhoto ? (faceVectorStr ? 'border-green-500' : 'border-amber-500') : 'border-gray-300 hover:border-amber-400 bg-gray-50'}`}>
                     {customerPhoto ? <img src={customerPhoto} className="w-full h-full object-cover" /> : <div className="text-gray-400 flex flex-col items-center"><svg className="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg><span className="text-sm font-bold">Tap to Capture</span></div>}
                   </div>
+                  {biometricStatus && (
+                    <div className="mt-2 text-[9px] font-bold tracking-widest text-center text-amber-600 uppercase">
+                      {biometricStatus}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-3 text-center">Jewellery Photo</label>
