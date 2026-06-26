@@ -408,8 +408,9 @@ export default function JewellerySalesTerminal() {
         return showToast("Govt ID and Customer Signature are required for Credit Financing.", "error");
       }
       const val = parseFloat(creditAmountInput) || 0;
-      if (val <= 0 || val > (finalDue * 0.20)) {
-        return showToast("Valid Credit Amount (Max 20% of Due) is required.", "error");
+      const maxLimit = (goldMakingNum + silverMakingNum) * 1.05;
+      if (val <= 0 || val > maxLimit) {
+        return showToast(`Valid Credit Amount (Max ₹${maxLimit.toFixed(2)}) is required.`, "error");
       }
     }
 
@@ -504,7 +505,8 @@ export default function JewellerySalesTerminal() {
             filename:     `${invoiceNo}_Credit_Agreement.pdf`,
             image:        { type: 'jpeg', quality: 0.8 },
             html2canvas:  { scale: 2, useCORS: true, scrollY: 0, windowWidth: 1040 },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+            pagebreak:    { mode: 'avoid-all' }
           };
           const rawCreditPdf = await html2pdf().set(creditOpt).from(creditElement).output('datauristring');
           creditPdfBase64 = rawCreditPdf.split(',')[1];
@@ -910,7 +912,7 @@ export default function JewellerySalesTerminal() {
                   
                   {creditEnabled && (
                     <div className="mt-3 pt-3 border-t border-gray-700">
-                      <label className="block text-[10px] font-bold text-amber-400 uppercase mb-1">Credit Amount (Max 20% of Due)</label>
+                      <label className="block text-[10px] font-bold text-amber-400 uppercase mb-1">Credit Amount (Max ₹{((goldMakingNum + silverMakingNum) * 1.05).toFixed(2)})</label>
                       <div className="relative">
                         <span className="absolute left-3 top-2.5 text-gray-500 font-bold text-sm">₹</span>
                         <input 
@@ -919,8 +921,9 @@ export default function JewellerySalesTerminal() {
                           value={creditAmountInput} 
                           onChange={(e) => {
                              const val = parseFloat(e.target.value) || 0;
-                             if (val > (finalDue * 0.20)) {
-                               setCreditAmountInput((finalDue * 0.20).toFixed(2));
+                             const maxLimit = (goldMakingNum + silverMakingNum) * 1.05;
+                             if (val > maxLimit) {
+                               setCreditAmountInput(maxLimit.toFixed(2));
                              } else {
                                setCreditAmountInput(e.target.value);
                              }
