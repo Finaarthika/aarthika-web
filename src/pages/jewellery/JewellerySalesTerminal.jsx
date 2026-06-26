@@ -184,6 +184,12 @@ export default function JewellerySalesTerminal() {
   const [jewelleryPhoto, setJewelleryPhoto] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
 
+  // Credit State
+  const [creditEnabled, setCreditEnabled] = useState(false);
+  const [creditAmountInput, setCreditAmountInput] = useState('');
+  const [govtIdPhoto, setGovtIdPhoto] = useState('');
+  const [signaturePhoto, setSignaturePhoto] = useState('');
+  
   // Biometrics State
   const [faceVectorStr, setFaceVectorStr] = useState('');
   const [modelsLoaded, setModelsLoaded] = useState(false);
@@ -396,6 +402,16 @@ export default function JewellerySalesTerminal() {
     if (!customerPhoto || !jewelleryPhoto) {
       return showToast("Both Customer and Jewellery photos are required.", "error");
     }
+    
+    if (creditEnabled) {
+      if (!govtIdPhoto || !signaturePhoto) {
+        return showToast("Govt ID and Customer Signature are required for Credit Financing.", "error");
+      }
+      const val = parseFloat(creditAmountInput) || 0;
+      if (val <= 0 || val > (finalDue * 0.20)) {
+        return showToast("Valid Credit Amount (Max 20% of Due) is required.", "error");
+      }
+    }
 
     setCreateLoading(true);
 
@@ -422,8 +438,17 @@ export default function JewellerySalesTerminal() {
         linkedAdvanceAmount: advanceDeductionNum,
         linkedAdvanceDate: selectedAdvance ? selectedAdvance.orderDate : null,
         finalDue: finalDue,
+        creditAmount: creditEnabled ? (parseFloat(creditAmountInput) || 0) : 0,
+        finalPaid: finalDue - (creditEnabled ? (parseFloat(creditAmountInput) || 0) : 0),
         customerPhoto,
-        jewelleryPhoto
+        jewelleryPhoto,
+        govtIdPhoto: creditEnabled ? govtIdPhoto : null,
+        signaturePhoto: creditEnabled ? signaturePhoto : null,
+        faceVectorStr: faceVectorStr || '',
+        goldRate: liveRates?.goldRate || 0,
+        silverRate: liveRates?.silverRate || 0,
+        totalGoldNetWeight: goldItems.reduce((sum, item) => sum + (parseFloat(item.netWeight) || 0), 0),
+        totalSilverNetWeight: silverItems.reduce((sum, item) => sum + (parseFloat(item.netWeight) || 0), 0)
       };
 
       // 1. Render Detailed A4 Receipt in background
@@ -455,6 +480,40 @@ export default function JewellerySalesTerminal() {
       const base64Pdf = await html2pdf().set(opt).from(element).output('datauristring');
       const base64Data = base64Pdf.split(',')[1];
       
+      // 2.5 Render Credit Agreement PDF if needed
+      let creditPdfBase64 = null;
+      if (creditEnabled) {
+        const creditTempDiv = document.createElement('div');
+        creditTempDiv.style.position = 'absolute';
+        creditTempDiv.style.top = '0';
+        creditTempDiv.style.left = '0';
+        creditTempDiv.style.zIndex = '-60';
+        document.body.appendChild(creditTempDiv);
+        
+        const { createRoot: createCreditRoot } = await import('react-dom/client');
+        const CreditAgreementPDF = (await import('./CreditAgreementPDF')).default;
+        const creditRoot = createCreditRoot(creditTempDiv);
+        creditRoot.render(React.createElement(CreditAgreementPDF, { data: printData }));
+        
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        const creditElement = document.getElementById('credit-agreement-pdf');
+        if (creditElement) {
+          const creditOpt = {
+            margin:       0,
+            filename:     `${invoiceNo}_Credit_Agreement.pdf`,
+            image:        { type: 'jpeg', quality: 0.8 },
+            html2canvas:  { scale: 2, useCORS: true, scrollY: 0, windowWidth: 1040 },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
+          };
+          const rawCreditPdf = await html2pdf().set(creditOpt).from(creditElement).output('datauristring');
+          creditPdfBase64 = rawCreditPdf.split(',')[1];
+        }
+        
+        creditRoot.unmount();
+        document.body.removeChild(creditTempDiv);
+      }
+      
       // 3. Send to API for Drive Upload & Sheet Logging
       const apiRes = await fetch('/api/jewellery-sales', {
         method: 'POST',
@@ -462,7 +521,8 @@ export default function JewellerySalesTerminal() {
         body: JSON.stringify({
           ...printData,
           officerName: officerAuth.staffName,
-          vaultPdfFile: base64Data
+          vaultPdfFile: base64Data,
+          creditPdfFile: creditPdfBase64
         })
       });
       
@@ -486,6 +546,11 @@ export default function JewellerySalesTerminal() {
         setGoldItems([]);
         setCustomerPhoto('');
         setJewelleryPhoto('');
+        setCreditEnabled(false);
+        setCreditAmountInput('');
+        setGovtIdPhoto('');
+        setSignaturePhoto('');
+        setFaceVectorStr('');
       };
       window.addEventListener('afterprint', handleAfterPrint);
       
@@ -703,6 +768,31 @@ export default function JewellerySalesTerminal() {
                   </div>
                 </div>
               </div>
+              
+              {creditEnabled && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6 pt-6 border-t border-gray-100">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-3 text-center flex items-center justify-center gap-1">
+                      <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" /></svg>
+                      Govt ID Photo
+                    </label>
+                    <input type="file" accept="image/*" capture="environment" id="cam-id" className="hidden" onChange={(e) => handleCameraCapture(e, setGovtIdPhoto)} />
+                    <div onClick={() => document.getElementById('cam-id').click()} className={`w-full aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-colors ${govtIdPhoto ? 'border-amber-500' : 'border-gray-300 hover:border-amber-400 bg-gray-50'}`}>
+                      {govtIdPhoto ? <img src={govtIdPhoto} className="w-full h-full object-cover" /> : <div className="text-gray-400 flex flex-col items-center"><svg className="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg><span className="text-sm font-bold">Tap to Capture</span></div>}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-3 text-center flex items-center justify-center gap-1">
+                      <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                      Customer Signature
+                    </label>
+                    <input type="file" accept="image/*" capture="environment" id="cam-sign" className="hidden" onChange={(e) => handleCameraCapture(e, setSignaturePhoto)} />
+                    <div onClick={() => document.getElementById('cam-sign').click()} className={`w-full aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-colors ${signaturePhoto ? 'border-amber-500' : 'border-gray-300 hover:border-amber-400 bg-gray-50'}`}>
+                      {signaturePhoto ? <img src={signaturePhoto} className="w-full h-full object-cover" /> : <div className="text-gray-400 flex flex-col items-center"><svg className="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg><span className="text-sm font-bold">Tap to Capture</span></div>}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
           </div>
@@ -794,9 +884,56 @@ export default function JewellerySalesTerminal() {
                   <span className="text-sm font-bold text-gray-400 uppercase tracking-widest">Grand Total</span>
                   <span className="text-lg font-black text-gray-300 tracking-tighter line-through">{formatINR(grandTotal)}</span>
                 </div>
-                <div className="flex justify-between items-end mb-6 border-t border-gray-700 pt-2">
+                <div className="flex justify-between items-end mb-4 border-t border-gray-700 pt-2">
                   <span className="text-sm font-bold text-amber-500 uppercase tracking-widest">Final Due</span>
                   <span className="text-3xl font-black text-amber-500 tracking-tighter">{formatINR(finalDue)}</span>
+                </div>
+
+                {/* CREDIT FINANCING MODULE */}
+                <div className="mb-6 bg-gray-800 border border-gray-700 rounded-xl p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <svg className="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                      <span className="text-xs font-bold text-gray-300 uppercase">Enable Credit Financing</span>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        setCreditEnabled(!creditEnabled);
+                        if (creditEnabled) { setCreditAmountInput(''); setGovtIdPhoto(''); setSignaturePhoto(''); }
+                      }}
+                      className={`w-10 h-5 rounded-full relative transition-colors duration-200 ${creditEnabled ? 'bg-amber-500' : 'bg-gray-600'}`}
+                    >
+                      <div className={`w-3.5 h-3.5 rounded-full bg-white absolute top-0.5 transition-transform duration-200 ${creditEnabled ? 'translate-x-5.5' : 'translate-x-1'}`}></div>
+                    </button>
+                  </div>
+                  
+                  {creditEnabled && (
+                    <div className="mt-3 pt-3 border-t border-gray-700">
+                      <label className="block text-[10px] font-bold text-amber-400 uppercase mb-1">Credit Amount (Max 20% of Due)</label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-2.5 text-gray-500 font-bold text-sm">₹</span>
+                        <input 
+                          type="number" 
+                          className="w-full bg-gray-900 border border-amber-500/50 rounded-lg pl-7 pr-3 py-2 text-white focus:border-amber-500 outline-none text-sm" 
+                          value={creditAmountInput} 
+                          onChange={(e) => {
+                             const val = parseFloat(e.target.value) || 0;
+                             if (val > (finalDue * 0.20)) {
+                               setCreditAmountInput((finalDue * 0.20).toFixed(2));
+                             } else {
+                               setCreditAmountInput(e.target.value);
+                             }
+                          }} 
+                          placeholder="0.00" 
+                        />
+                      </div>
+                      <div className="flex justify-between items-end mt-3 border-t border-gray-700 pt-2">
+                         <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">Final Paid Today</span>
+                         <span className="text-xl font-bold text-green-400">{formatINR(finalDue - (parseFloat(creditAmountInput) || 0))}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <button 

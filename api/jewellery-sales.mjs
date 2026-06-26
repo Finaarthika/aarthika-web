@@ -10,19 +10,28 @@ export default async (req, res) => {
     const {
       invoiceNo,
       date,
-      branchName,
       officerName,
       customerName,
       customerPhone,
-      itemDescription,
-      netWeight,
-      ratePerGram,
+      customerVillage,
+      items,
       metalValue,
-      makingCharges,
+      goldMakingCharges,
+      silverMakingCharges,
       gstAmount,
       discount,
       grandTotal,
-      vaultPdfFile
+      linkedAdvanceAmount,
+      linkedAdvanceDate,
+      creditAmount,
+      finalPaid,
+      faceVectorStr,
+      goldRate,
+      silverRate,
+      totalGoldNetWeight,
+      totalSilverNetWeight,
+      vaultPdfFile,
+      creditPdfFile
     } = req.body || {};
 
     if (!invoiceNo || !customerName) {
@@ -73,6 +82,7 @@ export default async (req, res) => {
     const SHEET_NAME = 'JEWELLERY_SALES';
 
     let vaultPdfLink = '';
+    let creditPdfLink = '';
 
     // Upload Vault PDF to Google Drive
     if (vaultPdfFile) {
@@ -107,35 +117,99 @@ export default async (req, res) => {
       
       if (driveRes.ok) {
         const driveData = await driveRes.json();
-        // Since it's a PDF, we store the direct webViewLink or use the same ID format
         vaultPdfLink = `https://drive.google.com/file/d/${driveData.id}/view`;
-      } else {
-        console.error('Drive PDF upload failed:', await driveRes.text());
       }
     }
 
-    // Append 14 Columns to Google Sheets
+    // Upload Credit Agreement PDF to Google Drive if provided
+    if (creditPdfFile) {
+      const boundary = 'foo_bar_baz_credit_pdf';
+      const metadata = {
+        name: `${invoiceNo}_Credit_Agreement.pdf`,
+        parents: [DRIVE_FOLDER_ID],
+        mimeType: 'application/pdf'
+      };
+      
+      const headerBuffer = Buffer.from(
+        `--${boundary}\r\n` +
+        `Content-Type: application/json; charset=UTF-8\r\n\r\n` +
+        JSON.stringify(metadata) + `\r\n` +
+        `--${boundary}\r\n` +
+        `Content-Type: application/pdf\r\n\r\n`
+      );
+      
+      const pdfBuffer = Buffer.from(creditPdfFile, 'base64');
+      const footerBuffer = Buffer.from(`\r\n--${boundary}--`);
+      
+      const multipartBody = Buffer.concat([headerBuffer, pdfBuffer, footerBuffer]);
+      
+      const driveRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': `multipart/related; boundary=${boundary}`
+        },
+        body: multipartBody
+      });
+      
+      if (driveRes.ok) {
+        const driveData = await driveRes.json();
+        creditPdfLink = `https://drive.google.com/file/d/${driveData.id}/view`;
+      }
+    }
+
+    // Construct 41 Columns for Sheet
+    const itemDescription = (items || []).map(i => `${i.metalType} ${i.category}`).join(', ');
+    const combinedMakingCharges = (parseFloat(goldMakingCharges) || 0) + (parseFloat(silverMakingCharges) || 0);
+
+    const safeStr = (val) => String(val || '').trim();
+    const safeNum = (val) => String(val || '0').trim();
+
+    const rowData = [
+      safeStr(invoiceNo),                           // 1. Invoice No.
+      safeStr(date),                                // 2. Date
+      safeStr(customerName),                        // 3. Customer Name
+      safeStr(customerVillage),                     // 4. Village
+      safeStr(customerPhone),                       // 5. Contact
+      safeStr(itemDescription),                     // 6. Item Description
+      safeNum(metalValue),                          // 7. Metal Value
+      safeNum(combinedMakingCharges),               // 8. Making Charge (Combined)
+      safeNum(gstAmount),                           // 9. GST Amount
+      safeNum(discount),                            // 10. Discount
+      safeNum(linkedAdvanceAmount),                 // 11. Advance Paid
+      safeStr(linkedAdvanceDate),                   // 12. Advance Date
+      safeNum(creditAmount),                        // 13. Credit Due
+      safeStr(creditPdfLink),                       // 14. Credit Agreement PDF Link
+      safeNum(finalPaid),                           // 15. Total Paid
+      safeStr(faceVectorStr),                       // 16. Face Code Vector
+      safeStr(vaultPdfLink),                        // 17. PDF Bill Link
+      safeStr(officerName),                         // 18. Officer Name
+      safeNum(goldRate),                            // 19. Gold Rate/g
+      safeNum(silverRate),                          // 20. Silver Rate/g
+      safeNum(totalGoldNetWeight),                  // 21. Gold Net Weight
+      safeNum(totalSilverNetWeight),                // 22. Silver Net Weight
+    ];
+
+    // Items 1 to 6 (Columns 23 to 40)
+    for (let i = 0; i < 6; i++) {
+      if (items && items[i]) {
+        rowData.push(
+          safeStr(`${items[i].metalType} ${items[i].category}`), // Name
+          safeNum(items[i].netWeight),                           // Wt
+          safeStr(items[i].purity)                               // Purity
+        );
+      } else {
+        rowData.push('', '', '');
+      }
+    }
+
+    // 41. Grand Total
+    rowData.push(safeNum(grandTotal));
+
     const appendUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/'${SHEET_NAME}'!A:A:append?valueInputOption=USER_ENTERED`;
     
     const appendData = {
-      values: [
-        [
-          invoiceNo,
-          date,
-          String(officerName || 'System'),
-          String(customerName || '').trim(),
-          String(customerPhone || '').trim(),
-          String(itemDescription || '').trim(),
-          String(netWeight || '0').trim(),
-          String(ratePerGram || '0').trim(),
-          String(metalValue || '0').trim(),
-          String(makingCharges || '0').trim(),
-          String(gstAmount || '0').trim(),
-          String(discount || '0').trim(),
-          String(grandTotal || '0').trim(),
-          vaultPdfLink
-        ]
-      ]
+      values: [rowData]
     };
 
     const sheetResponse = await fetch(appendUrl, {

@@ -327,9 +327,15 @@ export default function InvoicePrint() {
                       <span className="font-extrabold text-[11px] text-gray-700">-{formatINR(data.linkedAdvanceAmount)}</span>
                     </div>
                   )}
+                  {data.creditAmount > 0 && (
+                    <div className="flex justify-between items-center pt-0.5 mt-0.5 border-t border-dashed border-gray-300">
+                      <span className="font-nirand font-medium text-[10px] tracking-wide text-amber-600">Credit Financing</span>
+                      <span className="font-extrabold text-[11px] text-amber-600">-{formatINR(data.creditAmount)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between items-center pt-1 mt-1 border-t-2 border-[#1B1464]">
-                    <span className="font-nirand font-bold text-[14px] tracking-wide text-[#1B1464] uppercase">FINAL DUE</span>
-                    <span className="font-extrabold text-[15px] text-[#1B1464]">{formatINR(data.finalDue !== undefined ? data.finalDue : data.grandTotal)}</span>
+                    <span className="font-nirand font-bold text-[14px] tracking-wide text-[#1B1464] uppercase">{data.creditAmount > 0 ? 'FINAL PAID' : 'FINAL DUE'}</span>
+                    <span className="font-extrabold text-[15px] text-[#1B1464]">{formatINR(data.finalPaid !== undefined ? data.finalPaid : (data.finalDue !== undefined ? data.finalDue : data.grandTotal))}</span>
                   </div>
                 </div>
 
@@ -342,7 +348,7 @@ export default function InvoicePrint() {
                   <div className="h-4 w-px bg-gray-300"></div>
                   <div className="text-[12px] flex items-center gap-2 text-[#1B1464]">
                     <span className="font-bold uppercase tracking-wider">Final Paid:</span> 
-                    <span className="font-extrabold">{formatINR(data.finalDue !== undefined ? data.finalDue : data.grandTotal)} /-</span>
+                    <span className="font-extrabold">{formatINR(data.finalPaid !== undefined ? data.finalPaid : (data.finalDue !== undefined ? data.finalDue : data.grandTotal))} /-</span>
                   </div>
                 </div>
               </div>
