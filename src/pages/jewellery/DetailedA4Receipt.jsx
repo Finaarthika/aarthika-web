@@ -68,7 +68,7 @@ export default function DetailedA4Receipt({ data, id = "detailed-a4-receipt" }) 
               </div>
             </div>
 
-            <div className="flex justify-between items-start mb-2 shrink-0 mt-4">
+            <div className="flex justify-between items-start mb-1 shrink-0 mt-1">
               <div>
                 <h2 className="text-[28px] mb-2 font-normal font-nirand leading-none tracking-wide" style={{ color: '#1B1464' }}>INVOICE</h2>
                 <div className="grid grid-cols-[100px_1fr] gap-x-2 gap-y-1.5 text-[12px] font-bold text-gray-700">
@@ -87,8 +87,8 @@ export default function DetailedA4Receipt({ data, id = "detailed-a4-receipt" }) 
             </div>
 
             {/* Table */}
-            <div className="w-full mb-2 border border-gray-200 flex flex-col flex-grow min-h-0">
-              <div className="grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] bg-[#F8F9FA] py-1 px-3 border-b border-gray-200">
+            <div className="w-full mb-1 border border-gray-200 flex flex-col flex-grow min-h-0 overflow-hidden">
+              <div className="grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] bg-[#F8F9FA] py-1 px-3 border-b border-gray-200 shrink-0">
                 <div className="text-[10px] font-bold text-gray-600 uppercase font-nirand">Descriptions</div>
                 <div className="text-[10px] font-bold text-gray-600 uppercase font-nirand text-center">Gross Weight</div>
                 <div className="text-[10px] font-bold text-gray-600 uppercase font-nirand text-center">Net Weight</div>
@@ -97,15 +97,15 @@ export default function DetailedA4Receipt({ data, id = "detailed-a4-receipt" }) 
               </div>
               <div className="flex flex-col flex-grow bg-white pb-2">
                 {silverItems.length > 0 && (
-                  <div className={isCrowded ? "mb-1" : "mb-2"}>
-                    <div className={`text-[11px] font-bold text-[#1B1464] uppercase px-3 ${isCrowded ? 'pt-1 pb-0' : 'pt-2 pb-0.5'} font-nirand tracking-widest`}>SILVER</div>
+                  <div className="mb-0">
+                    <div className={`text-[11px] font-bold text-[#1B1464] uppercase px-3 ${isCrowded ? 'pt-0.5 pb-0' : 'pt-2 pb-0.5'} font-nirand tracking-widest`}>SILVER</div>
                     {silverItems.map((item, idx) => {
                       const netW = parseFloat(item.netWeight) || 0;
                       const rate = parseFloat(item.rate) || 0;
                       const purityMult = item.purity ? (item.purity.includes('%') ? parseFloat(item.purity)/100 : (item.purity.includes('K') ? parseFloat(item.purity)/24 : 1)) : 1;
                       const effRate = rate * purityMult;
                       return (
-                        <div key={`s-${idx}`} className={`grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] ${isCrowded ? 'py-[1px]' : 'py-[5px]'} px-3 items-center`}>
+                        <div key={`s-${idx}`} className={`grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] ${isCrowded ? 'py-[0px]' : 'py-[5px]'} px-3 items-center`}>
                           <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 uppercase`}>{item.category} ({item.purity})</div>
                           <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 text-center`}>{item.grossWeight || item.netWeight} g</div>
                           <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 text-center`}>{item.netWeight} g</div>
@@ -117,15 +117,15 @@ export default function DetailedA4Receipt({ data, id = "detailed-a4-receipt" }) 
                   </div>
                 )}
                 {goldItems.length > 0 && (
-                  <div className={isCrowded ? "mb-0" : "mb-1"}>
-                    <div className={`text-[11px] font-bold text-[#1B1464] uppercase px-3 ${isCrowded ? 'pt-1 pb-0' : 'pt-2 pb-0.5'} font-nirand tracking-widest`}>GOLD</div>
+                  <div className="mb-0">
+                    <div className={`text-[11px] font-bold text-[#1B1464] uppercase px-3 ${isCrowded ? 'pt-0.5 pb-0' : 'pt-2 pb-0.5'} font-nirand tracking-widest`}>GOLD</div>
                     {goldItems.map((item, idx) => {
                       const netW = parseFloat(item.netWeight) || 0;
                       const rate = parseFloat(item.rate) || 0;
                       const purityMult = item.purity ? (item.purity.includes('%') ? parseFloat(item.purity)/100 : (item.purity.includes('K') ? parseFloat(item.purity)/24 : 1)) : 1;
                       const effRate = rate * purityMult;
                       return (
-                        <div key={`g-${idx}`} className={`grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] ${isCrowded ? 'py-[1px]' : 'py-[5px]'} px-3 items-center`}>
+                        <div key={`g-${idx}`} className={`grid grid-cols-[3fr_1.2fr_1.2fr_1.2fr_1.5fr] ${isCrowded ? 'py-[0px]' : 'py-[5px]'} px-3 items-center`}>
                           <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 uppercase`}>{item.category} ({item.purity})</div>
                           <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 text-center`}>{item.grossWeight || item.netWeight} g</div>
                           <div className={`${isCrowded ? 'text-[9px]' : 'text-[10.5px]'} font-bold text-gray-800 text-center`}>{item.netWeight} g</div>
@@ -140,8 +140,8 @@ export default function DetailedA4Receipt({ data, id = "detailed-a4-receipt" }) 
             </div>
 
             <div className="mt-0 pb-0 shrink-0">
-              <div className="bg-[#F8F9FA] px-4 py-1.5 rounded-xl border border-gray-200 shadow-sm">
-                <div className="flex justify-between py-1 text-[12px] font-bold text-black border-b border-gray-200 pb-1 mb-1">
+              <div className="bg-[#F8F9FA] px-4 py-1 rounded-xl border border-gray-200 shadow-sm">
+                <div className="flex justify-between py-0.5 text-[11px] font-bold text-black border-b border-gray-200 pb-0.5 mb-1">
                   <span className="font-nirand uppercase tracking-wide text-gray-500">TOTAL AMOUNT</span>
                   <span className="font-extrabold">{formatINR(data.metalValue)}</span>
                 </div>
@@ -171,9 +171,9 @@ export default function DetailedA4Receipt({ data, id = "detailed-a4-receipt" }) 
                     </div>
                   )}
                 </div>
-                <div className="flex justify-between items-center pt-1.5 mt-1.5 border-t border-gray-300">
-                  <span className="font-nirand font-bold text-[14px] tracking-wide text-gray-500 uppercase">SUB TOTAL</span>
-                  <span className="font-extrabold text-[14px] text-gray-600">{formatINR(data.grandTotal)}</span>
+                <div className="flex justify-between items-center pt-1 mt-1 border-t border-gray-300">
+                  <span className="font-nirand font-bold text-[13px] tracking-wide text-gray-500 uppercase">SUB TOTAL</span>
+                  <span className="font-extrabold text-[13px] text-gray-600">{formatINR(data.grandTotal)}</span>
                 </div>
                 {data.linkedAdvanceAmount > 0 && (
                   <div className="flex justify-between items-center pt-1 mt-1 border-t border-dashed border-gray-300">
@@ -188,12 +188,12 @@ export default function DetailedA4Receipt({ data, id = "detailed-a4-receipt" }) 
                   </div>
                 )}
                 <div className="flex justify-between items-center pt-1.5 mt-1.5 border-t-2 border-[#1B1464]">
-                  <span className="font-nirand font-bold text-[15px] tracking-wide text-[#1B1464] uppercase">{data.creditAmount > 0 ? 'FINAL PAID' : 'FINAL DUE'}</span>
-                  <span className="font-extrabold text-[16px] text-[#1B1464]">{formatINR(data.finalPaid !== undefined ? data.finalPaid : (data.finalDue !== undefined ? data.finalDue : data.grandTotal))}</span>
+                  <span className="font-nirand font-bold text-[14px] tracking-wide text-[#1B1464] uppercase">{data.creditAmount > 0 ? 'FINAL PAID' : 'FINAL DUE'}</span>
+                  <span className="font-extrabold text-[15px] text-[#1B1464]">{formatINR(data.finalPaid !== undefined ? data.finalPaid : (data.finalDue !== undefined ? data.finalDue : data.grandTotal))}</span>
                 </div>
               </div>
 
-              <div className="border border-gray-200 rounded-lg py-1.5 px-5 bg-white flex justify-between items-center mt-1.5">
+              <div className="border border-gray-200 rounded-lg py-1 px-5 bg-white flex justify-between items-center mt-1">
                 <div className="text-[11px] flex items-center gap-2">
                   <span className="text-gray-500 font-bold uppercase tracking-wider">Gross Total:</span> 
                   <span className="font-extrabold text-gray-500 line-through">{formatINR(data.grandTotal)} /-</span>
