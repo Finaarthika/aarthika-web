@@ -111,14 +111,13 @@ export default function InvoicePrint() {
             }
             
             .print-container {
-              position: absolute !important;
-              left: 0 !important;
-              top: 0 !important;
-              margin: 0 !important;
+              position: relative !important;
+              margin: 0 auto !important;
               padding: 0 !important;
               box-shadow: none !important;
               width: 100% !important;
               height: 200mm !important;
+              page-break-after: always !important;
               overflow: visible !important;
             }
             
@@ -372,6 +371,78 @@ export default function InvoicePrint() {
           </div>
         </div>
       </div>
+
+      {/* PAGE 2: CREDIT AGREEMENT (Only shown if credit is enabled) */}
+      {data.creditAmount > 0 && (
+        <div className={`print-container w-[520px] h-[720px] bg-white pt-6 px-8 relative flex flex-col shadow-2xl print:shadow-none mx-auto print:mx-0 overflow-hidden box-border ${isMobileEngine ? 'mobile-print-override' : ''}`}>
+          
+          <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none z-0 print:hidden">
+            <img src={watermarkImg} alt="Watermark" className="w-[80%] object-contain grayscale" />
+          </div>
+
+          <div className="relative z-10 w-full flex flex-col h-full">
+            <h2 className="text-xl font-black font-redhat text-[#1B1464] tracking-tight uppercase mb-1 text-center">Credit Financing Agreement</h2>
+            <p className="text-[10px] font-bold tracking-widest text-gray-500 uppercase text-center mb-4 pb-2 border-b-2 border-gray-200">Invoice: {data.invoiceNo} • {data.date}</p>
+
+            <h3 className="text-xs font-extrabold tracking-widest text-[#1B1464] uppercase mb-2">Identity & Biometric Verification</h3>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="flex flex-col gap-2 text-[10px]">
+                <div className="flex bg-gray-50 p-1.5 rounded border border-gray-200"><strong className="w-20 text-gray-500">Name:</strong> <span>{data.customerName}</span></div>
+                <div className="flex bg-gray-50 p-1.5 rounded border border-gray-200"><strong className="w-20 text-gray-500">Phone:</strong> <span>+91-{data.customerPhone}</span></div>
+                <div className="flex bg-gray-50 p-1.5 rounded border border-gray-200"><strong className="w-20 text-gray-500">Vector:</strong> <span className="text-[7px] font-mono leading-tight break-all text-gray-600">{data.faceVectorStr ? (data.faceVectorStr.substring(0, 50) + '... [Secured]') : 'Not Extracted'}</span></div>
+              </div>
+              <div className="flex gap-2">
+                <div className="w-1/2 flex flex-col items-center">
+                  <div className="w-full aspect-square border border-gray-300 p-0.5 rounded shadow-sm bg-white mb-1">
+                    {data.customerPhoto ? <img src={data.customerPhoto} className="w-full h-full object-cover rounded-sm" /> : <div className="w-full h-full bg-gray-100 flex items-center justify-center text-[8px] text-gray-400">NO PHOTO</div>}
+                  </div>
+                  <span className="text-[8px] font-bold text-gray-500 uppercase">Live Photo</span>
+                </div>
+                <div className="w-1/2 flex flex-col items-center">
+                  <div className="w-full aspect-square border border-gray-300 p-0.5 rounded shadow-sm bg-white mb-1">
+                    {data.govtIdPhoto ? <img src={data.govtIdPhoto} className="w-full h-full object-cover rounded-sm" /> : <div className="w-full h-full bg-gray-100 flex items-center justify-center text-[8px] text-gray-400">NO ID</div>}
+                  </div>
+                  <span className="text-[8px] font-bold text-gray-500 uppercase">Govt ID</span>
+                </div>
+              </div>
+            </div>
+
+            <h3 className="text-xs font-extrabold tracking-widest text-[#1B1464] uppercase mb-2">Terms & Conditions</h3>
+            <div className="text-[9px] text-gray-700 leading-relaxed space-y-1.5 mb-2 text-justify border border-gray-200 bg-gray-50 p-3 rounded-lg">
+              <p><strong>1. ACKNOWLEDGMENT:</strong> The Customer acknowledges taking possession of the specified jewellery on {data.date} with a Credit Financed amount of <strong>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(data.creditAmount)}</strong>.</p>
+              <p><strong>2. TIMELINE & OBLIGATION:</strong> The Customer agrees to repay the full Credit Financed amount within <strong>30 days</strong>. Failure to repay will result in standard legal recovery.</p>
+              <p><strong>3. INTEREST PENALTY:</strong> If unpaid within the timeline, a penalty interest rate of <strong>2% per month</strong> will be levied on the outstanding balance.</p>
+              <p><strong>4. BIOMETRIC CONSENT:</strong> The Customer consents to the secure extraction (512D Vector mapping) and storage of their live photograph, Govt ID, and Signature for anti-fraud purposes.</p>
+              <p><strong>5. OWNERSHIP:</strong> Legal title remains with Aarthika / Mishra Jeweler's until the outstanding credit balance is fully settled.</p>
+            </div>
+
+            <div className="flex-grow"></div>
+
+            <div className="text-[10px] font-bold text-black border-t-2 border-gray-800 pt-2 mb-8 text-center px-4">
+              I acknowledge that these terms were fully read, explained to me in my vernacular language, and I accept all conditions voluntarily.
+            </div>
+
+            <div className="flex justify-between items-end mt-2">
+              <div className="flex flex-col items-center w-32">
+                <div className="h-12 w-full border-b border-gray-400 flex items-center justify-center mb-1"></div>
+                <span className="text-[9px] font-bold text-gray-800 uppercase tracking-widest">Authorized</span>
+              </div>
+              
+              <div className="flex flex-col items-center w-32">
+                <div className="h-12 w-full border-b border-gray-400 flex items-end justify-center mb-1">
+                   {data.signaturePhoto ? (
+                     <img src={data.signaturePhoto} alt="Signature" className="max-h-full max-w-full object-contain mix-blend-multiply" />
+                   ) : (
+                     <span className="text-gray-300 text-[8px] italic">Not Signed</span>
+                   )}
+                </div>
+                <span className="text-[9px] font-bold text-gray-800 uppercase tracking-widest">Customer Sign</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }
