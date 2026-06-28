@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import * as faceapi from 'face-api.js';
 import logoIcon from '../../assets/4.png';
 
 const OfficerHeader = ({ officerName, onLogout }) => (
@@ -118,25 +117,115 @@ export default function OldJewelleryTerminal() {
     setOfficerAuth({ loggedIn: false, userId: '', password: '', staffName: '' });
   };
 
-  const [liveRates, setLiveRates] = useState(null);
-  const [customers, setCustomers] = useState([]);
+  // Face Scan Models state
   const [modelsLoaded, setModelsLoaded] = useState(false);
+  const [modelLoadingStatus, setModelLoadingStatus] = useState("INITIALIZING SECURE ENGINE...");
+  const [customFaceNet, setCustomFaceNet] = useState(null);
+
+  const getCachedModelUrl = async (setStatus) => {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('AarthikaBiometricDB', 1);
+      
+      request.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains('models')) {
+          db.createObjectStore('models');
+        }
+      };
+      
+      request.onsuccess = async (e) => {
+        const db = e.target.result;
+        const transaction = db.transaction(['models'], 'readonly');
+        const store = transaction.objectStore('models');
+        const getReq = store.get('facenet_512');
+        
+        getReq.onsuccess = async () => {
+          if (getReq.result) {
+            setStatus("LOADING BIOMETRIC MODEL FROM INSTANT LOCAL CACHE...");
+            const blob = new Blob([getReq.result], { type: 'application/octet-stream' });
+            resolve(URL.createObjectURL(blob));
+          } else {
+            setStatus("DOWNLOADING 47MB BIOMETRIC MODEL... (MAY TAKE 10-30 SECONDS)");
+            try {
+              const response = await fetch('/facenet_512.tflite');
+              if (!response.ok) throw new Error("Failed to fetch model");
+              const buffer = await response.arrayBuffer();
+              
+              const writeTx = db.transaction(['models'], 'readwrite');
+              const writeStore = writeTx.objectStore('models');
+              writeStore.put(buffer, 'facenet_512');
+              
+              const blob = new Blob([buffer], { type: 'application/octet-stream' });
+              resolve(URL.createObjectURL(blob));
+            } catch (err) {
+              reject(err);
+            }
+          }
+        };
+        getReq.onerror = () => reject(getReq.error);
+      };
+      request.onerror = () => reject(request.error);
+    });
+  };
 
   useEffect(() => {
-    const loadModels = async () => {
+    const loadScript = async () => {
+      if (!window.faceapi) {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js';
+        script.async = true;
+        document.body.appendChild(script);
+        await new Promise((resolve) => { script.onload = resolve; });
+      }
       try {
+        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
         await Promise.all([
-          faceapi.nets.tinyFaceDetector.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights'),
-          faceapi.nets.faceLandmark68Net.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights'),
-          faceapi.nets.faceRecognitionNet.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights')
+          window.faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+          window.faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL)
         ]);
+      } catch (err) {
+        console.error("Failed to load face-api models", err);
+      }
+      
+      try {
+        setModelLoadingStatus("DOWNLOADING TENSORFLOW...");
+        if (!window.tf) {
+          const tfScript = document.createElement('script');
+          tfScript.src = 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js';
+          document.body.appendChild(tfScript);
+          await new Promise((resolve, reject) => { 
+            tfScript.onload = resolve; 
+            tfScript.onerror = () => reject(new Error("Failed to load tf.min.js"));
+          });
+        }
+        
+        setModelLoadingStatus("DOWNLOADING TFLITE ENGINE...");
+        if (!window.tflite) {
+          const tfliteScript = document.createElement('script');
+          tfliteScript.src = 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/dist/tf-tflite.min.js';
+          document.body.appendChild(tfliteScript);
+          await new Promise((resolve, reject) => { 
+            tfliteScript.onload = resolve; 
+            tfliteScript.onerror = () => reject(new Error("Failed to load tf-tflite.min.js"));
+          });
+        }
+        
+        const modelUrl = await getCachedModelUrl(setModelLoadingStatus);
+        window.tflite.setWasmPath('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/wasm/');
+        const tfliteModel = await window.tflite.loadTFLiteModel(modelUrl);
+        setCustomFaceNet(tfliteModel);
+        setModelLoadingStatus("MODELS LOADED SUCCESSFULLY");
         setModelsLoaded(true);
-      } catch (e) {
-        console.error("Face API models load error", e);
+      } catch (err) {
+        console.error("Failed to load custom TFLite FaceNet 512", err);
+        setModelLoadingStatus("ERROR: " + err.message);
       }
     };
-    loadModels();
+    loadScript();
   }, []);
+
+  const [liveRates, setLiveRates] = useState(null);
+  const [customers, setCustomers] = useState([]);
 
   useEffect(() => {
     if (officerAuth.loggedIn) {
@@ -171,29 +260,27 @@ export default function OldJewelleryTerminal() {
   const [isFaceScanning, setIsFaceScanning] = useState(false);
 
   // Manual Form State
-  const [saleData, setSaleData] = useState({
-    customerName: '',
-    customerPhone: '',
-    customerVillage: '',
-    itemsDescription: '',
-    grossWeight: '',
-    meltingPurity: '',
-    finalValue: ''
+  const [manualCustomer, setManualCustomer] = useState({
+    name: '', phone: '', village: ''
   });
+  
+  const [manualItems, setManualItems] = useState([
+    { name: '', weight: '', purity: '', metalType: 'Gold' }
+  ]);
+  const [finalValueInput, setFinalValueInput] = useState('');
 
   // Common Media State
   const [customerPhoto, setCustomerPhoto] = useState('');
   const [jewelleryPhoto, setJewelleryPhoto] = useState('');
   const [faceVectorStr, setFaceVectorStr] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const videoRef = useRef(null);
 
-  // Face Scan Logic
+  // Face Scan Logic with 512D
   const handleFaceScanSearch = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (!modelsLoaded) {
+    if (!modelsLoaded || !window.faceapi || !customFaceNet) {
       return showToast("AI Models not loaded yet. Please wait.", "error");
     }
 
@@ -202,51 +289,101 @@ export default function OldJewelleryTerminal() {
     setSearchResults([]);
 
     try {
-      const img = await faceapi.bufferToImage(file);
-      const detection = await faceapi.detectSingleFace(img, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-
-      if (!detection) {
-        setSearchQuery('');
-        setIsFaceScanning(false);
-        return showToast("No face detected in photo. Try again.", "error");
-      }
-
-      const queryVector = Array.from(detection.descriptor);
-      
-      let bestMatch = null;
-      let lowestDistance = 1000;
-
-      customers.forEach(cust => {
-        if (!cust.faceVector) return;
-        try {
-          const custVector = JSON.parse(cust.faceVector);
-          const distance = faceapi.euclideanDistance(new Float32Array(queryVector), new Float32Array(custVector));
-          if (distance < 0.5 && distance < lowestDistance) {
-            lowestDistance = distance;
-            bestMatch = cust;
-          }
-        } catch(e) {}
-      });
-
-      if (bestMatch) {
-        setSearchQuery('');
-        handleSelectCustomer(bestMatch);
-        showToast("Customer found via Face ID!", "success");
-        // Also save this photo as the customer photo for the transaction
-        const reader = new FileReader();
-        reader.onloadend = () => setCustomerPhoto(reader.result);
-        reader.readAsDataURL(file);
-        setFaceVectorStr(JSON.stringify(queryVector));
+      const bmp = await window.createImageBitmap(file);
+      const MAX_WIDTH = 600;
+      const MAX_HEIGHT = 600;
+      let width = bmp.width;
+      let height = bmp.height;
+      if (width > height) {
+        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
       } else {
-        setSearchQuery('');
-        showToast("No matching customer found.", "error");
+        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
       }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(bmp, 0, 0, width, height);
+      
+      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+      
+      const normalizedImg = new Image();
+      normalizedImg.onload = async () => {
+        const options = new window.faceapi.TinyFaceDetectorOptions({ inputSize: 512, scoreThreshold: 0.2 });
+        try {
+          const detection = await window.faceapi.detectSingleFace(normalizedImg, options);
+          if (!detection) {
+            setSearchQuery('');
+            setIsFaceScanning(false);
+            return showToast("No face detected in photo. Try again.", "error");
+          }
+          
+          const box = detection.box;
+          const faceCanvas = document.createElement('canvas');
+          faceCanvas.width = 160;
+          faceCanvas.height = 160;
+          const faceCtx = faceCanvas.getContext('2d');
+          faceCtx.drawImage(
+            normalizedImg,
+            box.x, box.y, box.width, box.height,
+            0, 0, 160, 160
+          );
+          
+          let tensor = window.tf.browser.fromPixels(faceCanvas);
+          tensor = window.tf.cast(tensor, 'float32').sub(127.5).div(127.5).expandDims(0);
+          const output = customFaceNet.predict(tensor);
+          const rawVectorArray = Array.from(output.dataSync());
+          tensor.dispose();
+          output.dispose();
+          
+          let sumSq = 0;
+          for (let i = 0; i < rawVectorArray.length; i++) sumSq += rawVectorArray[i] * rawVectorArray[i];
+          const magnitude = Math.sqrt(sumSq) || 1;
+          const vectorArray = rawVectorArray.map(val => val / magnitude);
+          const liveDescriptor = new Float32Array(vectorArray);
+          
+          let bestMatch = null;
+          let lowestDistance = 1000;
+
+          customers.forEach(cust => {
+            if (cust.faceVector && cust.faceVector.includes(',')) {
+              const storedArray = cust.faceVector.split(',').map(Number);
+              if (storedArray.length === 512) {
+                const storedDescriptor = new Float32Array(storedArray);
+                const dist = window.faceapi.euclideanDistance(liveDescriptor, storedDescriptor);
+                if (dist < 1.0 && dist < lowestDistance) { 
+                  lowestDistance = dist;
+                  bestMatch = cust;
+                }
+              }
+            }
+          });
+
+          if (bestMatch) {
+            setSearchQuery('');
+            handleSelectCustomer(bestMatch);
+            showToast("Customer found via Face ID!", "success");
+            setCustomerPhoto(compressedBase64);
+            setFaceVectorStr(JSON.stringify(vectorArray));
+          } else {
+            setSearchQuery('');
+            showToast("No matching customer found.", "error");
+          }
+        } catch(err) {
+          console.error(err);
+          setSearchQuery('');
+          showToast("Face scan failed.", "error");
+        }
+        setIsFaceScanning(false);
+      };
+      normalizedImg.src = compressedBase64;
+
     } catch(err) {
       console.error(err);
       setSearchQuery('');
       showToast("Face scan failed.", "error");
+      setIsFaceScanning(false);
     }
-    setIsFaceScanning(false);
   };
 
   const handleTextSearch = (e) => {
@@ -290,61 +427,101 @@ export default function OldJewelleryTerminal() {
     });
   };
 
-  // Camera Capture for manual entry and generic photos
-  const handleCameraCapture = async (e, setter, isCustomerPhoto = false) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        setter(reader.result);
-        if (isCustomerPhoto && modelsLoaded) {
-          try {
-            const img = await faceapi.bufferToImage(file);
-            const detection = await faceapi.detectSingleFace(img, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-            if (detection) {
-              setFaceVectorStr(JSON.stringify(Array.from(detection.descriptor)));
-              showToast("Face logged securely.", "success");
-            }
-          } catch(e) {}
-        }
-      };
-      reader.readAsDataURL(file);
+  const handleAddManualItem = () => {
+    if (manualItems.length < 6) {
+      setManualItems([...manualItems, { name: '', weight: '', purity: '', metalType: 'Gold' }]);
+    } else {
+      showToast('Maximum 6 items allowed.', 'error');
     }
   };
 
-  // Compute calculated values based on mode
-  let calculatedDescription = saleData.itemsDescription;
-  let calculatedWeight = Number(saleData.grossWeight) || 0;
-  let calculatedPurity = Number(saleData.meltingPurity) || 0;
+  const handleRemoveManualItem = (index) => {
+    setManualItems(manualItems.filter((_, i) => i !== index));
+  };
+
+  const updateManualItem = (index, field, value) => {
+    const newItems = [...manualItems];
+    newItems[index][field] = value;
+    setManualItems(newItems);
+  };
+
+  // Generic Camera Capture for Record Keeping (No Face Vector generated here)
+  const handleGenericPhotoCapture = async (e, setter) => {
+    const file = e.target.files[0];
+    if (file) {
+      try {
+        const bmp = await window.createImageBitmap(file);
+        const canvas = document.createElement('canvas');
+        let width = bmp.width;
+        let height = bmp.height;
+        if (width > height) {
+          if (width > 800) { height *= 800 / width; width = 800; }
+        } else {
+          if (height > 800) { width *= 800 / height; height = 800; }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(bmp, 0, 0, width, height);
+        setter(canvas.toDataURL('image/jpeg', 0.7));
+      } catch(err) {
+        const reader = new FileReader();
+        reader.onloadend = () => setter(reader.result);
+        reader.readAsDataURL(file);
+      }
+    }
+  };
+
+  // Compute values
+  let calculatedDescription = '';
+  let calculatedWeight = 0;
+  let calculatedPurity = 0;
+  let suggestedValuation = 0;
   
   if (activeTab === 'search' && selectedCustomer) {
     calculatedDescription = selectedItems.map(i => selectedCustomer.items[i].name).join(', ');
     calculatedWeight = selectedItems.reduce((acc, i) => acc + (Number(selectedCustomer.items[i].weight) || 0), 0);
-    // Average purity for simplicity if multiple items, otherwise exact
+    
+    // Suggestion logic for Search items
+    selectedItems.forEach(i => {
+      const w = Number(selectedCustomer.items[i].weight) || 0;
+      const p = Number(selectedCustomer.items[i].purity) || 0;
+      const name = selectedCustomer.items[i].name.toLowerCase();
+      const isSilv = name.includes('silver');
+      const rate = isSilv ? (liveRates?.silverScrapRate || 0) : (liveRates?.goldScrapRate || 0);
+      suggestedValuation += (w * rate * (p / 100));
+    });
+
     if (selectedItems.length > 0) {
       calculatedPurity = selectedItems.reduce((acc, i) => acc + (Number(selectedCustomer.items[i].purity) || 0), 0) / selectedItems.length;
     }
+  } else if (activeTab === 'manual') {
+    calculatedDescription = manualItems.map(i => `${i.metalType} ${i.name}`).join(', ');
+    calculatedWeight = manualItems.reduce((acc, i) => acc + (Number(i.weight) || 0), 0);
+    
+    // Suggestion logic for Manual items
+    manualItems.forEach(i => {
+      const w = Number(i.weight) || 0;
+      const p = Number(i.purity) || 0;
+      const rate = i.metalType === 'Silver' ? (liveRates?.silverScrapRate || 0) : (liveRates?.goldScrapRate || 0);
+      suggestedValuation += (w * rate * (p / 100));
+    });
+
+    if (manualItems.length > 0) {
+      calculatedPurity = manualItems.reduce((acc, i) => acc + (Number(i.purity) || 0), 0) / manualItems.length;
+    }
   }
 
-  // Calculate Suggested Valuation
-  // Assuming gold for now, if name contains silver we could use silver rate. 
-  // For safety, we check if description contains "Silver"
-  const isSilver = calculatedDescription.toLowerCase().includes('silver');
-  const scrapRate = isSilver ? (liveRates?.silverScrapRate || 0) : (liveRates?.goldScrapRate || 0);
-  
-  // Suggested Valuation = (Weight) * (Scrap Rate) * (Purity/100)
-  const suggestedValuation = (calculatedWeight * scrapRate * (calculatedPurity / 100));
-
   // Determine final value (use manual input if provided, otherwise suggested)
-  const finalAgreedValue = Number(saleData.finalValue) || Math.round(suggestedValuation) || 0;
+  const finalAgreedValue = Number(finalValueInput) || Math.round(suggestedValuation) || 0;
 
   const handleSubmit = async () => {
     if (activeTab === 'search') {
       if (!selectedCustomer) return showToast('Please select a customer first.', 'error');
       if (selectedItems.length === 0) return showToast('Please select at least one item to purchase.', 'error');
     } else {
-      if (!saleData.customerName) return showToast('Customer Name is required', 'error');
-      if (!saleData.grossWeight) return showToast('Gross Weight is required', 'error');
+      if (!manualCustomer.name) return showToast('Customer Name is required', 'error');
+      if (manualItems.length === 0 || !manualItems[0].name) return showToast('At least one item is required', 'error');
     }
 
     if (!customerPhoto || !jewelleryPhoto) {
@@ -359,14 +536,14 @@ export default function OldJewelleryTerminal() {
         invoiceNo,
         date: new Date().toLocaleDateString('en-IN'),
         officerName: officerAuth.staffName,
-        customerName: activeTab === 'search' ? selectedCustomer.customerName : saleData.customerName,
-        customerPhone: activeTab === 'search' ? selectedCustomer.phone : saleData.customerPhone,
-        customerVillage: activeTab === 'search' ? selectedCustomer.village : saleData.customerVillage,
+        customerName: activeTab === 'search' ? selectedCustomer.customerName : manualCustomer.name,
+        customerPhone: activeTab === 'search' ? selectedCustomer.phone : manualCustomer.phone,
+        customerVillage: activeTab === 'search' ? selectedCustomer.village : manualCustomer.village,
         itemsDescription: calculatedDescription,
         grossWeight: calculatedWeight,
         meltingPurity: calculatedPurity,
         finalValue: finalAgreedValue,
-        faceVectorStr: faceVectorStr,
+        faceVectorStr: activeTab === 'search' ? faceVectorStr : '', // Only send face vector if we extracted it during search
         customerPhoto: customerPhoto.split(',')[1],
         jewelleryPhoto: jewelleryPhoto.split(',')[1]
       };
@@ -384,11 +561,13 @@ export default function OldJewelleryTerminal() {
         // Save for printing
         localStorage.setItem('aarthika_old_invoice', JSON.stringify({
           ...payload,
-          customerPhoto: customerPhoto // keep full data url for print preview if needed
+          customerPhoto: customerPhoto // keep full data url for print preview
         }));
 
         // Reset
-        setSaleData({ customerName: '', customerPhone: '', customerVillage: '', itemsDescription: '', grossWeight: '', meltingPurity: '', finalValue: '' });
+        setManualCustomer({ name: '', phone: '', village: '' });
+        setManualItems([{ name: '', weight: '', purity: '', metalType: 'Gold' }]);
+        setFinalValueInput('');
         setCustomerPhoto('');
         setJewelleryPhoto('');
         setFaceVectorStr('');
@@ -569,44 +748,85 @@ export default function OldJewelleryTerminal() {
           )}
 
           {activeTab === 'manual' && (
-            <div className="bg-[#0D0D14] border border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl">
-               <h3 className="text-sm font-black text-rose-500 tracking-widest uppercase mb-6 flex items-center gap-2">
-                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                 New Customer Details
-               </h3>
-               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                 <div>
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Full Name</label>
-                    <input type="text" value={saleData.customerName} onChange={e => setSaleData({...saleData, customerName: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-500 transition-colors font-medium" />
-                 </div>
-                 <div>
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Phone Number</label>
-                    <input type="text" value={saleData.customerPhone} onChange={e => setSaleData({...saleData, customerPhone: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-500 transition-colors font-medium" />
-                 </div>
-                 <div className="sm:col-span-2">
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Village / City</label>
-                    <input type="text" value={saleData.customerVillage} onChange={e => setSaleData({...saleData, customerVillage: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-500 transition-colors font-medium" />
+            <div className="bg-[#0D0D14] border border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl space-y-8">
+               
+               {/* Customer Details Section */}
+               <div>
+                 <h3 className="text-sm font-black text-rose-500 tracking-widest uppercase mb-4 flex items-center gap-2">
+                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                   New Customer Details
+                 </h3>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                   <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Full Name</label>
+                      <input type="text" value={manualCustomer.name} onChange={e => setManualCustomer({...manualCustomer, name: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-500 transition-colors font-medium" />
+                   </div>
+                   <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Phone Number</label>
+                      <input type="text" value={manualCustomer.phone} onChange={e => setManualCustomer({...manualCustomer, phone: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-500 transition-colors font-medium" />
+                   </div>
+                   <div className="sm:col-span-2">
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Village / City</label>
+                      <input type="text" value={manualCustomer.village} onChange={e => setManualCustomer({...manualCustomer, village: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-500 transition-colors font-medium" />
+                   </div>
                  </div>
                </div>
 
-               <h3 className="text-sm font-black text-rose-500 tracking-widest uppercase mt-8 mb-6 flex items-center gap-2">
-                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
-                 Item Assessment
-               </h3>
-               <div className="space-y-4">
-                 <div>
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Item Description</label>
-                    <input type="text" placeholder="e.g. Old Gold Chain 22K" value={saleData.itemsDescription} onChange={e => setSaleData({...saleData, itemsDescription: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-500 transition-colors font-medium" />
+               {/* Items Section */}
+               <div>
+                 <div className="flex justify-between items-center mb-4">
+                   <h3 className="text-sm font-black text-rose-500 tracking-widest uppercase flex items-center gap-2">
+                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
+                     Item Assessment
+                   </h3>
+                   <span className="text-[10px] font-bold text-gray-500 bg-white/5 px-2 py-1 rounded">{manualItems.length} / 6 ITEMS</span>
                  </div>
-                 <div className="grid grid-cols-2 gap-4">
-                   <div>
-                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Gross Weight (g)</label>
-                      <input type="number" step="0.01" value={saleData.grossWeight} onChange={e => setSaleData({...saleData, grossWeight: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-500 transition-colors font-medium" />
-                   </div>
-                   <div>
-                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Melting Purity (%)</label>
-                      <input type="number" step="0.1" value={saleData.meltingPurity} onChange={e => setSaleData({...saleData, meltingPurity: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-500 transition-colors font-medium" />
-                   </div>
+
+                 <div className="space-y-4">
+                   {manualItems.map((item, index) => (
+                     <div key={index} className="p-4 bg-white/5 border border-white/10 rounded-xl relative">
+                       {manualItems.length > 1 && (
+                         <button onClick={() => handleRemoveManualItem(index)} className="absolute -top-2 -right-2 bg-rose-600 text-white rounded-full p-1 shadow-lg hover:bg-rose-500">
+                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                         </button>
+                       )}
+                       
+                       <div className="flex gap-4 mb-4">
+                         <label className="flex items-center gap-2 text-sm font-bold cursor-pointer">
+                           <input type="radio" name={`metal-${index}`} checked={item.metalType === 'Gold'} onChange={() => updateManualItem(index, 'metalType', 'Gold')} className="accent-amber-500 w-4 h-4" />
+                           <span className={item.metalType === 'Gold' ? 'text-amber-400' : 'text-gray-500'}>Gold</span>
+                         </label>
+                         <label className="flex items-center gap-2 text-sm font-bold cursor-pointer">
+                           <input type="radio" name={`metal-${index}`} checked={item.metalType === 'Silver'} onChange={() => updateManualItem(index, 'metalType', 'Silver')} className="accent-gray-300 w-4 h-4" />
+                           <span className={item.metalType === 'Silver' ? 'text-gray-300' : 'text-gray-500'}>Silver</span>
+                         </label>
+                       </div>
+
+                       <div className="space-y-4">
+                         <div>
+                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Item Description</label>
+                            <input type="text" placeholder="e.g. Chain, Ring..." value={item.name} onChange={e => updateManualItem(index, 'name', e.target.value)} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-500 transition-colors font-medium" />
+                         </div>
+                         <div className="grid grid-cols-2 gap-4">
+                           <div>
+                              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Gross Weight (g)</label>
+                              <input type="number" step="0.01" value={item.weight} onChange={e => updateManualItem(index, 'weight', e.target.value)} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-500 transition-colors font-medium" />
+                           </div>
+                           <div>
+                              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Melting Purity (%)</label>
+                              <input type="number" step="0.1" value={item.purity} onChange={e => updateManualItem(index, 'purity', e.target.value)} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-500 transition-colors font-medium" />
+                           </div>
+                         </div>
+                       </div>
+                     </div>
+                   ))}
+
+                   {manualItems.length < 6 && (
+                     <button onClick={handleAddManualItem} className="w-full py-4 border-2 border-dashed border-white/10 hover:border-rose-500/50 rounded-xl text-gray-400 font-bold text-sm tracking-wide transition-colors flex items-center justify-center gap-2">
+                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                       ADD ANOTHER ITEM
+                     </button>
+                   )}
                  </div>
                </div>
             </div>
@@ -620,15 +840,15 @@ export default function OldJewelleryTerminal() {
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 text-center">Customer Face Scan</label>
-                <input type="file" accept="image/*" capture="environment" id="cam-cust" className="hidden" onChange={(e) => handleCameraCapture(e, setCustomerPhoto, true)} />
-                <div onClick={() => document.getElementById('cam-cust').click()} className={`w-full aspect-square rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-colors ${customerPhoto ? (faceVectorStr ? 'border-emerald-500/50 bg-emerald-500/10' : 'border-rose-500/50 bg-rose-500/10') : 'border-white/10 hover:border-rose-500/50 bg-white/5'}`}>
-                  {customerPhoto ? <img src={customerPhoto} className="w-full h-full object-cover" /> : <div className="text-gray-500 flex flex-col items-center"><svg className="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg><span className="text-[10px] font-bold uppercase">Tap to Scan</span></div>}
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 text-center">Customer Photo</label>
+                <input type="file" accept="image/*" capture="environment" id="cam-cust" className="hidden" onChange={(e) => handleGenericPhotoCapture(e, setCustomerPhoto)} />
+                <div onClick={() => document.getElementById('cam-cust').click()} className={`w-full aspect-square rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-colors ${customerPhoto ? 'border-emerald-500/50 bg-emerald-500/10' : 'border-white/10 hover:border-rose-500/50 bg-white/5'}`}>
+                  {customerPhoto ? <img src={customerPhoto} className="w-full h-full object-cover" /> : <div className="text-gray-500 flex flex-col items-center"><svg className="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg><span className="text-[10px] font-bold uppercase">Tap to Capture</span></div>}
                 </div>
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 text-center">Old Jewellery Item</label>
-                <input type="file" accept="image/*" capture="environment" id="cam-jewel" className="hidden" onChange={(e) => handleCameraCapture(e, setJewelleryPhoto)} />
+                <input type="file" accept="image/*" capture="environment" id="cam-jewel" className="hidden" onChange={(e) => handleGenericPhotoCapture(e, setJewelleryPhoto)} />
                 <div onClick={() => document.getElementById('cam-jewel').click()} className={`w-full aspect-square rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-colors ${jewelleryPhoto ? 'border-emerald-500/50 bg-emerald-500/10' : 'border-white/10 hover:border-rose-500/50 bg-white/5'}`}>
                   {jewelleryPhoto ? <img src={jewelleryPhoto} className="w-full h-full object-cover" /> : <div className="text-gray-500 flex flex-col items-center"><svg className="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg><span className="text-[10px] font-bold uppercase">Tap to Capture</span></div>}
                 </div>
@@ -644,15 +864,20 @@ export default function OldJewelleryTerminal() {
             <div className="bg-[#0D0D14] border border-white/10 rounded-2xl p-6 shadow-xl">
                <div className="flex justify-between items-center mb-6">
                  <h3 className="text-sm font-black text-white tracking-widest uppercase">Financial Summary</h3>
-                 <div className="bg-white/10 text-[9px] font-bold text-amber-400 px-2 py-1 rounded">
-                    Gold: {liveRates?.goldScrapRate || 0}/g
+                 <div className="flex flex-col gap-1">
+                   <div className="bg-amber-500/10 border border-amber-500/30 text-[9px] font-bold text-amber-400 px-2 py-0.5 rounded">
+                      Gold Rate: ₹{liveRates?.goldScrapRate || 0}/g
+                   </div>
+                   <div className="bg-gray-500/10 border border-gray-500/30 text-[9px] font-bold text-gray-300 px-2 py-0.5 rounded">
+                      Silver Rate: ₹{liveRates?.silverScrapRate || 0}/g
+                   </div>
                  </div>
                </div>
                
                <div className="space-y-3 text-sm border-b border-white/10 pb-4 mb-4">
                  <div className="flex justify-between">
                    <span className="text-gray-400 font-medium">Gross Weight</span>
-                   <span className="text-white font-bold">{calculatedWeight ? `${calculatedWeight} g` : '0 g'}</span>
+                   <span className="text-white font-bold">{calculatedWeight ? `${calculatedWeight.toFixed(2)} g` : '0 g'}</span>
                  </div>
                  <div className="flex justify-between">
                    <span className="text-gray-400 font-medium">Melting Purity</span>
@@ -669,8 +894,8 @@ export default function OldJewelleryTerminal() {
                  <input 
                    type="number" 
                    placeholder={Math.round(suggestedValuation).toString()}
-                   value={saleData.finalValue}
-                   onChange={e => setSaleData({...saleData, finalValue: e.target.value})}
+                   value={finalValueInput}
+                   onChange={e => setFinalValueInput(e.target.value)}
                    className="w-full bg-[#05050A] border border-rose-500/30 rounded-xl px-4 py-4 text-white text-2xl font-black focus:outline-none focus:border-rose-500 transition-colors"
                  />
                </div>
