@@ -84,7 +84,7 @@ export default async (req, res) => {
     const SHEET_NAME = 'JEWELLERY_SALES';
 
     if (req.method === 'GET') {
-      const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A2:P`;
+      const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A2:AN`;
       const sheetResponse = await fetch(sheetsUrl, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -101,11 +101,23 @@ export default async (req, res) => {
       const rows = data.values || [];
 
       const customers = rows.map(row => {
+        let items = [];
+        for (let i = 0; i < 6; i++) {
+          const offset = 22 + (i * 3);
+          if (row[offset] && String(row[offset]).trim() !== '') {
+            items.push({
+              name: String(row[offset]).trim(),
+              weight: String(row[offset + 1] || '').trim(),
+              purity: String(row[offset + 2] || '').trim()
+            });
+          }
+        }
         return {
           customerName: row[2] ? String(row[2]).trim() : '',
           village: row[3] ? String(row[3]).trim() : '',
           phone: row[4] ? String(row[4]).trim() : '',
-          faceVector: row[15] ? String(row[15]).trim() : ''
+          faceVector: row[15] ? String(row[15]).trim() : '',
+          items: items
         };
       }).filter(c => {
         return c.customerName !== '' && c.faceVector !== '';
