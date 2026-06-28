@@ -113,6 +113,8 @@ export default async (req, res) => {
           }
         }
         return {
+          invoiceNo: row[0] ? String(row[0]).trim() : '',
+          date: row[1] ? String(row[1]).trim() : '',
           customerName: row[2] ? String(row[2]).trim() : '',
           village: row[3] ? String(row[3]).trim() : '',
           phone: row[4] ? String(row[4]).trim() : '',

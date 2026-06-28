@@ -43,8 +43,9 @@ async function fetchAndParseSheetData() {
     const goldMakingPerGram = parseFloat(json.table?.rows?.[1]?.c?.[0]?.v) || 0;
     const silverMakingPerGram = parseFloat(json.table?.rows?.[1]?.c?.[1]?.v) || 0;
     const goldHallmarking = parseFloat(json.table?.rows?.[2]?.c?.[0]?.v) || 0;
-    const goldScrapRate = Math.round(parseFloat(json.table?.rows?.[5]?.c?.[0]?.v) || 0);
-    const silverScrapRate = Math.round(parseFloat(json.table?.rows?.[5]?.c?.[1]?.v) || 0);
+    const lastRowIndex = json.table?.rows?.length ? json.table.rows.length - 1 : 0;
+    const goldScrapRate = Math.round(parseFloat(json.table?.rows?.[lastRowIndex]?.c?.[0]?.v) || 0);
+    const silverScrapRate = Math.round(parseFloat(json.table?.rows?.[lastRowIndex]?.c?.[1]?.v) || 0);
 
     return { goldRate, silverRate, goldMakingPerGram, silverMakingPerGram, goldHallmarking, goldScrapRate, silverScrapRate };
 

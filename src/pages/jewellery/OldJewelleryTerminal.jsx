@@ -242,7 +242,21 @@ export default function OldJewelleryTerminal() {
         .then(res => res.json())
         .then(data => {
            if (data.data) {
-             setCustomers(data.data);
+             const grouped = {};
+             data.data.forEach(txn => {
+                const key = `${txn.customerName}-${txn.phone}`;
+                if (!grouped[key]) {
+                  grouped[key] = {
+                    customerName: txn.customerName,
+                    phone: txn.phone,
+                    village: txn.village,
+                    faceVector: txn.faceVector,
+                    transactions: []
+                  };
+                }
+                grouped[key].transactions.push(txn);
+             });
+             setCustomers(Object.values(grouped));
            }
         })
         .catch(console.error);
@@ -256,6 +270,7 @@ export default function OldJewelleryTerminal() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedTransactionIndex, setSelectedTransactionIndex] = useState(0);
   const [selectedItems, setSelectedItems] = useState([]); // array of indexes
   const [isFaceScanning, setIsFaceScanning] = useState(false);
 
@@ -399,22 +414,12 @@ export default function OldJewelleryTerminal() {
       (c.phone && c.phone.toLowerCase().includes(lowerQ)) ||
       (c.village && c.village.toLowerCase().includes(lowerQ))
     );
-    
-    // Deduplicate by Name+Phone
-    const unique = [];
-    const seen = new Set();
-    results.forEach(r => {
-      const key = `${r.customerName}-${r.phone}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        unique.push(r);
-      }
-    });
-    setSearchResults(unique);
+    setSearchResults(results);
   };
 
   const handleSelectCustomer = (cust) => {
     setSelectedCustomer(cust);
+    setSelectedTransactionIndex(0);
     setSearchResults([]);
     setSearchQuery('');
     setSelectedItems([]);
@@ -478,22 +483,23 @@ export default function OldJewelleryTerminal() {
   let calculatedPurity = 0;
   let suggestedValuation = 0;
   
-  if (activeTab === 'search' && selectedCustomer) {
-    calculatedDescription = selectedItems.map(i => selectedCustomer.items[i].name).join(', ');
-    calculatedWeight = selectedItems.reduce((acc, i) => acc + (Number(selectedCustomer.items[i].weight) || 0), 0);
+  if (activeTab === 'search' && selectedCustomer && selectedCustomer.transactions && selectedCustomer.transactions[selectedTransactionIndex]) {
+    const txn = selectedCustomer.transactions[selectedTransactionIndex];
+    calculatedDescription = selectedItems.map(i => txn.items[i].name).join(', ');
+    calculatedWeight = selectedItems.reduce((acc, i) => acc + (Number(txn.items[i].weight) || 0), 0);
     
     // Suggestion logic for Search items
     selectedItems.forEach(i => {
-      const w = Number(selectedCustomer.items[i].weight) || 0;
-      const p = Number(selectedCustomer.items[i].purity) || 0;
-      const name = selectedCustomer.items[i].name.toLowerCase();
+      const w = Number(txn.items[i].weight) || 0;
+      const p = Number(txn.items[i].purity) || 0;
+      const name = txn.items[i].name.toLowerCase();
       const isSilv = name.includes('silver');
       const rate = isSilv ? (liveRates?.silverScrapRate || 0) : (liveRates?.goldScrapRate || 0);
       suggestedValuation += (w * rate * (p / 100));
     });
 
     if (selectedItems.length > 0) {
-      calculatedPurity = selectedItems.reduce((acc, i) => acc + (Number(selectedCustomer.items[i].purity) || 0), 0) / selectedItems.length;
+      calculatedPurity = selectedItems.reduce((acc, i) => acc + (Number(txn.items[i].purity) || 0), 0) / selectedItems.length;
     }
   } else if (activeTab === 'manual') {
     calculatedDescription = manualItems.map(i => `${i.metalType} ${i.name}`).join(', ');
@@ -720,12 +726,31 @@ export default function OldJewelleryTerminal() {
                  <button onClick={() => setSelectedCustomer(null)} className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg font-bold text-gray-300">Change</button>
                </div>
 
-               <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Previously Purchased Items</h4>
-               {(!selectedCustomer.items || selectedCustomer.items.length === 0) ? (
-                 <div className="bg-white/5 rounded-xl p-4 text-center text-sm text-gray-400">No previous items found for this customer. Switch to Manual Entry.</div>
+               {/* Transaction Dropdown */}
+               <div className="mb-6 border-t border-white/10 pt-4">
+                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Select Past Transaction</label>
+                 <select 
+                   value={selectedTransactionIndex}
+                   onChange={(e) => {
+                     setSelectedTransactionIndex(Number(e.target.value));
+                     setSelectedItems([]);
+                   }}
+                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-500 transition-colors font-medium appearance-none"
+                 >
+                   {selectedCustomer.transactions.map((txn, idx) => (
+                     <option key={idx} value={idx} className="bg-[#0D0D14] text-white">
+                       {txn.date} {txn.invoiceNo ? `(Inv: ${txn.invoiceNo})` : ''} - {txn.items.length} items
+                     </option>
+                   ))}
+                 </select>
+               </div>
+
+               <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Items in Selected Transaction</h4>
+               {(!selectedCustomer.transactions[selectedTransactionIndex]?.items || selectedCustomer.transactions[selectedTransactionIndex].items.length === 0) ? (
+                 <div className="bg-white/5 rounded-xl p-4 text-center text-sm text-gray-400">No previous items found in this transaction. Switch to Manual Entry.</div>
                ) : (
                  <div className="space-y-2">
-                   {selectedCustomer.items.map((item, idx) => (
+                   {selectedCustomer.transactions[selectedTransactionIndex].items.map((item, idx) => (
                      <div 
                        key={idx} 
                        onClick={() => handleToggleItem(idx)}
