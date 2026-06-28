@@ -24,92 +24,120 @@ export default function JewelleryHub() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] flex flex-col font-inter">
+    <div className="min-h-screen bg-[#05050A] flex flex-col font-inter relative overflow-hidden">
+      {/* Background Ambience */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[150px] pointer-events-none" />
+      
       <OfficerHeader />
       
-      <div className="flex-grow flex items-center justify-center p-6">
-        <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="flex-grow flex items-center justify-center p-6 sm:p-12 z-10">
+        <div className="max-w-7xl w-full">
           
-          {/* Retail Billing Terminal Card */}
-          <div 
-            onClick={() => navigate('/jewellery/retail')}
-            className="group relative bg-white border border-gray-200 rounded-3xl p-8 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 cursor-pointer overflow-hidden"
-          >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-100 rounded-bl-full -mr-10 -mt-10 opacity-50 group-hover:bg-amber-200 transition-colors"></div>
-            <div className="relative z-10">
-              <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg mb-6">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-              </div>
-              <h2 className="text-2xl font-black text-[#1B1464] mb-2 tracking-tight">Retail Billing Terminal</h2>
-              <p className="text-gray-500 text-sm font-medium leading-relaxed">
-                Open the instant checkout POS. Generate customer receipts, calculate live rates, and log vault security photos for items leaving the store.
-              </p>
-            </div>
-            <div className="mt-8 flex items-center text-amber-600 font-bold text-sm tracking-wide group-hover:translate-x-2 transition-transform">
-              OPEN TERMINAL <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-            </div>
+          <div className="mb-12 text-center sm:text-left">
+            <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight mb-4">Command Center</h1>
+            <p className="text-gray-400 text-lg max-w-2xl">Select a terminal to proceed. All actions are logged and secured under enterprise vault protocols.</p>
           </div>
 
-          {/* Custom Orders Terminal Card */}
-          <div 
-            onClick={() => navigate('/jewellery/custom-order')}
-            className="group relative bg-white border border-gray-200 rounded-3xl p-8 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 cursor-pointer overflow-hidden"
-          >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-100 rounded-bl-full -mr-10 -mt-10 opacity-50 group-hover:bg-indigo-200 transition-colors"></div>
-            <div className="relative z-10">
-              <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg mb-6">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+            
+            {/* Retail Billing Terminal Card */}
+            <div 
+              onClick={() => navigate('/jewellery/retail')}
+              className="group relative bg-[#0D0D14]/80 backdrop-blur-2xl border border-white/5 rounded-3xl p-8 lg:p-10 hover:border-amber-500/30 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col justify-between min-h-[320px]"
+            >
+              <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-amber-500/5 rounded-full blur-3xl -mr-32 -mt-32 group-hover:bg-amber-500/10 transition-colors duration-700"></div>
+              
+              <div className="relative z-10 flex justify-between items-start mb-8">
+                <div className="w-20 h-20 bg-gradient-to-br from-amber-500/20 to-orange-600/10 border border-amber-500/20 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(245,158,11,0.15)] group-hover:shadow-[0_0_40px_rgba(245,158,11,0.3)] transition-shadow">
+                  <svg className="w-10 h-10 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                </div>
+                <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-amber-500 group-hover:border-amber-500 group-hover:text-black text-white/30 transition-all duration-300">
+                  <svg className="w-5 h-5 group-hover:rotate-45 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                </div>
               </div>
-              <h2 className="text-2xl font-black text-[#1B1464] mb-2 tracking-tight">Custom Orders & Advances</h2>
-              <p className="text-gray-500 text-sm font-medium leading-relaxed">
-                Accept custom jewelry orders. Log design instructions, capture reference photos, and accept advance deposits to secure the order.
-              </p>
-            </div>
-            <div className="mt-8 flex items-center text-indigo-600 font-bold text-sm tracking-wide group-hover:translate-x-2 transition-transform">
-              OPEN TERMINAL <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-            </div>
-          </div>
-
-          {/* Open Orders Tracker Card */}
-          <div 
-            onClick={() => navigate('/jewellery/open-orders')}
-            className="group relative bg-white border border-gray-200 rounded-3xl p-8 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 cursor-pointer overflow-hidden"
-          >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-100 rounded-bl-full -mr-10 -mt-10 opacity-50 group-hover:bg-emerald-200 transition-colors"></div>
-            <div className="relative z-10">
-              <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg mb-6">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+              
+              <div className="relative z-10">
+                <h2 className="text-3xl font-black text-white mb-4 tracking-tight group-hover:text-amber-400 transition-colors">Retail Checkout</h2>
+                <p className="text-gray-400 text-base font-medium leading-relaxed max-w-md">
+                  Instant POS terminal. Generate customer receipts, compute live metal rates, and log secure vault images for items leaving the premises.
+                </p>
               </div>
-              <h2 className="text-2xl font-black text-[#1B1464] mb-2 tracking-tight">Active Orders Tracker</h2>
-              <p className="text-gray-500 text-sm font-medium leading-relaxed">
-                Track pending custom orders. Monitor target deadlines, view attached PDFs, and stay on top of overdue or urgent deliveries.
-              </p>
             </div>
-            <div className="mt-8 flex items-center text-emerald-600 font-bold text-sm tracking-wide group-hover:translate-x-2 transition-transform">
-              OPEN TERMINAL <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-            </div>
-          </div>
 
-          {/* Old Scrap Purchase Terminal Card */}
-          <div 
-            onClick={() => navigate('/jewellery/old-purchase')}
-            className="group relative bg-white border border-gray-200 rounded-3xl p-8 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 cursor-pointer overflow-hidden"
-          >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-rose-100 rounded-bl-full -mr-10 -mt-10 opacity-50 group-hover:bg-rose-200 transition-colors"></div>
-            <div className="relative z-10">
-              <div className="w-16 h-16 bg-gradient-to-br from-rose-400 to-red-500 rounded-2xl flex items-center justify-center shadow-lg mb-6">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+            {/* Custom Orders Terminal Card */}
+            <div 
+              onClick={() => navigate('/jewellery/custom-order')}
+              className="group relative bg-[#0D0D14]/80 backdrop-blur-2xl border border-white/5 rounded-3xl p-8 lg:p-10 hover:border-indigo-500/30 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col justify-between min-h-[320px]"
+            >
+              <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-3xl -mr-32 -mt-32 group-hover:bg-indigo-500/10 transition-colors duration-700"></div>
+              
+              <div className="relative z-10 flex justify-between items-start mb-8">
+                <div className="w-20 h-20 bg-gradient-to-br from-indigo-500/20 to-purple-600/10 border border-indigo-500/20 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(99,102,241,0.15)] group-hover:shadow-[0_0_40px_rgba(99,102,241,0.3)] transition-shadow">
+                  <svg className="w-10 h-10 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                </div>
+                <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-indigo-500 group-hover:border-indigo-500 group-hover:text-white text-white/30 transition-all duration-300">
+                  <svg className="w-5 h-5 group-hover:rotate-45 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                </div>
               </div>
-              <h2 className="text-2xl font-black text-[#1B1464] mb-2 tracking-tight">Old Scrap Purchase</h2>
-              <p className="text-gray-500 text-sm font-medium leading-relaxed">
-                Purchase old jewellery. Face scan to match retail clients, calculate deductions, and generate secure vault purchase records.
-              </p>
+              
+              <div className="relative z-10">
+                <h2 className="text-3xl font-black text-white mb-4 tracking-tight group-hover:text-indigo-400 transition-colors">Custom Orders</h2>
+                <p className="text-gray-400 text-base font-medium leading-relaxed max-w-md">
+                  Process bespoke requests. Log design references, capture advance deposits, and secure manufacturing details in the system.
+                </p>
+              </div>
             </div>
-            <div className="mt-8 flex items-center text-rose-600 font-bold text-sm tracking-wide group-hover:translate-x-2 transition-transform">
-              OPEN TERMINAL <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-            </div>
-          </div>
 
+            {/* Open Orders Tracker Card */}
+            <div 
+              onClick={() => navigate('/jewellery/open-orders')}
+              className="group relative bg-[#0D0D14]/80 backdrop-blur-2xl border border-white/5 rounded-3xl p-8 lg:p-10 hover:border-emerald-500/30 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col justify-between min-h-[320px]"
+            >
+              <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-3xl -mr-32 -mb-32 group-hover:bg-emerald-500/10 transition-colors duration-700"></div>
+              
+              <div className="relative z-10 flex justify-between items-start mb-8">
+                <div className="w-20 h-20 bg-gradient-to-br from-emerald-500/20 to-teal-600/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.15)] group-hover:shadow-[0_0_40px_rgba(16,185,129,0.3)] transition-shadow">
+                  <svg className="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+                </div>
+                <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-emerald-500 group-hover:border-emerald-500 group-hover:text-white text-white/30 transition-all duration-300">
+                  <svg className="w-5 h-5 group-hover:rotate-45 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                </div>
+              </div>
+              
+              <div className="relative z-10">
+                <h2 className="text-3xl font-black text-white mb-4 tracking-tight group-hover:text-emerald-400 transition-colors">Active Orders</h2>
+                <p className="text-gray-400 text-base font-medium leading-relaxed max-w-md">
+                  Monitor pending pipelines. Track target deadlines, access secure Vault PDFs, and manage overdue or prioritized deliveries.
+                </p>
+              </div>
+            </div>
+
+            {/* Old Scrap Purchase Terminal Card */}
+            <div 
+              onClick={() => navigate('/jewellery/old-purchase')}
+              className="group relative bg-[#0D0D14]/80 backdrop-blur-2xl border border-white/5 rounded-3xl p-8 lg:p-10 hover:border-rose-500/30 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col justify-between min-h-[320px]"
+            >
+              <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-rose-500/5 rounded-full blur-3xl -mr-32 -mb-32 group-hover:bg-rose-500/10 transition-colors duration-700"></div>
+              
+              <div className="relative z-10 flex justify-between items-start mb-8">
+                <div className="w-20 h-20 bg-gradient-to-br from-rose-500/20 to-red-600/10 border border-rose-500/20 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(244,63,94,0.15)] group-hover:shadow-[0_0_40px_rgba(244,63,94,0.3)] transition-shadow">
+                  <svg className="w-10 h-10 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </div>
+                <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-rose-500 group-hover:border-rose-500 group-hover:text-white text-white/30 transition-all duration-300">
+                  <svg className="w-5 h-5 group-hover:rotate-45 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                </div>
+              </div>
+              
+              <div className="relative z-10">
+                <h2 className="text-3xl font-black text-white mb-4 tracking-tight group-hover:text-rose-400 transition-colors">Old Scrap Buy</h2>
+                <p className="text-gray-400 text-base font-medium leading-relaxed max-w-md">
+                  Purchase customer gold/silver. Perform facial recognition, evaluate deductions, and mint secure vault acquisition records.
+                </p>
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
     </div>
