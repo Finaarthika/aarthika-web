@@ -2,7 +2,7 @@
 
 const SHEET_ID = '1YpeV4GpJeedrYGHQgonuSL-Rf4kuQiwpPysdZL9B-vk';
 const SHEET_NAME = 'METAL RATE'; 
-const RANGE = 'A18:B20'; // Gold: A18, Silver: B18, Making Gold: A19, Silver: B19, Hallmarking Gold: A20
+const RANGE = 'A18:B23'; // Gold: A18, Silver: B18, Scrap Gold: A23, Scrap Silver: B23
 
 // Construct the Google Visualization API URL
 const sheetNameEncoded = encodeURIComponent(SHEET_NAME);
@@ -43,8 +43,10 @@ async function fetchAndParseSheetData() {
     const goldMakingPerGram = parseFloat(json.table?.rows?.[1]?.c?.[0]?.v) || 0;
     const silverMakingPerGram = parseFloat(json.table?.rows?.[1]?.c?.[1]?.v) || 0;
     const goldHallmarking = parseFloat(json.table?.rows?.[2]?.c?.[0]?.v) || 0;
+    const goldScrapRate = Math.round(parseFloat(json.table?.rows?.[5]?.c?.[0]?.v) || 0);
+    const silverScrapRate = Math.round(parseFloat(json.table?.rows?.[5]?.c?.[1]?.v) || 0);
 
-    return { goldRate, silverRate, goldMakingPerGram, silverMakingPerGram, goldHallmarking };
+    return { goldRate, silverRate, goldMakingPerGram, silverMakingPerGram, goldHallmarking, goldScrapRate, silverScrapRate };
 
   } catch (error) {
     console.error('Error fetching or parsing public sheet data:', error);

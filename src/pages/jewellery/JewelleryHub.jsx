@@ -28,7 +28,7 @@ export default function JewelleryHub() {
       <OfficerHeader />
       
       <div className="flex-grow flex items-center justify-center p-6">
-        <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           
           {/* Retail Billing Terminal Card */}
           <div 
@@ -86,6 +86,26 @@ export default function JewelleryHub() {
               </p>
             </div>
             <div className="mt-8 flex items-center text-emerald-600 font-bold text-sm tracking-wide group-hover:translate-x-2 transition-transform">
+              OPEN TERMINAL <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+            </div>
+          </div>
+
+          {/* Old Scrap Purchase Terminal Card */}
+          <div 
+            onClick={() => navigate('/jewellery/old-purchase')}
+            className="group relative bg-white border border-gray-200 rounded-3xl p-8 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 cursor-pointer overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-rose-100 rounded-bl-full -mr-10 -mt-10 opacity-50 group-hover:bg-rose-200 transition-colors"></div>
+            <div className="relative z-10">
+              <div className="w-16 h-16 bg-gradient-to-br from-rose-400 to-red-500 rounded-2xl flex items-center justify-center shadow-lg mb-6">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              </div>
+              <h2 className="text-2xl font-black text-[#1B1464] mb-2 tracking-tight">Old Scrap Purchase</h2>
+              <p className="text-gray-500 text-sm font-medium leading-relaxed">
+                Purchase old jewellery. Face scan to match retail clients, calculate deductions, and generate secure vault purchase records.
+              </p>
+            </div>
+            <div className="mt-8 flex items-center text-rose-600 font-bold text-sm tracking-wide group-hover:translate-x-2 transition-transform">
               OPEN TERMINAL <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
             </div>
           </div>

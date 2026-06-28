@@ -30,6 +30,8 @@ import JewellerySalesTerminal from './pages/jewellery/JewellerySalesTerminal'
 import CustomOrderTerminal from './pages/jewellery/CustomOrderTerminal'
 import OpenOrders from './pages/jewellery/OpenOrders'
 import InvoicePrint from './pages/jewellery/InvoicePrint'
+import OldJewelleryTerminal from './pages/jewellery/OldJewelleryTerminal'
+import OldJewelleryPrint from './pages/jewellery/OldJewelleryPrint'
 import './App.css'
 
 const NAV_OFFSET = -80;
@@ -128,6 +130,8 @@ function App() {
         <Route path="/jewellery/custom-order" element={<CustomOrderTerminal />} />
         <Route path="/jewellery/open-orders" element={<OpenOrders />} />
         <Route path="/jewellery/print" element={<InvoicePrint />} />
+        <Route path="/jewellery/old-purchase" element={<OldJewelleryTerminal />} />
+        <Route path="/jewellery/old-purchase/print" element={<OldJewelleryPrint />} />
       </Routes>
       {isJoinFormVisible && <JoinAarthika onClose={toggleJoinForm} />}
     </Router>

@@ -46,6 +46,7 @@ export default defineConfig({
       },
       // Service worker configuration (optional, default is generateSW)
       workbox: {
+         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
          globPatterns: ['**/*.{js,css,html,png,jpg,svg,woff,woff2}'], // Cache common assets
          runtimeCaching: [ // Example: Cache API calls if needed (adjust pattern)
           // {
