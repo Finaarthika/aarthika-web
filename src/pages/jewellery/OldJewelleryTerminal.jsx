@@ -120,7 +120,7 @@ export default function OldJewelleryTerminal() {
         .catch(console.error);
 
       // Fetch existing customers for facial matching
-      fetch('/api/jewellery-sales-search')
+      fetch('/api/jewellery-sales')
         .then(res => res.json())
         .then(data => {
            if (data.data) {

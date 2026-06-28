@@ -1,7 +1,7 @@
 import * as jose from 'jose';
 
 export default async (req, res) => {
-  if (req.method !== 'POST') {
+  if (req.method !== 'POST' && req.method !== 'GET') {
     res.setHeader('Content-Type', 'application/json');
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
@@ -34,8 +34,10 @@ export default async (req, res) => {
       creditPdfFile
     } = req.body || {};
 
-    if (!invoiceNo || !customerName) {
-      return res.status(400).json({ error: 'Invoice No and Customer Name are required.' });
+    if (req.method === 'POST') {
+      if (!invoiceNo || !customerName) {
+        return res.status(400).json({ error: 'Invoice No and Customer Name are required.' });
+      }
     }
 
     let clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
@@ -80,6 +82,38 @@ export default async (req, res) => {
     const DRIVE_FOLDER_ID = '1Xo3g-xTVJqBuH3OcnwsBZRW1VhIdhA8F';
     const SHEET_ID = '1G1Q-OcKpk3iQ_yHi8Ec0sKYApqxquffSD4oS-e6Mvmo';
     const SHEET_NAME = 'JEWELLERY_SALES';
+
+    if (req.method === 'GET') {
+      const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A2:P`;
+      const sheetResponse = await fetch(sheetsUrl, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      if (!sheetResponse.ok) {
+        const errorText = await sheetResponse.text();
+        throw new Error(`Google Sheets API responded with status ${sheetResponse.status}: ${errorText}`);
+      }
+
+      const data = await sheetResponse.json();
+      const rows = data.values || [];
+
+      const customers = rows.map(row => {
+        return {
+          customerName: row[2] ? String(row[2]).trim() : '',
+          village: row[3] ? String(row[3]).trim() : '',
+          phone: row[4] ? String(row[4]).trim() : '',
+          faceVector: row[15] ? String(row[15]).trim() : ''
+        };
+      }).filter(c => {
+        return c.customerName !== '' && c.faceVector !== '';
+      });
+
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(200).json({ data: customers });
+    }
 
     let vaultPdfLink = '';
     let creditPdfLink = '';
