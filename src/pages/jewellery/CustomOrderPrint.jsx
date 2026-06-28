@@ -18,7 +18,7 @@ export default function CustomOrderPrint({ data }) {
           {/* Header */}
           <div className="bg-[#1B1464] text-white px-8 py-5 flex justify-between items-center shrink-0">
             <div className="flex items-center gap-6">
-              <img src={logoTextUrl} alt="Aarthika" className="h-10 object-contain brightness-0 invert opacity-90" />
+              <img src={logoTextUrl} alt="Aarthika" className="h-10 object-contain opacity-90" style={{ filter: 'brightness(0) invert(1)' }} />
               <div className="border-l border-white/20 pl-6">
                 <h1 className="text-2xl font-black tracking-widest font-nirand">MISHRA JEWELLER'S</h1>
                 <p className="text-[11px] text-white/70 font-bold uppercase tracking-[0.2em] mt-1">Enterprise Custom Workshop Slip</p>
