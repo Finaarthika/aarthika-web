@@ -361,12 +361,18 @@ export default function OldJewelleryTerminal() {
           let lowestDistance = 1000;
 
           customers.forEach(cust => {
-            if (cust.faceVector && cust.faceVector.includes(',')) {
-              const storedArray = cust.faceVector.split(',').map(Number);
-              if (storedArray.length === 512) {
+            if (cust.faceVector) {
+              let rawString = cust.faceVector;
+              if (rawString.startsWith('[')) {
+                try {
+                  rawString = JSON.parse(rawString).join(',');
+                } catch(e) {}
+              }
+              const storedArray = rawString.split(',').map(Number);
+              if (storedArray.length === 512 && !storedArray.some(isNaN)) {
                 const storedDescriptor = new Float32Array(storedArray);
                 const dist = window.faceapi.euclideanDistance(liveDescriptor, storedDescriptor);
-                if (dist < 1.0 && dist < lowestDistance) { 
+                if (dist < 1.2 && dist < lowestDistance) { 
                   lowestDistance = dist;
                   bestMatch = cust;
                 }
