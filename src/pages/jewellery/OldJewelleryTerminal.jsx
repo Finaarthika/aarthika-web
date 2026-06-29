@@ -289,20 +289,29 @@ export default function OldJewelleryTerminal() {
     setSearchResults([]);
 
     try {
+      // IDENTICAL image preprocessing to Passbook SearchGrid.jsx
       const bmp = await window.createImageBitmap(file);
+      const MAX_WIDTH = 600;
+      const MAX_HEIGHT = 600;
+      let width = bmp.width;
+      let height = bmp.height;
+      if (width > height) {
+        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+      } else {
+        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+      }
       const canvas = document.createElement('canvas');
-      let width = bmp.width; let height = bmp.height;
-      if (width > 800) { height *= 800 / width; width = 800; }
-      canvas.width = width; canvas.height = height;
+      canvas.width = width;
+      canvas.height = height;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(bmp, 0, 0, width, height);
-      
-      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6); // same as passbook
       
       const normalizedImg = new Image();
       normalizedImg.onload = async () => {
         const options = new window.faceapi.TinyFaceDetectorOptions({ inputSize: 512, scoreThreshold: 0.2 });
         try {
+          // 1. Detect face bounding box
           const detection = await window.faceapi.detectSingleFace(normalizedImg, options);
           if (!detection) {
             setSearchQuery('');
@@ -310,13 +319,19 @@ export default function OldJewelleryTerminal() {
             return showToast("No face detected in photo. Try again.", "error");
           }
           
+          // 2. Crop face for TFLite model (identical to passbook)
           const box = detection.box;
           const faceCanvas = document.createElement('canvas');
           faceCanvas.width = 160;
           faceCanvas.height = 160;
           const faceCtx = faceCanvas.getContext('2d');
-          faceCtx.drawImage(normalizedImg, box.x, box.y, box.width, box.height, 0, 0, 160, 160);
+          faceCtx.drawImage(
+            normalizedImg,
+            box.x, box.y, box.width, box.height,
+            0, 0, 160, 160
+          );
           
+          // 3. Extract 512D vector (identical to passbook)
           let tensor = window.tf.browser.fromPixels(faceCanvas);
           tensor = window.tf.cast(tensor, 'float32').sub(127.5).div(127.5).expandDims(0);
           const output = customFaceNet.predict(tensor);
@@ -324,6 +339,7 @@ export default function OldJewelleryTerminal() {
           tensor.dispose();
           output.dispose();
           
+          // 4. L2 Normalization (identical to passbook)
           let sumSq = 0;
           for (let i = 0; i < rawVectorArray.length; i++) sumSq += rawVectorArray[i] * rawVectorArray[i];
           const magnitude = Math.sqrt(sumSq) || 1;
@@ -332,20 +348,15 @@ export default function OldJewelleryTerminal() {
           setFaceVectorStr(vectorArray.join(','));
           setCustomerPhoto(compressedBase64);
           
-          // Match against EVERY transaction row individually
+          // 5. Match against EVERY transaction row (same threshold as passbook: < 1.0)
           const allMatches = [];
           customers.forEach(txn => {
-            if (!txn.faceVector) return;
-            let rawString = txn.faceVector.trim();
-            // Strip JSON array brackets if present
-            if (rawString.startsWith('[')) {
-              try { rawString = JSON.parse(rawString).join(','); } catch(e) {}
-            }
-            const storedArray = rawString.split(',').map(Number);
-            if (storedArray.length !== 512 || storedArray.some(isNaN)) return;
+            if (!txn.faceVector || !txn.faceVector.includes(',')) return;
+            const storedArray = txn.faceVector.split(',').map(Number);
+            if (storedArray.length !== 512) return;
             const storedDescriptor = new Float32Array(storedArray);
             const dist = window.faceapi.euclideanDistance(liveDescriptor, storedDescriptor);
-            if (dist < 1.2) {
+            if (dist < 1.0) { // same strict threshold as passbook
               allMatches.push({ ...txn, _faceDistance: dist });
             }
           });
@@ -356,7 +367,7 @@ export default function OldJewelleryTerminal() {
           setSearchQuery('');
           if (allMatches.length > 0) {
             setSearchResults(allMatches);
-            showToast(`${allMatches.length} matching transaction(s) found!`, "success");
+            showToast(`${allMatches.length} match(es) found!`, "success");
           } else {
             showToast("No matching customer found.", "error");
           }
