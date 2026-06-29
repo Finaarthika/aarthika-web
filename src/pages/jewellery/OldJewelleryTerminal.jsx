@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import html2pdf from 'html2pdf.js';
 import logoIcon from '../../assets/4.png';
+import AuditRecordsModal from './AuditRecordsModal';
 
-const OfficerHeader = ({ officerName, onLogout }) => (
+const OfficerHeader = ({ officerName, onLogout, onAuditRecordsClick }) => (
   <div className="sticky top-0 z-50 w-full bg-[#0D0D14] py-3 sm:py-4 px-4 sm:px-8 shadow-2xl border-b border-rose-500/20 overflow-hidden backdrop-blur-md">
     <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between relative z-10 gap-3 sm:gap-0">
       <div className="flex items-center group cursor-default">
@@ -23,6 +24,9 @@ const OfficerHeader = ({ officerName, onLogout }) => (
           <div className="text-rose-500/60 text-xs font-medium tracking-wider uppercase">Active Purchaser</div>
           <div className="text-rose-100 text-sm font-semibold">{officerName || 'System'}</div>
         </div>
+        <button onClick={onAuditRecordsClick} className="group flex items-center gap-2 bg-rose-500/20 hover:bg-rose-500/40 border border-rose-500/50 px-4 py-2 rounded-xl transition-all duration-300">
+          <span className="text-sm font-bold text-rose-200 group-hover:text-white uppercase">Vault Records</span>
+        </button>
         <button onClick={onLogout} className="group flex items-center gap-2 bg-white/5 hover:bg-red-500/20 hover:border-red-500/50 border border-white/10 px-4 py-2 rounded-xl transition-all duration-300">
           <span className="text-sm font-bold text-white group-hover:text-red-400">SECURE LOGOUT</span>
         </button>
@@ -33,6 +37,7 @@ const OfficerHeader = ({ officerName, onLogout }) => (
 
 export default function OldJewelleryTerminal() {
   const navigate = useNavigate();
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
   const showToast = (message, type = 'success') => {
     setToast({ visible: true, message, type });
@@ -740,7 +745,7 @@ export default function OldJewelleryTerminal() {
 
   return (
     <div className="min-h-screen bg-[#05050A] text-white flex flex-col font-inter overflow-x-hidden">
-      <OfficerHeader officerName={officerAuth.staffName} onLogout={handleLogout} />
+      <OfficerHeader officerName={officerAuth.staffName} onLogout={handleLogout} onAuditRecordsClick={() => setIsAuditModalOpen(true)} />
       
       {/* Toast Notification */}
       {toast.visible && (
@@ -1073,6 +1078,14 @@ export default function OldJewelleryTerminal() {
           </div>
         </div>
       </div>
+      {/* Audit Records Modal */}
+      <AuditRecordsModal 
+        isOpen={isAuditModalOpen} 
+        onClose={() => setIsAuditModalOpen(false)} 
+        customers={customers} 
+        modelsLoaded={modelsLoaded} 
+        customFaceNet={customFaceNet} 
+      />
     </div>
   );
 }
