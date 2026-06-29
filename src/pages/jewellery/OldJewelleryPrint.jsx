@@ -4,27 +4,33 @@ import premiumLogo from '../../assets/3.png';
 import watermarkImg from '../../assets/watermark.png';
 import aarthikaLogo from '../../assets/Aarthika (1).png';
 
-export default function OldJewelleryPrint() {
-  const [data, setData] = useState(null);
+export default function OldJewelleryPrint({ dataProp, silentMode = false }) {
+  const [data, setData] = useState(dataProp || null);
   const [isMobileEngine, setIsMobileEngine] = useState(false);
 
   useEffect(() => {
-    document.body.classList.add('printing-a4-land');
-    setIsMobileEngine(window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
-    return () => { document.body.classList.remove('printing-a4-land'); };
-  }, []);
+    if (!silentMode) {
+      document.body.classList.add('printing-a4-land');
+      setIsMobileEngine(window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+      return () => { document.body.classList.remove('printing-a4-land'); };
+    }
+  }, [silentMode]);
 
   useEffect(() => {
-    const rawData = localStorage.getItem('aarthika_old_invoice');
-    if (rawData) { setData(JSON.parse(rawData)); }
-  }, []);
+    if (!dataProp) {
+      const rawData = localStorage.getItem('aarthika_old_invoice');
+      if (rawData) { setData(JSON.parse(rawData)); }
+    } else {
+      setData(dataProp);
+    }
+  }, [dataProp]);
 
   useEffect(() => {
-    if (!isMobileEngine && data) {
+    if (!silentMode && !isMobileEngine && data && !dataProp) {
       const timer = setTimeout(() => { window.print(); }, 800);
       return () => clearTimeout(timer);
     }
-  }, [isMobileEngine, data]);
+  }, [isMobileEngine, data, silentMode, dataProp]);
 
   const handlePrint = () => {
     if (isMobileEngine) {
@@ -85,17 +91,19 @@ export default function OldJewelleryPrint() {
       `}</style>
 
       {/* Screen Controls */}
-      <div className="no-print bg-gray-900 text-white p-4 flex justify-between items-center fixed top-0 w-full z-50 shadow-md">
-        <div className="text-sm font-semibold tracking-wide">Old Purchase Agreement (A4 Landscape)</div>
-        <div className="flex gap-3">
-          <button onClick={handlePrint} className="bg-rose-700 hover:bg-rose-600 text-white px-8 py-2.5 rounded text-sm font-bold tracking-widest uppercase shadow-lg transition-all">
-            {isMobileEngine ? 'DOWNLOAD PDF' : 'PRINT / SAVE AS PDF'}
-          </button>
-          <button onClick={() => window.history.back()} className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2.5 rounded text-sm font-bold">
-            ← Back
-          </button>
+      {!silentMode && (
+        <div className="no-print bg-gray-900 text-white p-4 flex justify-between items-center fixed top-0 w-full z-50 shadow-md">
+          <div className="text-sm font-semibold tracking-wide">Old Purchase Agreement (A4 Landscape)</div>
+          <div className="flex gap-3">
+            <button onClick={handlePrint} className="bg-rose-700 hover:bg-rose-600 text-white px-8 py-2.5 rounded text-sm font-bold tracking-widest uppercase shadow-lg transition-all">
+              {isMobileEngine ? 'DOWNLOAD PDF' : 'PRINT / SAVE AS PDF'}
+            </button>
+            <button onClick={() => window.history.back()} className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2.5 rounded text-sm font-bold">
+              ← Back
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* A4 Landscape Receipt Canvas */}
       <div id="actual-receipt-content" className="print-container w-[1050px] min-h-[720px] bg-white pt-1 relative flex flex-col shadow-2xl print:shadow-none my-20 print:my-0 mx-auto overflow-hidden box-border">

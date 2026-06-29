@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import html2pdf from 'html2pdf.js';
 import logoIcon from '../../assets/4.png';
 
 const OfficerHeader = ({ officerName, onLogout }) => (
@@ -637,6 +638,41 @@ export default function OldJewelleryTerminal() {
         customerPhoto: customerPhoto.split(',')[1],
         jewelleryPhoto: jewelleryPhoto.split(',')[1]
       };
+
+      // Generate Silent PDF for Vault Upload
+      try {
+        showToast("Generating secure vault PDF...", "success");
+        const tempDiv = document.createElement('div');
+        tempDiv.style.position = 'absolute';
+        tempDiv.style.top = '0';
+        tempDiv.style.left = '0';
+        tempDiv.style.zIndex = '-50';
+        document.body.appendChild(tempDiv);
+        
+        const { createRoot } = await import('react-dom/client');
+        const OldJewelleryPrint = (await import('./OldJewelleryPrint')).default;
+        const root = createRoot(tempDiv);
+        root.render(React.createElement(OldJewelleryPrint, { dataProp: payload, silentMode: true }));
+        
+        await new Promise(resolve => setTimeout(resolve, 800)); // allow render time
+        
+        const element = document.getElementById('actual-receipt-content');
+        if (element) {
+          const opt = {
+            margin: 0,
+            filename: `${invoiceNo}_Old_Jewellery.pdf`,
+            image: { type: 'jpeg', quality: 1.0 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape', compress: true }
+          };
+          const base64Pdf = await html2pdf().set(opt).from(element).output('datauristring');
+          payload.vaultPdfFile = base64Pdf.split(',')[1];
+        }
+        root.unmount();
+        document.body.removeChild(tempDiv);
+      } catch (err) {
+        console.error("Silent PDF Generation Error", err);
+      }
 
       const res = await fetch('/api/old-jewellery-purchase', {
         method: 'POST',

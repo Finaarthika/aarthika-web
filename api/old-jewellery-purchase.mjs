@@ -68,7 +68,7 @@ export default async (req, res) => {
 
     const { access_token: accessToken } = await tokenResponse.json();
 
-    const DRIVE_FOLDER_ID = '1Xo3g-xTVJqBuH3OcnwsBZRW1VhIdhA8F';
+    const DRIVE_FOLDER_ID = '13ssoK7c3Y_iPVVwwAxfCWkkjwQQ_rNBt';
     const SHEET_ID = '1G1Q-OcKpk3iQ_yHi8Ec0sKYApqxquffSD4oS-e6Mvmo';
     const SHEET_NAME = 'OLD_JEWELLERY_PURCHASE';
 
