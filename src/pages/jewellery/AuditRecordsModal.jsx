@@ -4,26 +4,14 @@ export default function AuditRecordsModal({ isOpen, onClose, customers, modelsLo
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [selectedTxn, setSelectedTxn] = useState(null);
-  const [isFaceScanning, setIsFaceScanning] = useState(false);
-  const videoRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
       setSearchQuery('');
       setSearchResults(customers);
       setSelectedTxn(null);
-    } else {
-      stopCamera();
     }
   }, [isOpen, customers]);
-
-  const stopCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const tracks = videoRef.current.srcObject.getTracks();
-      tracks.forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-    }
-  };
 
   const handleTextSearch = (e) => {
     const q = e.target.value;
@@ -42,27 +30,39 @@ export default function AuditRecordsModal({ isOpen, onClose, customers, modelsLo
     setSearchResults(results);
   };
 
-  const handleFaceScan = async () => {
+  const handleFaceScanSearch = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
     if (!modelsLoaded || !customFaceNet || !window.faceapi || !window.tf) {
       alert("Biometric engine is still loading. Please wait a moment.");
       return;
     }
-    setIsFaceScanning(true);
-    setSearchQuery('');
+    
+    setSearchQuery('Scanning face...');
+    setSearchResults([]);
     
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await new Promise(resolve => { videoRef.current.onloadedmetadata = resolve; });
-        videoRef.current.play();
+      const bmp = await window.createImageBitmap(file);
+      const MAX_WIDTH = 600;
+      let width = bmp.width;
+      let height = bmp.height;
+      if (width > MAX_WIDTH) {
+        height = Math.round((height * MAX_WIDTH) / width);
+        width = MAX_WIDTH;
       }
       
-      const detections = await window.faceapi.detectAllFaces(videoRef.current, new window.faceapi.TinyFaceDetectorOptions());
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(bmp, 0, 0, width, height);
+      
+      const detections = await window.faceapi.detectAllFaces(canvas, new window.faceapi.TinyFaceDetectorOptions());
       if (!detections || detections.length === 0) {
-        alert("No face detected! Please ensure proper lighting and try again.");
-        stopCamera();
-        setIsFaceScanning(false);
+        alert("No face detected in the photo! Please ensure proper lighting and try again.");
+        setSearchQuery('');
+        setSearchResults(customers);
         return;
       }
       
@@ -71,7 +71,7 @@ export default function AuditRecordsModal({ isOpen, onClose, customers, modelsLo
       faceCanvas.width = 160;
       faceCanvas.height = 160;
       const fctx = faceCanvas.getContext('2d');
-      fctx.drawImage(videoRef.current, box.x, box.y, box.width, box.height, 0, 0, 160, 160);
+      fctx.drawImage(canvas, box.x, box.y, box.width, box.height, 0, 0, 160, 160);
       
       let tensor = window.tf.browser.fromPixels(faceCanvas);
       tensor = window.tf.cast(tensor, 'float32').sub(127.5).div(127.5).expandDims(0);
@@ -100,15 +100,13 @@ export default function AuditRecordsModal({ isOpen, onClose, customers, modelsLo
       allMatches.sort((a, b) => a._faceDistance - b._faceDistance);
       
       setSearchResults(allMatches);
+      setSearchQuery('');
       if (allMatches.length === 0) alert("No matching records found for this face.");
-      
-      stopCamera();
-      setIsFaceScanning(false);
     } catch(err) {
       console.error(err);
       alert("Face scan failed.");
-      stopCamera();
-      setIsFaceScanning(false);
+      setSearchQuery('');
+      setSearchResults(customers);
     }
   };
 
@@ -130,15 +128,6 @@ export default function AuditRecordsModal({ isOpen, onClose, customers, modelsLo
 
         <div className="flex-grow flex flex-col md:flex-row overflow-hidden relative">
           
-          {/* Scanning Overlay */}
-          {isFaceScanning && (
-            <div className="absolute inset-0 z-50 bg-[#0D0D14]/95 flex flex-col items-center justify-center">
-               <video ref={videoRef} autoPlay playsInline muted className="w-64 h-64 object-cover rounded-full border-4 border-rose-500 animate-pulse shadow-[0_0_40px_rgba(244,63,94,0.4)]" />
-               <p className="text-rose-400 mt-6 font-bold tracking-widest uppercase animate-bounce">Scanning Biometrics...</p>
-               <button onClick={() => { stopCamera(); setIsFaceScanning(false); }} className="mt-8 px-6 py-2 bg-rose-900/40 text-rose-200 rounded-lg border border-rose-500/50 hover:bg-rose-500 hover:text-white transition-colors">Cancel Scan</button>
-            </div>
-          )}
-
           {/* Left Panel: Search & List */}
           <div className="w-full md:w-[40%] flex flex-col border-r border-white/5 bg-[#101018]">
             <div className="p-4 border-b border-white/5 space-y-3">
@@ -149,10 +138,11 @@ export default function AuditRecordsModal({ isOpen, onClose, customers, modelsLo
                 onChange={handleTextSearch}
                 className="w-full bg-[#1A1A24] border border-white/10 rounded-xl px-4 py-3 text-rose-100 placeholder-white/30 focus:outline-none focus:border-rose-500/50"
               />
-              <button onClick={handleFaceScan} disabled={!modelsLoaded} className="w-full bg-rose-500/20 hover:bg-rose-500/40 disabled:opacity-50 border border-rose-500/50 text-rose-200 font-bold tracking-wider py-3 rounded-xl flex items-center justify-center gap-2 transition-all">
+              <label className={`w-full bg-rose-500/20 hover:bg-rose-500/40 border border-rose-500/50 text-rose-200 font-bold tracking-wider py-3 rounded-xl flex items-center justify-center gap-2 transition-all ${!modelsLoaded ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8V6a2 2 0 012-2h2M19 8V6a2 2 0 00-2-2h-2M3 16v2a2 2 0 002 2h2M19 16v2a2 2 0 01-2 2h-2M8 12a4 4 0 108 0 4 4 0 00-8 0z" /></svg>
                 {modelsLoaded ? 'BIOMETRIC FACE SCAN' : 'LOADING MODELS...'}
-              </button>
+                <input type="file" accept="image/*" capture="environment" className="hidden" disabled={!modelsLoaded} onChange={handleFaceScanSearch} />
+              </label>
             </div>
             
             <div className="flex-grow overflow-y-auto p-2 space-y-2 custom-scrollbar">
