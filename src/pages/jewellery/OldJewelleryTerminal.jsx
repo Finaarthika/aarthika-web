@@ -662,7 +662,7 @@ export default function OldJewelleryTerminal() {
             margin: 0,
             filename: `${invoiceNo}_Old_Jewellery.pdf`,
             image: { type: 'jpeg', quality: 1.0 },
-            html2canvas: { scale: 2, useCORS: true },
+            html2canvas: { scale: 2, useCORS: true, scrollY: 0, windowWidth: 1050 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape', compress: true }
           };
           const base64Pdf = await html2pdf().set(opt).from(element).output('datauristring');

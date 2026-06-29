@@ -106,7 +106,7 @@ export default function OldJewelleryPrint({ dataProp, silentMode = false }) {
       )}
 
       {/* A4 Landscape Receipt Canvas */}
-      <div id="actual-receipt-content" className="print-container w-[1050px] min-h-[720px] bg-white pt-1 relative flex flex-col shadow-2xl print:shadow-none my-20 print:my-0 mx-auto overflow-hidden box-border">
+      <div id="actual-receipt-content" className={`print-container w-[1050px] h-[742px] bg-white pt-1 relative flex flex-col overflow-hidden box-border ${silentMode ? '' : 'shadow-2xl print:shadow-none my-20 print:my-0 mx-auto'}`}>
 
         {/* Watermark */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none z-0">
