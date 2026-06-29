@@ -74,7 +74,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* THERMAL RECEIPT PRINTING MAGIC */
 @media print {
-  body:not(.printing-a5) * { 
+  body:not(.printing-a5):not(.printing-a4-land) * { 
     visibility: hidden; 
   }
   .print-receipt-container, .print-receipt-container * { 
