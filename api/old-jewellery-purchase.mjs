@@ -13,12 +13,16 @@ export default async (req, res) => {
       customerVillage,
       customerPhone,
       itemsDescription,
-      grossWeight,
-      meltingPurity,
       finalValue,
       faceVectorStr,
       vaultPdfFile,
-      invoiceNo // optional, for file naming
+      invoiceNo,
+      officerName,
+      goldScrapRate,
+      silverScrapRate,
+      goldWeight,
+      silverWeight,
+      purchasedItems = []
     } = req.body || {};
 
     if (!customerName) {
@@ -110,21 +114,37 @@ export default async (req, res) => {
     const safeStr = (val) => String(val || '').trim();
     const safeNum = (val) => String(val || '0').trim();
 
-    // A: Date, B: Customer Name, C: Village, D: Phone, E: Items, F: Gross Weight, G: Melting Purity, H: Final Value, I: PDF Link, J: Face Vector
+    // Map according to new 31 column mapping
     const rowData = [
       safeStr(date),
       safeStr(customerName),
       safeStr(customerVillage),
       safeStr(customerPhone),
       safeStr(itemsDescription),
-      safeNum(grossWeight),
-      safeStr(meltingPurity),
       safeNum(finalValue),
       safeStr(vaultPdfLink),
-      safeStr(faceVectorStr)
+      safeStr(faceVectorStr),
+      safeStr(officerName),
+      safeNum(goldScrapRate),
+      safeNum(silverScrapRate),
+      safeNum(goldWeight),
+      safeNum(silverWeight)
     ];
 
-    const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:J:append?valueInputOption=USER_ENTERED`;
+    for (let i = 0; i < 6; i++) {
+      if (i < purchasedItems.length) {
+        let item = purchasedItems[i];
+        rowData.push(safeStr(item.name));
+        rowData.push(safeNum(item.weight));
+        rowData.push(safeNum(item.purity));
+      } else {
+        rowData.push("");
+        rowData.push("");
+        rowData.push("");
+      }
+    }
+
+    const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:AE:append?valueInputOption=USER_ENTERED`;
     
     const appendResponse = await fetch(sheetsUrl, {
       method: 'POST',
