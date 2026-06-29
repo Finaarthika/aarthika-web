@@ -471,15 +471,29 @@ export default function OldJewelleryTerminal() {
   let suggestedValuation = 0;
   let goldWeightCalc = 0;
   let silverWeightCalc = 0;
-  
+  const parsePurity = (val) => {
+    if (!val) return 0;
+    const str = String(val).toUpperCase().replace(/%/g, '').trim();
+    if (str.includes('K')) {
+      const k = parseFloat(str.replace('K', ''));
+      return (k / 24) * 100;
+    }
+    return parseFloat(str) || 0;
+  };
+
+  const parseWeight = (val) => {
+    if (!val) return 0;
+    return parseFloat(String(val).replace(/[^0-9.]/g, '')) || 0;
+  };
+
   if (activeTab === 'search' && selectedTransaction) {
     calculatedDescription = selectedItems.map(i => selectedTransaction.items[i]?.name || '').filter(Boolean).join(', ');
     
     selectedItems.forEach(i => {
       const item = selectedTransaction.items[i];
       if (!item) return;
-      const w = Number(item.weight) || 0;
-      const p = Number(item.purity) || 0;
+      const w = parseWeight(item.weight);
+      const p = parsePurity(item.purity);
       const name = (item.name || '').toLowerCase();
       const isSilv = name.includes('silver');
       calculatedWeight += w;
@@ -490,14 +504,14 @@ export default function OldJewelleryTerminal() {
     });
 
     if (selectedItems.length > 0) {
-      calculatedPurity = selectedItems.reduce((acc, i) => acc + (Number(selectedTransaction.items[i]?.purity) || 0), 0) / selectedItems.length;
+      calculatedPurity = selectedItems.reduce((acc, i) => acc + parsePurity(selectedTransaction.items[i]?.purity), 0) / selectedItems.length;
     }
   } else if (activeTab === 'manual') {
     calculatedDescription = manualItems.map(i => `${i.metalType} ${i.name}`).join(', ');
     
     manualItems.forEach(i => {
-      const w = Number(i.weight) || 0;
-      const p = Number(i.purity) || 0;
+      const w = parseWeight(i.weight);
+      const p = parsePurity(i.purity);
       calculatedWeight += w;
       if (i.metalType === 'Silver') silverWeightCalc += w;
       else goldWeightCalc += w;
@@ -506,7 +520,7 @@ export default function OldJewelleryTerminal() {
     });
 
     if (manualItems.length > 0) {
-      calculatedPurity = manualItems.reduce((acc, i) => acc + (Number(i.purity) || 0), 0) / manualItems.length;
+      calculatedPurity = manualItems.reduce((acc, i) => acc + parsePurity(i.purity), 0) / manualItems.length;
     }
   }
 
@@ -538,16 +552,16 @@ export default function OldJewelleryTerminal() {
           const name = (item?.name || '').toLowerCase();
           return {
             name: item?.name || '',
-            weight: item?.weight || 0,
-            purity: item?.purity || 0,
+            weight: parseWeight(item?.weight),
+            purity: parsePurity(item?.purity),
             metalType: name.includes('silver') ? 'Silver' : 'Gold',
           };
         });
       } else {
         purchasedItems = manualItems.map(i => ({
           name: i.name,
-          weight: i.weight,
-          purity: i.purity,
+          weight: parseWeight(i.weight),
+          purity: parsePurity(i.purity),
           metalType: i.metalType,
         }));
       }
