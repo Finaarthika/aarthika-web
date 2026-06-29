@@ -414,8 +414,40 @@ export default function OldJewelleryTerminal() {
 
   const handleToggleItem = (index) => {
     setSelectedItems(prev => {
-      if (prev.includes(index)) return prev.filter(i => i !== index);
-      return [...prev, index];
+      const isSelected = prev.includes(index);
+      
+      if (isSelected) {
+        // Remove from manualItems
+        setManualItems(currentItems => currentItems.filter(item => item.originalIndex !== index));
+        return prev.filter(i => i !== index);
+      } else {
+        // Add to manualItems
+        if (manualItems.length >= 6) {
+          showToast('Maximum 6 items allowed.', 'error');
+          return prev;
+        }
+        
+        const item = selectedTransaction.items[index];
+        const name = item.name || '';
+        const isSilv = name.toLowerCase().includes('silver');
+        
+        const newItem = {
+          name: name,
+          weight: parseWeight(item.weight),
+          purity: parsePurity(item.purity),
+          metalType: isSilv ? 'Silver' : 'Gold',
+          originalIndex: index
+        };
+        
+        // Remove the empty default item if it's the only one and empty
+        if (manualItems.length === 1 && !manualItems[0].name && !manualItems[0].weight) {
+          setManualItems([newItem]);
+        } else {
+          setManualItems(currentItems => [...currentItems, newItem]);
+        }
+        
+        return [...prev, index];
+      }
     });
   };
 
@@ -486,43 +518,22 @@ export default function OldJewelleryTerminal() {
     return parseFloat(String(val).replace(/[^0-9.]/g, '')) || 0;
   };
 
-  if (activeTab === 'search' && selectedTransaction) {
-    calculatedDescription = selectedItems.map(i => selectedTransaction.items[i]?.name || '').filter(Boolean).join(', ');
-    
-    selectedItems.forEach(i => {
-      const item = selectedTransaction.items[i];
-      if (!item) return;
-      const w = parseWeight(item.weight);
-      const p = parsePurity(item.purity);
-      const name = (item.name || '').toLowerCase();
-      const isSilv = name.includes('silver');
-      calculatedWeight += w;
-      if (isSilv) { goldWeightCalc += 0; silverWeightCalc += w; }
-      else { goldWeightCalc += w; }
-      const rate = isSilv ? (liveRates?.silverScrapRate || 0) : (liveRates?.goldScrapRate || 0);
-      suggestedValuation += (w * rate * (p / 100));
-    });
+  calculatedDescription = manualItems.map(i => `${i.metalType} ${i.name}`).join(', ');
+  
+  manualItems.forEach(i => {
+    const w = parseWeight(i.weight);
+    const p = parsePurity(i.purity);
+    calculatedWeight += w;
+    if (i.metalType === 'Silver') silverWeightCalc += w;
+    else goldWeightCalc += w;
+    const rate = i.metalType === 'Silver' ? (liveRates?.silverScrapRate || 0) : (liveRates?.goldScrapRate || 0);
+    suggestedValuation += (w * rate * (p / 100));
+  });
 
-    if (selectedItems.length > 0) {
-      calculatedPurity = selectedItems.reduce((acc, i) => acc + parsePurity(selectedTransaction.items[i]?.purity), 0) / selectedItems.length;
-    }
-  } else if (activeTab === 'manual') {
-    calculatedDescription = manualItems.map(i => `${i.metalType} ${i.name}`).join(', ');
-    
-    manualItems.forEach(i => {
-      const w = parseWeight(i.weight);
-      const p = parsePurity(i.purity);
-      calculatedWeight += w;
-      if (i.metalType === 'Silver') silverWeightCalc += w;
-      else goldWeightCalc += w;
-      const rate = i.metalType === 'Silver' ? (liveRates?.silverScrapRate || 0) : (liveRates?.goldScrapRate || 0);
-      suggestedValuation += (w * rate * (p / 100));
-    });
-
-    if (manualItems.length > 0) {
-      calculatedPurity = manualItems.reduce((acc, i) => acc + parsePurity(i.purity), 0) / manualItems.length;
-    }
+  if (manualItems.length > 0) {
+    calculatedPurity = manualItems.reduce((acc, i) => acc + parsePurity(i.purity), 0) / manualItems.length;
   }
+
 
   // Determine final value (use manual input if provided, otherwise suggested)
   const finalAgreedValue = Number(finalValueInput) || Math.round(suggestedValuation) || 0;
@@ -817,11 +828,14 @@ export default function OldJewelleryTerminal() {
                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Village / City</label>
                       <input type="text" value={manualCustomer.village} onChange={e => setManualCustomer({...manualCustomer, village: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-500 transition-colors font-medium" />
                    </div>
-                 </div>
-               </div>
+                </div>
+              </div>
+            </div>
+           )}
 
-               {/* Items Section */}
-               <div>
+           {/* Items Section (Always visible) */}
+           <div className="bg-[#0D0D14] border border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl space-y-8 mt-6">
+             <div>
                  <div className="flex justify-between items-center mb-4">
                    <h3 className="text-sm font-black text-rose-500 tracking-widest uppercase flex items-center gap-2">
                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
@@ -878,7 +892,6 @@ export default function OldJewelleryTerminal() {
                  </div>
                </div>
             </div>
-          )}
 
           {/* Security Vault Photos (Required for both modes) */}
           <div className="bg-[#0D0D14] border border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl">
