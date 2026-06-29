@@ -129,16 +129,16 @@ export default function OldJewelleryPrint() {
                       <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>
                     </div>
                     <div className="flex items-start justify-end gap-1.5">
-                      <span className="text-[10px] leading-tight font-semibold">Purani Gali, Kishanganj<br/>Bihar – 855107</span>
+                      <span className="text-[10px] leading-tight font-semibold">Dharampur, Uttar Dinajpur<br/>Pin Code : 733210</span>
                       <svg className="w-3.5 h-3.5 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>
                     </div>
                   </div>
                 </div>
 
                 {/* Meta + Customer Row */}
-                <div className="flex justify-between items-start mt-4 mb-3">
+                <div className="flex justify-between items-start mt-2 mb-2">
                   <div>
-                    <h2 className="text-[22px] font-normal font-nirand leading-none tracking-wide mb-2" style={{ color: '#7f1d1d' }}>PURCHASE DETAILS</h2>
+                    <h2 className="text-[22px] font-normal font-nirand leading-none tracking-wide mb-1.5" style={{ color: '#7f1d1d' }}>PURCHASE DETAILS</h2>
                     <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1 text-[12px] font-bold text-gray-700">
                       <span>Date:</span><span className="font-normal text-black">{data.date}</span>
                       <span>Invoice No:</span><span className="font-normal text-black uppercase">{data.invoiceNo}</span>
@@ -154,9 +154,9 @@ export default function OldJewelleryPrint() {
                 </div>
 
                 {/* Items Table */}
-                <div className="w-full border border-gray-200 flex flex-col flex-grow min-h-0 mb-3">
+                <div className="w-full border border-gray-200 flex flex-col flex-grow min-h-0 mb-2">
                   {/* Table Header */}
-                  <div className="grid grid-cols-[3fr_1fr_1fr_1.2fr] bg-[#fef2f2] py-2 px-3 border-b border-gray-200">
+                  <div className="grid grid-cols-[3fr_1fr_1fr_1.2fr] bg-[#fef2f2] py-1.5 px-3 border-b border-gray-200">
                     <div className="text-[10px] font-bold text-gray-600 uppercase font-nirand">Item Description</div>
                     <div className="text-[10px] font-bold text-gray-600 uppercase font-nirand text-center">Weight (g)</div>
                     <div className="text-[10px] font-bold text-gray-600 uppercase font-nirand text-center">Purity (%)</div>
@@ -167,14 +167,14 @@ export default function OldJewelleryPrint() {
                   <div className="flex flex-col flex-grow bg-white">
                     {/* Gold Items */}
                     {goldItems.length > 0 && (
-                      <div className="mb-1">
-                        <div className={`text-[11px] font-bold uppercase px-3 pt-2 pb-0.5 font-nirand tracking-widest`} style={{ color: '#92400e' }}>GOLD</div>
+                      <div className="mb-0.5">
+                        <div className={`text-[11px] font-bold uppercase px-3 pt-1.5 pb-0.5 font-nirand tracking-widest`} style={{ color: '#92400e' }}>GOLD</div>
                         {goldItems.map((item, idx) => {
                           const w = Number(item.weight) || 0;
                           const p = Number(item.purity) || 0;
                           const val = w * goldRate * (p / 100);
                           return (
-                            <div key={`g-${idx}`} className={`grid grid-cols-[3fr_1fr_1fr_1.2fr] ${isCrowded ? 'py-1' : 'py-1.5'} px-3 items-center border-b border-gray-50`}>
+                            <div key={`g-${idx}`} className={`grid grid-cols-[3fr_1fr_1fr_1.2fr] ${isCrowded ? 'py-0.5' : 'py-1'} px-3 items-center border-b border-gray-50`}>
                               <div className={`${isCrowded ? 'text-[10px]' : 'text-[11px]'} font-bold text-gray-800`}>{item.name}</div>
                               <div className={`${isCrowded ? 'text-[10px]' : 'text-[11px]'} font-bold text-gray-700 text-center`}>{w}g</div>
                               <div className={`${isCrowded ? 'text-[10px]' : 'text-[11px]'} font-bold text-gray-700 text-center`}>{Number(p).toFixed(1)}%</div>
@@ -186,14 +186,14 @@ export default function OldJewelleryPrint() {
                     )}
                     {/* Silver Items */}
                     {silverItems.length > 0 && (
-                      <div className="mb-1">
-                        <div className={`text-[11px] font-bold uppercase px-3 pt-2 pb-0.5 font-nirand tracking-widest`} style={{ color: '#374151' }}>SILVER</div>
+                      <div className="mb-0.5">
+                        <div className={`text-[11px] font-bold uppercase px-3 pt-1.5 pb-0.5 font-nirand tracking-widest`} style={{ color: '#374151' }}>SILVER</div>
                         {silverItems.map((item, idx) => {
                           const w = Number(item.weight) || 0;
                           const p = Number(item.purity) || 0;
                           const val = w * silverRate * (p / 100);
                           return (
-                            <div key={`s-${idx}`} className={`grid grid-cols-[3fr_1fr_1fr_1.2fr] ${isCrowded ? 'py-1' : 'py-1.5'} px-3 items-center border-b border-gray-50`}>
+                            <div key={`s-${idx}`} className={`grid grid-cols-[3fr_1fr_1fr_1.2fr] ${isCrowded ? 'py-0.5' : 'py-1'} px-3 items-center border-b border-gray-50`}>
                               <div className={`${isCrowded ? 'text-[10px]' : 'text-[11px]'} font-bold text-gray-800`}>{item.name}</div>
                               <div className={`${isCrowded ? 'text-[10px]' : 'text-[11px]'} font-bold text-gray-700 text-center`}>{w}g</div>
                               <div className={`${isCrowded ? 'text-[10px]' : 'text-[11px]'} font-bold text-gray-700 text-center`}>{Number(p).toFixed(1)}%</div>
@@ -210,8 +210,8 @@ export default function OldJewelleryPrint() {
                 </div>
 
                 {/* Rates + Weights Summary */}
-                <div className="bg-[#fef2f2] border border-rose-100 rounded-xl px-4 py-2.5 mb-3 shrink-0">
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-[11px]">
+                <div className="bg-[#fef2f2] border border-rose-100 rounded-xl px-4 py-1.5 mb-2 shrink-0">
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-[11px]">
                     {goldWeight > 0 && (
                       <>
                         <div className="flex justify-between">
@@ -244,8 +244,8 @@ export default function OldJewelleryPrint() {
                 </div>
 
                 {/* Totals Box */}
-                <div className="bg-[#F8F9FA] px-5 py-2.5 rounded-xl border border-gray-200 shadow-sm shrink-0 mb-3">
-                  <div className="flex justify-between py-1 text-[12px] font-bold text-black border-b border-gray-200 pb-1.5 mb-1.5">
+                <div className="bg-[#F8F9FA] px-5 py-2 rounded-xl border border-gray-200 shadow-sm shrink-0 mb-2">
+                  <div className="flex justify-between py-0.5 text-[12px] font-bold text-black border-b border-gray-200 pb-1 mb-1">
                     <span className="font-nirand uppercase tracking-wide text-gray-500">Suggested Valuation</span>
                     <span className="font-extrabold text-gray-700">{formatINR(data.suggestedValuation)}</span>
                   </div>
