@@ -469,7 +469,7 @@ export default function OldJewelleryTerminal() {
     setManualItems(newItems);
   };
 
-  // Generic Camera Capture for Record Keeping (No Face Vector generated here)
+  // Generic Camera Capture for Record Keeping (also generates Face Vector for customer photo)
   const handleGenericPhotoCapture = async (e, setter) => {
     const file = e.target.files[0];
     if (file) {
@@ -488,7 +488,46 @@ export default function OldJewelleryTerminal() {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(bmp, 0, 0, width, height);
         setter(canvas.toDataURL('image/jpeg', 0.7));
+
+        if (setter === setCustomerPhoto && modelsLoaded && customFaceNet && window.faceapi) {
+          try {
+            showToast("Generating face scan...", "success");
+            const detections = await window.faceapi.detectAllFaces(canvas, new window.faceapi.TinyFaceDetectorOptions());
+            if (detections && detections.length > 0) {
+              const box = detections[0].box;
+              const faceCanvas = document.createElement('canvas');
+              faceCanvas.width = 160;
+              faceCanvas.height = 160;
+              const fctx = faceCanvas.getContext('2d');
+              fctx.drawImage(
+                canvas,
+                box.x, box.y, box.width, box.height,
+                0, 0, 160, 160
+              );
+              let tensor = window.tf.browser.fromPixels(faceCanvas);
+              tensor = window.tf.cast(tensor, 'float32').sub(127.5).div(127.5).expandDims(0);
+              const output = customFaceNet.predict(tensor);
+              const rawVectorArray = Array.from(output.dataSync());
+              tensor.dispose();
+              output.dispose();
+              
+              let sumSq = 0;
+              for (let i = 0; i < rawVectorArray.length; i++) sumSq += rawVectorArray[i] * rawVectorArray[i];
+              const magnitude = Math.sqrt(sumSq) || 1;
+              const vectorArray = rawVectorArray.map(val => val / magnitude);
+              
+              setFaceVectorStr(vectorArray.join(','));
+              showToast("Face vector generated successfully", "success");
+            } else {
+              showToast("No face detected in customer photo. Please retake if possible.", "warning");
+            }
+          } catch (err) {
+            console.error("Face extraction error:", err);
+            showToast("Failed to generate face vector", "error");
+          }
+        }
       } catch(err) {
+        console.error(err);
         const reader = new FileReader();
         reader.onloadend = () => setter(reader.result);
         reader.readAsDataURL(file);
@@ -594,7 +633,7 @@ export default function OldJewelleryTerminal() {
         suggestedValuation: Math.round(suggestedValuation),
         finalValue: finalAgreedValue,
         purchasedItems,
-        faceVectorStr: activeTab === 'search' ? faceVectorStr : '',
+        faceVectorStr,
         customerPhoto: customerPhoto.split(',')[1],
         jewelleryPhoto: jewelleryPhoto.split(',')[1]
       };
