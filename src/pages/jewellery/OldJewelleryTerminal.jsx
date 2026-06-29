@@ -237,26 +237,12 @@ export default function OldJewelleryTerminal() {
         })
         .catch(console.error);
 
-      // Fetch existing customers and their items
+      // Fetch existing customers and their items — keep FLAT, do NOT group
       fetch('/api/jewellery-sales')
         .then(res => res.json())
         .then(data => {
            if (data.data) {
-             const grouped = {};
-             data.data.forEach(txn => {
-                const key = `${txn.customerName}-${txn.phone}`;
-                if (!grouped[key]) {
-                  grouped[key] = {
-                    customerName: txn.customerName,
-                    phone: txn.phone,
-                    village: txn.village,
-                    faceVector: txn.faceVector,
-                    transactions: []
-                  };
-                }
-                grouped[key].transactions.push(txn);
-             });
-             setCustomers(Object.values(grouped));
+             setCustomers(data.data); // Each element is one transaction row
            }
         })
         .catch(console.error);
@@ -269,9 +255,8 @@ export default function OldJewelleryTerminal() {
   // Search State
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [selectedTransactionIndex, setSelectedTransactionIndex] = useState(0);
-  const [selectedItems, setSelectedItems] = useState([]); // array of indexes
+  const [selectedTransaction, setSelectedTransaction] = useState(null); // one flat transaction row
+  const [selectedItems, setSelectedItems] = useState([]); // array of indexes from that transaction
   const [isFaceScanning, setIsFaceScanning] = useState(false);
 
   // Manual Form State
@@ -305,22 +290,14 @@ export default function OldJewelleryTerminal() {
 
     try {
       const bmp = await window.createImageBitmap(file);
-      const MAX_WIDTH = 600;
-      const MAX_HEIGHT = 600;
-      let width = bmp.width;
-      let height = bmp.height;
-      if (width > height) {
-        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-      } else {
-        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-      }
       const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
+      let width = bmp.width; let height = bmp.height;
+      if (width > 800) { height *= 800 / width; width = 800; }
+      canvas.width = width; canvas.height = height;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(bmp, 0, 0, width, height);
       
-      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
       
       const normalizedImg = new Image();
       normalizedImg.onload = async () => {
@@ -338,11 +315,7 @@ export default function OldJewelleryTerminal() {
           faceCanvas.width = 160;
           faceCanvas.height = 160;
           const faceCtx = faceCanvas.getContext('2d');
-          faceCtx.drawImage(
-            normalizedImg,
-            box.x, box.y, box.width, box.height,
-            0, 0, 160, 160
-          );
+          faceCtx.drawImage(normalizedImg, box.x, box.y, box.width, box.height, 0, 0, 160, 160);
           
           let tensor = window.tf.browser.fromPixels(faceCanvas);
           tensor = window.tf.cast(tensor, 'float32').sub(127.5).div(127.5).expandDims(0);
@@ -356,44 +329,41 @@ export default function OldJewelleryTerminal() {
           const magnitude = Math.sqrt(sumSq) || 1;
           const vectorArray = rawVectorArray.map(val => val / magnitude);
           const liveDescriptor = new Float32Array(vectorArray);
+          setFaceVectorStr(vectorArray.join(','));
+          setCustomerPhoto(compressedBase64);
           
-          let bestMatch = null;
-          let lowestDistance = 1000;
-
-          customers.forEach(cust => {
-            if (cust.faceVector) {
-              let rawString = cust.faceVector;
-              if (rawString.startsWith('[')) {
-                try {
-                  rawString = JSON.parse(rawString).join(',');
-                } catch(e) {}
-              }
-              const storedArray = rawString.split(',').map(Number);
-              if (storedArray.length === 512 && !storedArray.some(isNaN)) {
-                const storedDescriptor = new Float32Array(storedArray);
-                const dist = window.faceapi.euclideanDistance(liveDescriptor, storedDescriptor);
-                if (dist < 1.2 && dist < lowestDistance) { 
-                  lowestDistance = dist;
-                  bestMatch = cust;
-                }
-              }
+          // Match against EVERY transaction row individually
+          const allMatches = [];
+          customers.forEach(txn => {
+            if (!txn.faceVector) return;
+            let rawString = txn.faceVector.trim();
+            // Strip JSON array brackets if present
+            if (rawString.startsWith('[')) {
+              try { rawString = JSON.parse(rawString).join(','); } catch(e) {}
+            }
+            const storedArray = rawString.split(',').map(Number);
+            if (storedArray.length !== 512 || storedArray.some(isNaN)) return;
+            const storedDescriptor = new Float32Array(storedArray);
+            const dist = window.faceapi.euclideanDistance(liveDescriptor, storedDescriptor);
+            if (dist < 1.2) {
+              allMatches.push({ ...txn, _faceDistance: dist });
             }
           });
+          
+          // Sort by closest match first
+          allMatches.sort((a, b) => a._faceDistance - b._faceDistance);
 
-          if (bestMatch) {
-            setSearchQuery('');
-            handleSelectCustomer(bestMatch);
-            showToast("Customer found via Face ID!", "success");
-            setCustomerPhoto(compressedBase64);
-            setFaceVectorStr(JSON.stringify(vectorArray));
+          setSearchQuery('');
+          if (allMatches.length > 0) {
+            setSearchResults(allMatches);
+            showToast(`${allMatches.length} matching transaction(s) found!`, "success");
           } else {
-            setSearchQuery('');
             showToast("No matching customer found.", "error");
           }
         } catch(err) {
           console.error(err);
           setSearchQuery('');
-          showToast("Face scan failed.", "error");
+          showToast("Face scan failed: " + err.message, "error");
         }
         setIsFaceScanning(false);
       };
@@ -415,17 +385,17 @@ export default function OldJewelleryTerminal() {
       return;
     }
     const lowerQ = q.toLowerCase();
-    const results = customers.filter(c => 
-      (c.customerName && c.customerName.toLowerCase().includes(lowerQ)) ||
-      (c.phone && c.phone.toLowerCase().includes(lowerQ)) ||
-      (c.village && c.village.toLowerCase().includes(lowerQ))
+    // Return all matching transaction rows individually
+    const results = customers.filter(txn => 
+      (txn.customerName && txn.customerName.toLowerCase().includes(lowerQ)) ||
+      (txn.phone && txn.phone.toLowerCase().includes(lowerQ)) ||
+      (txn.village && txn.village.toLowerCase().includes(lowerQ))
     );
     setSearchResults(results);
   };
 
-  const handleSelectCustomer = (cust) => {
-    setSelectedCustomer(cust);
-    setSelectedTransactionIndex(0);
+  const handleSelectTransaction = (txn) => {
+    setSelectedTransaction(txn);
     setSearchResults([]);
     setSearchQuery('');
     setSelectedItems([]);
@@ -489,23 +459,21 @@ export default function OldJewelleryTerminal() {
   let calculatedPurity = 0;
   let suggestedValuation = 0;
   
-  if (activeTab === 'search' && selectedCustomer && selectedCustomer.transactions && selectedCustomer.transactions[selectedTransactionIndex]) {
-    const txn = selectedCustomer.transactions[selectedTransactionIndex];
-    calculatedDescription = selectedItems.map(i => txn.items[i].name).join(', ');
-    calculatedWeight = selectedItems.reduce((acc, i) => acc + (Number(txn.items[i].weight) || 0), 0);
+  if (activeTab === 'search' && selectedTransaction) {
+    calculatedDescription = selectedItems.map(i => selectedTransaction.items[i]?.name || '').filter(Boolean).join(', ');
+    calculatedWeight = selectedItems.reduce((acc, i) => acc + (Number(selectedTransaction.items[i]?.weight) || 0), 0);
     
-    // Suggestion logic for Search items
     selectedItems.forEach(i => {
-      const w = Number(txn.items[i].weight) || 0;
-      const p = Number(txn.items[i].purity) || 0;
-      const name = txn.items[i].name.toLowerCase();
+      const w = Number(selectedTransaction.items[i]?.weight) || 0;
+      const p = Number(selectedTransaction.items[i]?.purity) || 0;
+      const name = (selectedTransaction.items[i]?.name || '').toLowerCase();
       const isSilv = name.includes('silver');
       const rate = isSilv ? (liveRates?.silverScrapRate || 0) : (liveRates?.goldScrapRate || 0);
       suggestedValuation += (w * rate * (p / 100));
     });
 
     if (selectedItems.length > 0) {
-      calculatedPurity = selectedItems.reduce((acc, i) => acc + (Number(txn.items[i].purity) || 0), 0) / selectedItems.length;
+      calculatedPurity = selectedItems.reduce((acc, i) => acc + (Number(selectedTransaction.items[i]?.purity) || 0), 0) / selectedItems.length;
     }
   } else if (activeTab === 'manual') {
     calculatedDescription = manualItems.map(i => `${i.metalType} ${i.name}`).join(', ');
@@ -529,7 +497,7 @@ export default function OldJewelleryTerminal() {
 
   const handleSubmit = async () => {
     if (activeTab === 'search') {
-      if (!selectedCustomer) return showToast('Please select a customer first.', 'error');
+      if (!selectedTransaction) return showToast('Please select a transaction first.', 'error');
       if (selectedItems.length === 0) return showToast('Please select at least one item to purchase.', 'error');
     } else {
       if (!manualCustomer.name) return showToast('Customer Name is required', 'error');
@@ -548,9 +516,9 @@ export default function OldJewelleryTerminal() {
         invoiceNo,
         date: new Date().toLocaleDateString('en-IN'),
         officerName: officerAuth.staffName,
-        customerName: activeTab === 'search' ? selectedCustomer.customerName : manualCustomer.name,
-        customerPhone: activeTab === 'search' ? selectedCustomer.phone : manualCustomer.phone,
-        customerVillage: activeTab === 'search' ? selectedCustomer.village : manualCustomer.village,
+        customerName: activeTab === 'search' ? selectedTransaction.customerName : manualCustomer.name,
+        customerPhone: activeTab === 'search' ? selectedTransaction.phone : manualCustomer.phone,
+        customerVillage: activeTab === 'search' ? selectedTransaction.village : manualCustomer.village,
         itemsDescription: calculatedDescription,
         grossWeight: calculatedWeight,
         meltingPurity: calculatedPurity,
@@ -583,7 +551,7 @@ export default function OldJewelleryTerminal() {
         setCustomerPhoto('');
         setJewelleryPhoto('');
         setFaceVectorStr('');
-        setSelectedCustomer(null);
+        setSelectedTransaction(null);
         setSelectedItems([]);
         
         navigate('/jewellery/old-purchase/print');
@@ -650,20 +618,20 @@ export default function OldJewelleryTerminal() {
           {/* Tabs */}
           <div className="flex gap-4 mb-2">
             <button 
-              onClick={() => { setActiveTab('search'); setSelectedCustomer(null); }}
+              onClick={() => { setActiveTab('search'); setSelectedTransaction(null); setSearchResults([]); }}
               className={`flex-1 py-3 rounded-xl font-bold text-sm tracking-wide transition-all ${activeTab === 'search' ? 'bg-rose-600 shadow-[0_0_20px_rgba(225,29,72,0.3)] text-white' : 'bg-[#0D0D14] border border-white/10 text-gray-500 hover:text-white hover:border-white/20'}`}
             >
               SEARCH EXISTING CUSTOMER
             </button>
             <button 
-              onClick={() => { setActiveTab('manual'); setSelectedCustomer(null); }}
+              onClick={() => { setActiveTab('manual'); setSelectedTransaction(null); setSearchResults([]); }}
               className={`flex-1 py-3 rounded-xl font-bold text-sm tracking-wide transition-all ${activeTab === 'manual' ? 'bg-rose-600 shadow-[0_0_20px_rgba(225,29,72,0.3)] text-white' : 'bg-[#0D0D14] border border-white/10 text-gray-500 hover:text-white hover:border-white/20'}`}
             >
               MANUAL ENTRY (NEW)
             </button>
           </div>
 
-          {activeTab === 'search' && !selectedCustomer && (
+          {activeTab === 'search' && !selectedTransaction && (
             <div className="bg-[#0D0D14] border border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
                <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500/5 rounded-full blur-3xl pointer-events-none"></div>
                <h3 className="text-sm font-black text-rose-500 tracking-widest uppercase mb-6 flex items-center gap-2">
@@ -700,20 +668,25 @@ export default function OldJewelleryTerminal() {
                  </button>
                </div>
 
-               {/* Search Results */}
+               {/* Search Results - show individual transactions */}
                {searchResults.length > 0 && (
-                 <div className="mt-4 bg-white/5 border border-white/10 rounded-xl overflow-hidden max-h-64 overflow-y-auto">
-                   {searchResults.map((cust, idx) => (
+                 <div className="mt-4 space-y-2 max-h-72 overflow-y-auto">
+                   {searchResults.map((txn, idx) => (
                      <div 
                        key={idx} 
-                       onClick={() => handleSelectCustomer(cust)}
-                       className="p-4 border-b border-white/5 hover:bg-rose-500/10 cursor-pointer transition-colors flex justify-between items-center"
+                       onClick={() => handleSelectTransaction(txn)}
+                       className="p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-rose-500/10 hover:border-rose-500/40 cursor-pointer transition-colors"
                      >
-                       <div>
-                         <div className="font-bold text-white text-lg">{cust.customerName}</div>
-                         <div className="text-xs text-gray-400 font-medium">{cust.village} • Ph: {cust.phone}</div>
+                       <div className="flex justify-between items-start">
+                         <div>
+                           <div className="font-bold text-white">{txn.customerName}</div>
+                           <div className="text-xs text-gray-400">{txn.village} • {txn.phone}</div>
+                           <div className="text-[10px] text-rose-400 font-bold mt-1 uppercase tracking-wider">
+                             {txn.date} {txn.invoiceNo ? `• Inv: ${txn.invoiceNo}` : ''} • {txn.items.length} item(s)
+                           </div>
+                         </div>
+                         <svg className="w-5 h-5 text-gray-500 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                        </div>
-                       <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                      </div>
                    ))}
                  </div>
@@ -721,49 +694,33 @@ export default function OldJewelleryTerminal() {
             </div>
           )}
 
-          {activeTab === 'search' && selectedCustomer && (
+          {activeTab === 'search' && selectedTransaction && (
             <div className="bg-[#0D0D14] border border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
                <div className="flex justify-between items-start mb-6">
                  <div>
-                   <h3 className="text-sm font-black text-rose-500 tracking-widest uppercase mb-1">Selected Customer</h3>
-                   <div className="text-2xl font-black text-white">{selectedCustomer.customerName}</div>
-                   <div className="text-sm text-gray-400 font-medium">{selectedCustomer.village} • {selectedCustomer.phone}</div>
+                   <h3 className="text-sm font-black text-rose-500 tracking-widest uppercase mb-1">Selected Transaction</h3>
+                   <div className="text-2xl font-black text-white">{selectedTransaction.customerName}</div>
+                   <div className="text-sm text-gray-400 font-medium">{selectedTransaction.village} • {selectedTransaction.phone}</div>
+                   <div className="text-xs text-rose-400 font-bold mt-1">
+                     {selectedTransaction.date} {selectedTransaction.invoiceNo ? `• Invoice: ${selectedTransaction.invoiceNo}` : ''}
+                   </div>
                  </div>
-                 <button onClick={() => setSelectedCustomer(null)} className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg font-bold text-gray-300">Change</button>
+                 <button onClick={() => { setSelectedTransaction(null); setSelectedItems([]); }} className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg font-bold text-gray-300">Change</button>
                </div>
 
-               {/* Transaction Dropdown */}
-               <div className="mb-6 border-t border-white/10 pt-4">
-                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Select Past Transaction</label>
-                 <select 
-                   value={selectedTransactionIndex}
-                   onChange={(e) => {
-                     setSelectedTransactionIndex(Number(e.target.value));
-                     setSelectedItems([]);
-                   }}
-                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-500 transition-colors font-medium appearance-none"
-                 >
-                   {selectedCustomer.transactions.map((txn, idx) => (
-                     <option key={idx} value={idx} className="bg-[#0D0D14] text-white">
-                       {txn.date} {txn.invoiceNo ? `(Inv: ${txn.invoiceNo})` : ''} - {txn.items.length} items
-                     </option>
-                   ))}
-                 </select>
-               </div>
-
-               <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Items in Selected Transaction</h4>
-               {(!selectedCustomer.transactions[selectedTransactionIndex]?.items || selectedCustomer.transactions[selectedTransactionIndex].items.length === 0) ? (
-                 <div className="bg-white/5 rounded-xl p-4 text-center text-sm text-gray-400">No previous items found in this transaction. Switch to Manual Entry.</div>
+               <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Items Purchased in this Invoice — select the ones they want to sell back</h4>
+               {(!selectedTransaction.items || selectedTransaction.items.length === 0) ? (
+                 <div className="bg-white/5 rounded-xl p-4 text-center text-sm text-gray-400">No items found for this transaction.</div>
                ) : (
                  <div className="space-y-2">
-                   {selectedCustomer.transactions[selectedTransactionIndex].items.map((item, idx) => (
+                   {selectedTransaction.items.map((item, idx) => (
                      <div 
                        key={idx} 
                        onClick={() => handleToggleItem(idx)}
                        className={`p-4 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${selectedItems.includes(idx) ? 'bg-rose-500/10 border-rose-500/50' : 'bg-white/5 border-white/10 hover:border-white/20'}`}
                      >
                        <div className="flex items-center gap-4">
-                         <div className={`w-5 h-5 rounded flex items-center justify-center border ${selectedItems.includes(idx) ? 'bg-rose-500 border-rose-500 text-white' : 'border-gray-600'}`}>
+                         <div className={`w-5 h-5 rounded flex items-center justify-center border-2 ${selectedItems.includes(idx) ? 'bg-rose-500 border-rose-500 text-white' : 'border-gray-600'}`}>
                            {selectedItems.includes(idx) && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
                          </div>
                          <div>
