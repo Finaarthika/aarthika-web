@@ -469,16 +469,22 @@ export default function OldJewelleryTerminal() {
   let calculatedWeight = 0;
   let calculatedPurity = 0;
   let suggestedValuation = 0;
+  let goldWeightCalc = 0;
+  let silverWeightCalc = 0;
   
   if (activeTab === 'search' && selectedTransaction) {
     calculatedDescription = selectedItems.map(i => selectedTransaction.items[i]?.name || '').filter(Boolean).join(', ');
-    calculatedWeight = selectedItems.reduce((acc, i) => acc + (Number(selectedTransaction.items[i]?.weight) || 0), 0);
     
     selectedItems.forEach(i => {
-      const w = Number(selectedTransaction.items[i]?.weight) || 0;
-      const p = Number(selectedTransaction.items[i]?.purity) || 0;
-      const name = (selectedTransaction.items[i]?.name || '').toLowerCase();
+      const item = selectedTransaction.items[i];
+      if (!item) return;
+      const w = Number(item.weight) || 0;
+      const p = Number(item.purity) || 0;
+      const name = (item.name || '').toLowerCase();
       const isSilv = name.includes('silver');
+      calculatedWeight += w;
+      if (isSilv) { goldWeightCalc += 0; silverWeightCalc += w; }
+      else { goldWeightCalc += w; }
       const rate = isSilv ? (liveRates?.silverScrapRate || 0) : (liveRates?.goldScrapRate || 0);
       suggestedValuation += (w * rate * (p / 100));
     });
@@ -488,12 +494,13 @@ export default function OldJewelleryTerminal() {
     }
   } else if (activeTab === 'manual') {
     calculatedDescription = manualItems.map(i => `${i.metalType} ${i.name}`).join(', ');
-    calculatedWeight = manualItems.reduce((acc, i) => acc + (Number(i.weight) || 0), 0);
     
-    // Suggestion logic for Manual items
     manualItems.forEach(i => {
       const w = Number(i.weight) || 0;
       const p = Number(i.purity) || 0;
+      calculatedWeight += w;
+      if (i.metalType === 'Silver') silverWeightCalc += w;
+      else goldWeightCalc += w;
       const rate = i.metalType === 'Silver' ? (liveRates?.silverScrapRate || 0) : (liveRates?.goldScrapRate || 0);
       suggestedValuation += (w * rate * (p / 100));
     });
@@ -523,6 +530,28 @@ export default function OldJewelleryTerminal() {
     try {
       const invoiceNo = 'OLD-' + Math.floor(1000 + Math.random() * 9000);
       
+      // Build full items list for receipt
+      let purchasedItems = [];
+      if (activeTab === 'search' && selectedTransaction) {
+        purchasedItems = selectedItems.map(i => {
+          const item = selectedTransaction.items[i];
+          const name = (item?.name || '').toLowerCase();
+          return {
+            name: item?.name || '',
+            weight: item?.weight || 0,
+            purity: item?.purity || 0,
+            metalType: name.includes('silver') ? 'Silver' : 'Gold',
+          };
+        });
+      } else {
+        purchasedItems = manualItems.map(i => ({
+          name: i.name,
+          weight: i.weight,
+          purity: i.purity,
+          metalType: i.metalType,
+        }));
+      }
+
       const payload = {
         invoiceNo,
         date: new Date().toLocaleDateString('en-IN'),
@@ -532,9 +561,15 @@ export default function OldJewelleryTerminal() {
         customerVillage: activeTab === 'search' ? selectedTransaction.village : manualCustomer.village,
         itemsDescription: calculatedDescription,
         grossWeight: calculatedWeight,
+        goldWeight: goldWeightCalc,
+        silverWeight: silverWeightCalc,
+        goldScrapRate: liveRates?.goldScrapRate || 0,
+        silverScrapRate: liveRates?.silverScrapRate || 0,
         meltingPurity: calculatedPurity,
+        suggestedValuation: Math.round(suggestedValuation),
         finalValue: finalAgreedValue,
-        faceVectorStr: activeTab === 'search' ? faceVectorStr : '', // Only send face vector if we extracted it during search
+        purchasedItems,
+        faceVectorStr: activeTab === 'search' ? faceVectorStr : '',
         customerPhoto: customerPhoto.split(',')[1],
         jewelleryPhoto: jewelleryPhoto.split(',')[1]
       };
@@ -873,19 +908,37 @@ export default function OldJewelleryTerminal() {
                  </div>
                </div>
                
-               <div className="space-y-3 text-sm border-b border-white/10 pb-4 mb-4">
-                 <div className="flex justify-between">
-                   <span className="text-gray-400 font-medium">Gross Weight</span>
-                   <span className="text-white font-bold">{calculatedWeight ? `${calculatedWeight.toFixed(2)} g` : '0 g'}</span>
-                 </div>
-                 <div className="flex justify-between">
-                   <span className="text-gray-400 font-medium">Melting Purity</span>
-                   <span className="text-white font-bold">{calculatedPurity ? `${calculatedPurity.toFixed(1)}%` : '0 %'}</span>
-                 </div>
-                 <div className="flex justify-between pt-2 border-t border-white/5">
-                   <span className="text-emerald-400 font-bold text-[10px] uppercase tracking-wider">Suggested Valuation</span>
-                   <span className="text-emerald-400 font-black">₹{Math.round(suggestedValuation).toLocaleString('en-IN')}</span>
-                 </div>
+               <div className="space-y-2.5 text-sm border-b border-white/10 pb-4 mb-4">
+                  {goldWeightCalc > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-amber-400/80 font-medium text-xs">Gold Weight</span>
+                      <div className="text-right">
+                        <span className="text-white font-bold">{goldWeightCalc.toFixed(2)} g</span>
+                        <span className="text-amber-400/60 text-[10px] ml-1">@ ₹{liveRates?.goldScrapRate || 0}/g</span>
+                      </div>
+                    </div>
+                  )}
+                  {silverWeightCalc > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400/80 font-medium text-xs">Silver Weight</span>
+                      <div className="text-right">
+                        <span className="text-white font-bold">{silverWeightCalc.toFixed(2)} g</span>
+                        <span className="text-gray-400/60 text-[10px] ml-1">@ ₹{liveRates?.silverScrapRate || 0}/g</span>
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex justify-between border-t border-white/5 pt-2">
+                    <span className="text-gray-400 font-medium">Total Gross Weight</span>
+                    <span className="text-white font-bold">{calculatedWeight ? `${calculatedWeight.toFixed(2)} g` : '0 g'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400 font-medium">Avg. Purity</span>
+                    <span className="text-white font-bold">{calculatedPurity ? `${calculatedPurity.toFixed(1)}%` : '0 %'}</span>
+                  </div>
+                  <div className="flex justify-between pt-2 border-t border-white/5">
+                    <span className="text-emerald-400 font-bold text-[10px] uppercase tracking-wider">Suggested Valuation</span>
+                    <span className="text-emerald-400 font-black">₹{Math.round(suggestedValuation).toLocaleString('en-IN')}</span>
+                  </div>
                </div>
 
                <div>
