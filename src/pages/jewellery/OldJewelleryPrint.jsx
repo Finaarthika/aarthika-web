@@ -66,16 +66,18 @@ export default function OldJewelleryPrint() {
         @import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700;800&display=swap');
         
         @media print {
-          @page { size: A4 landscape; margin: 5mm; }
-          html, body { margin: 0 !important; padding: 0 !important; overflow: visible !important; }
+          @page { size: A4 landscape; margin: 0; }
+          html, body { margin: 0 !important; padding: 0 !important; }
           ::-webkit-scrollbar { display: none !important; }
           body * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
           .no-print { display: none !important; }
-          body, html { background: white !important; height: 100% !important; }
+          body, html { background: white !important; }
           .print-container {
-            position: relative !important; margin: 0 auto !important; padding: 0 !important;
-            box-shadow: none !important; width: 100% !important; height: 200mm !important;
-            page-break-after: always !important; overflow: visible !important;
+            margin: 0 !important; padding: 0 !important;
+            box-shadow: none !important; 
+            transform: scale(1.05);
+            transform-origin: top left;
+            page-break-after: always !important; 
           }
         }
         .font-nirand { font-family: "Red Hat Display", sans-serif; }
@@ -106,7 +108,7 @@ export default function OldJewelleryPrint() {
         <div className="px-6 flex-grow flex flex-col relative z-10 min-h-0">
 
           {/* Master Layout Grid */}
-          <div className="flex flex-row gap-6 h-full mt-2 mb-2 flex-grow">
+          <div className="flex flex-row gap-6 mt-2 mb-2 flex-grow">
             
             {/* LEFT COLUMN: Financials & Details (60%) */}
             <div className="w-[60%] flex flex-col border-r-2 border-gray-200 pr-6">
