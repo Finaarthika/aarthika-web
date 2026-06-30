@@ -1,23 +1,29 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import html2pdf from 'html2pdf.js';
 import logoIcon from '../../assets/4.png';
 import logoTextUrl from '../../assets/Aarthika (1).png';
 import premiumLogo from '../../assets/3.png';
 import InvoicePrint from './InvoicePrint';
 
-const OfficerHeader = ({ officerName, onLogout }) => (
+const OfficerHeader = ({ officerName, onLogout, onBack }) => (
   <div className="sticky top-0 z-50 w-full bg-gradient-to-r from-[#0d0d14] via-aarthikaDark to-amber-900 py-3 sm:py-4 px-4 sm:px-8 shadow-2xl border-b border-white/10 overflow-hidden backdrop-blur-md">
     <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between relative z-10 gap-3 sm:gap-0">
-      <div className="flex items-center group cursor-default">
-        <div className="relative bg-white rounded-full w-12 h-12 sm:w-14 sm:h-14 mr-4 shadow-xl flex-shrink-0 overflow-hidden flex items-center justify-center p-0.5">
-          <img src={logoIcon} alt="Aarthika Icon" className="h-full w-full object-cover rounded-full" />
-        </div>
+      <div className="flex items-center gap-4">
+        <button onClick={onBack} className="text-white hover:text-amber-300 transition-colors bg-white/5 p-2 rounded-lg">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+        </button>
+        <div className="flex items-center group cursor-default">
+          <div className="relative bg-white rounded-full w-12 h-12 sm:w-14 sm:h-14 mr-4 shadow-xl flex-shrink-0 overflow-hidden flex items-center justify-center p-0.5">
+            <img src={logoIcon} alt="Aarthika Icon" className="h-full w-full object-cover rounded-full" />
+          </div>
         <div className="flex flex-col">
           <span className="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-100 to-amber-500 tracking-tight flex items-center gap-2">
             AARTHIKA <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-200 border border-amber-500/30">JEWELLERY POS</span>
           </span>
           <span className="text-amber-200/80 text-[10px] sm:text-xs font-semibold tracking-[0.2em] uppercase">Enterprise Billing Terminal</span>
         </div>
+      </div>
       </div>
       
       <div className="flex items-center gap-4 sm:gap-6 z-10">
@@ -34,6 +40,7 @@ const OfficerHeader = ({ officerName, onLogout }) => (
 );
 
 export default function JewellerySalesTerminal() {
+  const navigate = useNavigate();
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
   const [showPrint, setShowPrint] = useState(false);
   const showToast = (message, type = 'success') => {
@@ -607,7 +614,7 @@ export default function JewellerySalesTerminal() {
     <>
     <div className="bg-[#f8f9fa] min-h-screen font-sans pb-20">
       <ToastComponent />
-      <OfficerHeader officerName={officerAuth.staffName} onLogout={handleLogout} />
+      <OfficerHeader officerName={officerAuth.staffName} onLogout={handleLogout} onBack={() => navigate('/jewellery')} />
       
       <div className="max-w-6xl mx-auto px-4 py-8">
         

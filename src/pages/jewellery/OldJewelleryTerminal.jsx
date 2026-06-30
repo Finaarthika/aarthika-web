@@ -4,19 +4,24 @@ import html2pdf from 'html2pdf.js';
 import logoIcon from '../../assets/4.png';
 import AuditRecordsModal from './AuditRecordsModal';
 
-const OfficerHeader = ({ officerName, onLogout, onAuditRecordsClick }) => (
+const OfficerHeader = ({ officerName, onLogout, onAuditRecordsClick, onBack }) => (
   <div className="sticky top-0 z-50 w-full bg-[#0D0D14] py-3 sm:py-4 px-4 sm:px-8 shadow-2xl border-b border-rose-500/20 overflow-hidden backdrop-blur-md">
     <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between relative z-10 gap-3 sm:gap-0">
-      <div className="flex items-center group cursor-default">
-        <div className="relative bg-rose-950 rounded-full w-12 h-12 sm:w-14 sm:h-14 mr-4 shadow-xl flex-shrink-0 overflow-hidden flex items-center justify-center p-0.5 border-2 border-rose-500/30">
-          <img src={logoIcon} alt="Aarthika Icon" className="h-full w-full object-cover rounded-full" />
-        </div>
+      <div className="flex items-center gap-4">
+        <button onClick={onBack} className="text-white hover:text-rose-300 transition-colors bg-white/5 p-2 rounded-lg">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+        </button>
+        <div className="flex items-center group cursor-default">
+          <div className="relative bg-rose-950 rounded-full w-12 h-12 sm:w-14 sm:h-14 mr-4 shadow-xl flex-shrink-0 overflow-hidden flex items-center justify-center p-0.5 border-2 border-rose-500/30">
+            <img src={logoIcon} alt="Aarthika Icon" className="h-full w-full object-cover rounded-full" />
+          </div>
         <div className="flex flex-col">
           <span className="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-rose-100 to-rose-400 tracking-tight flex items-center gap-2">
             AARTHIKA <span className="text-xs px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-200 border border-rose-500/30">OLD SCRAP POS</span>
           </span>
           <span className="text-rose-200/80 text-[10px] sm:text-xs font-semibold tracking-[0.2em] uppercase">Enterprise Purchase Terminal</span>
         </div>
+      </div>
       </div>
       
       <div className="flex items-center gap-4 sm:gap-6 z-10">
