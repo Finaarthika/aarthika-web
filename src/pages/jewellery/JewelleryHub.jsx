@@ -112,7 +112,7 @@ export default function JewelleryHub() {
           silverRate: Math.round(newSilver)
         };
       });
-    }, 2500);
+    }, 750);
 
     return () => clearInterval(interval);
   }, [baseRates]);
@@ -145,7 +145,7 @@ export default function JewelleryHub() {
                   </span>
                 )}
               </div>
-              <span className={`text-3xl font-black transition-colors duration-500 ${goldTrend > 0 ? 'text-emerald-400' : goldTrend < 0 ? 'text-red-400' : 'text-white'}`}>₹{displayRates.goldRate.toLocaleString()} <span className="text-sm font-medium text-gray-400">/ 10g</span></span>
+              <span className={`text-3xl font-black transition-colors duration-500 ${goldTrend > 0 ? 'text-emerald-400' : goldTrend < 0 ? 'text-red-400' : 'text-white'}`}>₹{displayRates.goldRate.toLocaleString()} <span className="text-sm font-medium text-gray-400">/ g</span></span>
             </div>
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex flex-col justify-center relative overflow-hidden group">
               <div className="absolute -right-4 -top-4 w-24 h-24 bg-zinc-300/10 rounded-full blur-2xl group-hover:bg-zinc-300/20 transition-all duration-500"></div>
@@ -157,7 +157,7 @@ export default function JewelleryHub() {
                   </span>
                 )}
               </div>
-              <span className={`text-3xl font-black transition-colors duration-500 ${silverTrend > 0 ? 'text-emerald-400' : silverTrend < 0 ? 'text-red-400' : 'text-white'}`}>₹{displayRates.silverRate.toLocaleString()} <span className="text-sm font-medium text-gray-400">/ kg</span></span>
+              <span className={`text-3xl font-black transition-colors duration-500 ${silverTrend > 0 ? 'text-emerald-400' : silverTrend < 0 ? 'text-red-400' : 'text-white'}`}>₹{displayRates.silverRate.toLocaleString()} <span className="text-sm font-medium text-gray-400">/ g</span></span>
             </div>
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex flex-col justify-center relative overflow-hidden group">
               <div className="absolute -right-4 -top-4 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all duration-500"></div>
