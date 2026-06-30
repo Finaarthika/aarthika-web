@@ -751,7 +751,7 @@ export default function OldJewelleryTerminal() {
 
   return (
     <div className="min-h-screen bg-[#05050A] text-white flex flex-col font-inter overflow-x-hidden">
-      <OfficerHeader officerName={officerAuth.staffName} onLogout={handleLogout} onAuditRecordsClick={() => setIsAuditModalOpen(true)} />
+      <OfficerHeader officerName={officerAuth.staffName} onLogout={handleLogout} onAuditRecordsClick={() => setIsAuditModalOpen(true)} onBack={() => navigate('/jewellery')} />
       
       {/* Toast Notification */}
       {toast.visible && (
