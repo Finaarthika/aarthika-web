@@ -12,7 +12,7 @@ const OfficerHeader = ({ officerName, onLogout, onAuditRecordsClick, onBack }) =
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
         </button>
         <div className="flex items-center group cursor-default">
-          <div className="relative bg-rose-950 rounded-full w-12 h-12 sm:w-14 sm:h-14 mr-4 shadow-xl flex-shrink-0 overflow-hidden flex items-center justify-center p-0.5 border-2 border-rose-500/30">
+          <div className="relative bg-white rounded-full w-12 h-12 sm:w-14 sm:h-14 mr-4 shadow-xl flex-shrink-0 overflow-hidden flex items-center justify-center p-0.5">
             <img src={logoIcon} alt="Aarthika Icon" className="h-full w-full object-cover rounded-full" />
           </div>
         <div className="flex flex-col">
