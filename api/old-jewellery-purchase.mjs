@@ -7,26 +7,17 @@ export default async (req, res) => {
   }
 
   try {
-    const {
-      date,
-      customerName,
-      customerVillage,
-      customerPhone,
-      itemsDescription,
-      finalValue,
-      faceVectorStr,
-      vaultPdfFile,
-      invoiceNo,
-      officerName,
-      goldScrapRate,
-      silverScrapRate,
-      goldWeight,
-      silverWeight,
-      purchasedItems = []
-    } = req.body || {};
+    let date, customerName, customerVillage, customerPhone, itemsDescription, finalValue, faceVectorStr, vaultPdfFile, invoiceNo, officerName, goldScrapRate, silverScrapRate, goldWeight, silverWeight, purchasedItems;
 
-    if (!customerName) {
-      return res.status(400).json({ error: 'Customer Name is required.' });
+    if (req.method === 'POST') {
+      const body = req.body || {};
+      ({
+        date, customerName, customerVillage, customerPhone, itemsDescription, finalValue, faceVectorStr, vaultPdfFile, invoiceNo, officerName, goldScrapRate, silverScrapRate, goldWeight, silverWeight, purchasedItems = []
+      } = body);
+
+      if (!customerName) {
+        return res.status(400).json({ error: 'Customer Name is required.' });
+      }
     }
 
     let clientEmail = process.env.GOOGLE_CLIENT_EMAIL;

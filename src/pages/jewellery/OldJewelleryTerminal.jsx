@@ -247,11 +247,12 @@ export default function OldJewelleryTerminal() {
       fetch(`/api/old-jewellery-purchase?t=${Date.now()}`)
         .then(res => res.json())
         .then(data => {
+           console.log("OLD JEWELLERY FETCH DATA:", data);
            if (data.data) {
              setCustomers(data.data); // Each element is one transaction row
            }
         })
-        .catch(console.error);
+        .catch(err => console.error("OLD JEWELLERY FETCH ERROR:", err));
     }
   }, [officerAuth.loggedIn]);
 
