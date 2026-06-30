@@ -129,7 +129,7 @@ export default function JewelleryHub() {
         <div className="max-w-7xl w-full">
           
           <div className="mb-8 text-center sm:text-left">
-            <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight mb-4">Command Center</h1>
+            <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight mb-4">Operations Console</h1>
             <p className="text-gray-400 text-lg max-w-2xl">Select a terminal to proceed. All actions are logged and secured under enterprise vault protocols.</p>
           </div>
 
