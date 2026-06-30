@@ -83,7 +83,7 @@ export default async (req, res) => {
       const customers = rows.map((row, index) => {
         let items = [];
         for (let i = 0; i < 6; i++) {
-          const offset = 14 + (i * 3); // Items start at index 14 (column O) after adding Invoice No
+          const offset = 13 + (i * 3); // Items start at index 13 (column N)
           if (row[offset] && String(row[offset]).trim() !== '') {
             items.push({
               name: String(row[offset]).trim(),
@@ -93,19 +93,19 @@ export default async (req, res) => {
           }
         }
         return {
-          invoiceNo: row[0] ? String(row[0]).trim() : `OJ-${Date.now().toString().slice(-6)}-${index}`,
-          date: row[1] ? String(row[1]).trim() : '',
-          customerName: row[2] ? String(row[2]).trim() : '',
-          village: row[3] ? String(row[3]).trim() : '',
-          phone: row[4] ? String(row[4]).trim() : '',
-          itemsDescription: row[5] ? String(row[5]).trim() : '',
-          finalValue: row[6] ? String(row[6]).trim() : '0',
-          vaultPdfLink: row[7] ? String(row[7]).trim() : '',
-          faceVector: row[8] ? String(row[8]).trim() : '',
-          officerName: row[9] ? String(row[9]).trim() : '',
-          goldWeight: row[12] ? String(row[12]).trim() : '0',
-          silverWeight: row[13] ? String(row[13]).trim() : '0',
-          items: items
+          date: row[0] ? String(row[0]).trim() : '',
+          customerName: row[1] ? String(row[1]).trim() : '',
+          village: row[2] ? String(row[2]).trim() : '',
+          phone: row[3] ? String(row[3]).trim() : '',
+          itemsDescription: row[4] ? String(row[4]).trim() : '',
+          finalValue: row[5] ? String(row[5]).trim() : '0',
+          vaultPdfLink: row[6] ? String(row[6]).trim() : '',
+          faceVector: row[7] ? String(row[7]).trim() : '',
+          officerName: row[8] ? String(row[8]).trim() : '',
+          goldWeight: row[11] ? String(row[11]).trim() : '0',
+          silverWeight: row[12] ? String(row[12]).trim() : '0',
+          items: items,
+          invoiceNo: row[31] ? String(row[31]).trim() : `OJ-${Date.now().toString().slice(-6)}-${index}`
         };
       }).filter(c => {
         return c.customerName !== '' && c.faceVector !== '';
@@ -158,9 +158,8 @@ export default async (req, res) => {
     const safeStr = (val) => String(val || '').trim();
     const safeNum = (val) => String(val || '0').trim();
 
-    // Map according to new 32 column mapping
+    // Map according to original 31 column mapping, plus Invoice No at index 31 (AF)
     const rowData = [
-      safeStr(invoiceNo || `OJ-${Date.now().toString().slice(-6)}`),
       safeStr(date),
       safeStr(customerName),
       safeStr(customerVillage),
@@ -189,7 +188,11 @@ export default async (req, res) => {
       }
     }
 
-    const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:AE:append?valueInputOption=USER_ENTERED`;
+    // After the loop for 6 items, we should be at index 31.
+    // Insert invoiceNo at index 31
+    rowData[31] = safeStr(invoiceNo || `OJ-${Date.now().toString().slice(-6)}`);
+
+    const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A:AF:append?valueInputOption=USER_ENTERED`;
     
     const appendResponse = await fetch(sheetsUrl, {
       method: 'POST',
