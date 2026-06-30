@@ -244,7 +244,7 @@ export default function OldJewelleryTerminal() {
         .catch(console.error);
 
       // Fetch existing customers and their items — keep FLAT, do NOT group
-      fetch('/api/jewellery-sales')
+      fetch('/api/old-jewellery-purchase')
         .then(res => res.json())
         .then(data => {
            if (data.data) {

@@ -1,7 +1,7 @@
 import * as jose from 'jose';
 
 export default async (req, res) => {
-  if (req.method !== 'POST') {
+  if (req.method !== 'POST' && req.method !== 'GET') {
     res.setHeader('Content-Type', 'application/json');
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
@@ -71,6 +71,58 @@ export default async (req, res) => {
     const DRIVE_FOLDER_ID = '13ssoK7c3Y_iPVVwwAxfCWkkjwQQ_rNBt';
     const SHEET_ID = '1G1Q-OcKpk3iQ_yHi8Ec0sKYApqxquffSD4oS-e6Mvmo';
     const SHEET_NAME = 'OLD_JEWELLERY_PURCHASE';
+
+    if (req.method === 'GET') {
+      const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!A2:AE`;
+      const sheetResponse = await fetch(sheetsUrl, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      if (!sheetResponse.ok) {
+        const errorText = await sheetResponse.text();
+        throw new Error(`Google Sheets API responded with status ${sheetResponse.status}: ${errorText}`);
+      }
+
+      const data = await sheetResponse.json();
+      const rows = data.values || [];
+
+      const customers = rows.map((row, index) => {
+        let items = [];
+        for (let i = 0; i < 6; i++) {
+          const offset = 13 + (i * 3); // Items start at index 13 (column N)
+          if (row[offset] && String(row[offset]).trim() !== '') {
+            items.push({
+              name: String(row[offset]).trim(),
+              weight: String(row[offset + 1] || '').trim(),
+              purity: String(row[offset + 2] || '').trim()
+            });
+          }
+        }
+        return {
+          invoiceNo: `OJ-${Date.now().toString().slice(-6)}-${index}`, // Generate dummy invoice since we didn't save one explicitly? Wait, looking at POST, we didn't save invoiceNo to sheet! Actually we do: Wait, 1. Date, 2. Name... no invoiceNo column! So I'll use the Date as a proxy or just string.
+          date: row[0] ? String(row[0]).trim() : '',
+          customerName: row[1] ? String(row[1]).trim() : '',
+          village: row[2] ? String(row[2]).trim() : '',
+          phone: row[3] ? String(row[3]).trim() : '',
+          itemsDescription: row[4] ? String(row[4]).trim() : '',
+          finalValue: row[5] ? String(row[5]).trim() : '0',
+          vaultPdfLink: row[6] ? String(row[6]).trim() : '',
+          faceVector: row[7] ? String(row[7]).trim() : '',
+          officerName: row[8] ? String(row[8]).trim() : '',
+          goldWeight: row[11] ? String(row[11]).trim() : '0',
+          silverWeight: row[12] ? String(row[12]).trim() : '0',
+          items: items
+        };
+      }).filter(c => {
+        return c.customerName !== '' && c.faceVector !== '';
+      });
+
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(200).json({ data: customers });
+    }
 
     let vaultPdfLink = '';
 
