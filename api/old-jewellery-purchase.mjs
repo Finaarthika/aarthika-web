@@ -83,7 +83,7 @@ export default async (req, res) => {
       const customers = rows.map((row, index) => {
         let items = [];
         for (let i = 0; i < 6; i++) {
-          const offset = 13 + (i * 3); // Items start at index 13 (column N)
+          const offset = 14 + (i * 3); // Items start at index 14 (column O) after adding Invoice No
           if (row[offset] && String(row[offset]).trim() !== '') {
             items.push({
               name: String(row[offset]).trim(),
@@ -93,18 +93,18 @@ export default async (req, res) => {
           }
         }
         return {
-          invoiceNo: `OJ-${Date.now().toString().slice(-6)}-${index}`, // Generate dummy invoice since we didn't save one explicitly? Wait, looking at POST, we didn't save invoiceNo to sheet! Actually we do: Wait, 1. Date, 2. Name... no invoiceNo column! So I'll use the Date as a proxy or just string.
-          date: row[0] ? String(row[0]).trim() : '',
-          customerName: row[1] ? String(row[1]).trim() : '',
-          village: row[2] ? String(row[2]).trim() : '',
-          phone: row[3] ? String(row[3]).trim() : '',
-          itemsDescription: row[4] ? String(row[4]).trim() : '',
-          finalValue: row[5] ? String(row[5]).trim() : '0',
-          vaultPdfLink: row[6] ? String(row[6]).trim() : '',
-          faceVector: row[7] ? String(row[7]).trim() : '',
-          officerName: row[8] ? String(row[8]).trim() : '',
-          goldWeight: row[11] ? String(row[11]).trim() : '0',
-          silverWeight: row[12] ? String(row[12]).trim() : '0',
+          invoiceNo: row[0] ? String(row[0]).trim() : `OJ-${Date.now().toString().slice(-6)}-${index}`,
+          date: row[1] ? String(row[1]).trim() : '',
+          customerName: row[2] ? String(row[2]).trim() : '',
+          village: row[3] ? String(row[3]).trim() : '',
+          phone: row[4] ? String(row[4]).trim() : '',
+          itemsDescription: row[5] ? String(row[5]).trim() : '',
+          finalValue: row[6] ? String(row[6]).trim() : '0',
+          vaultPdfLink: row[7] ? String(row[7]).trim() : '',
+          faceVector: row[8] ? String(row[8]).trim() : '',
+          officerName: row[9] ? String(row[9]).trim() : '',
+          goldWeight: row[12] ? String(row[12]).trim() : '0',
+          silverWeight: row[13] ? String(row[13]).trim() : '0',
           items: items
         };
       }).filter(c => {
@@ -158,8 +158,9 @@ export default async (req, res) => {
     const safeStr = (val) => String(val || '').trim();
     const safeNum = (val) => String(val || '0').trim();
 
-    // Map according to new 31 column mapping
+    // Map according to new 32 column mapping
     const rowData = [
+      safeStr(invoiceNo || `OJ-${Date.now().toString().slice(-6)}`),
       safeStr(date),
       safeStr(customerName),
       safeStr(customerVillage),

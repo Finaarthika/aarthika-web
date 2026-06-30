@@ -218,10 +218,26 @@ export default function AuditRecordsModal({ isOpen, onClose, customers, modelsLo
                 </div>
 
                 <div className="mb-6">
-                  <h4 className="text-xs text-white/40 uppercase tracking-widest mb-2 border-b border-white/10 pb-1">Items Details</h4>
-                  <div className="text-rose-100 font-medium">
-                    {selectedTxn.itemsDescription ? selectedTxn.itemsDescription : 'No item details'}
-                  </div>
+                  <h4 className="text-xs text-white/40 uppercase tracking-widest mb-3 border-b border-white/10 pb-2">Items Details</h4>
+                  
+                  {selectedTxn.items && selectedTxn.items.length > 0 ? (
+                    <div className="space-y-2 mb-4">
+                      {selectedTxn.items.map((item, idx) => (
+                        <div key={idx} className="flex justify-between items-center bg-white/5 px-3 py-2 rounded-lg border border-white/10">
+                          <span className="text-rose-100 font-semibold">{item.name}</span>
+                          <div className="flex gap-3 text-sm">
+                            <span className="text-white/70">Wt: <span className="text-white font-medium">{item.weight}g</span></span>
+                            <span className="text-white/70">Purity: <span className="text-white font-medium">{item.purity}%</span></span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-rose-100 font-medium mb-4">
+                      {selectedTxn.itemsDescription ? selectedTxn.itemsDescription : 'No item details'}
+                    </div>
+                  )}
+
                   <div className="flex gap-4 mt-3">
                     <div className="bg-amber-500/10 text-amber-200 px-3 py-1.5 rounded border border-amber-500/20 text-sm font-bold">Gold: {selectedTxn.goldWeight || 0}g</div>
                     <div className="bg-gray-400/10 text-gray-200 px-3 py-1.5 rounded border border-gray-400/20 text-sm font-bold">Silver: {selectedTxn.silverWeight || 0}g</div>
@@ -231,7 +247,7 @@ export default function AuditRecordsModal({ isOpen, onClose, customers, modelsLo
                 <div className="flex items-center justify-between mt-8 p-4 bg-rose-950/20 rounded-xl border border-rose-500/30 relative z-10">
                   <div>
                     <p className="text-[10px] text-rose-400/80 uppercase tracking-widest mb-0.5">Final Value</p>
-                    <p className="text-3xl font-black text-rose-400">₹{Number(selectedTxn.finalValue || 0).toLocaleString('en-IN')}</p>
+                    <p className="text-3xl font-black text-rose-400">₹{Number(String(selectedTxn.finalValue || '0').replace(/[^0-9.]/g, '')).toLocaleString('en-IN')}</p>
                   </div>
                   {selectedTxn.vaultPdfLink && selectedTxn.vaultPdfLink.startsWith('http') ? (
                     <a href={selectedTxn.vaultPdfLink} target="_blank" rel="noopener noreferrer" className="px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-lg font-bold tracking-wider uppercase text-sm shadow-lg shadow-rose-900/50 transition-all flex items-center gap-2">
