@@ -22,16 +22,31 @@ const OfficerHeader = () => (
 
 export default function JewelleryHub() {
   const navigate = useNavigate();
-  const [liveRates, setLiveRates] = useState({ goldRate: 0, silverRate: 0 });
+  const [baseRates, setBaseRates] = useState({ goldRate: 0, silverRate: 0 });
+  const [displayRates, setDisplayRates] = useState({ goldRate: 0, silverRate: 0 });
+  const [goldTrend, setGoldTrend] = useState(0);
+  const [silverTrend, setSilverTrend] = useState(0);
   const [activeOrdersCount, setActiveOrdersCount] = useState(0);
   const [todayPurchases, setTodayPurchases] = useState(0);
+
+  const isMarketClosed = () => {
+    const now = new Date();
+    const day = now.getDay();
+    const hours = now.getHours();
+    if (day === 0) return true; // Sunday fully closed
+    if (day === 6 && hours >= 23) return true; // Saturday after 11 PM
+    return false;
+  };
 
   useEffect(() => {
     // Fetch Metal Rates
     fetch('/api/metal-rates')
       .then(res => res.json())
       .then(data => {
-        if (!data.error) setLiveRates(data);
+        if (!data.error) {
+          setBaseRates({ goldRate: Number(data.goldRate) || 0, silverRate: Number(data.silverRate) || 0 });
+          setDisplayRates({ goldRate: Number(data.goldRate) || 0, silverRate: Number(data.silverRate) || 0 });
+        }
       })
       .catch(console.error);
 
@@ -61,6 +76,47 @@ export default function JewelleryHub() {
       .catch(console.error);
   }, []);
 
+  useEffect(() => {
+    if (!baseRates.goldRate || !baseRates.silverRate) return;
+
+    const interval = setInterval(() => {
+      if (isMarketClosed()) {
+        setDisplayRates(baseRates);
+        setGoldTrend(0);
+        setSilverTrend(0);
+        return;
+      }
+
+      setDisplayRates(prev => {
+        const goldDrift = (Math.random() - 0.5) * (baseRates.goldRate * 0.002);
+        const silverDrift = (Math.random() - 0.5) * (baseRates.silverRate * 0.002);
+
+        let newGold = prev.goldRate + goldDrift;
+        let newSilver = prev.silverRate + silverDrift;
+
+        const goldMax = baseRates.goldRate * 1.015;
+        const goldMin = baseRates.goldRate * 0.985;
+        if (newGold > goldMax) newGold = goldMax;
+        if (newGold < goldMin) newGold = goldMin;
+
+        const silverMax = baseRates.silverRate * 1.015;
+        const silverMin = baseRates.silverRate * 0.985;
+        if (newSilver > silverMax) newSilver = silverMax;
+        if (newSilver < silverMin) newSilver = silverMin;
+
+        setGoldTrend(newGold > prev.goldRate ? 1 : (newGold < prev.goldRate ? -1 : 0));
+        setSilverTrend(newSilver > prev.silverRate ? 1 : (newSilver < prev.silverRate ? -1 : 0));
+
+        return {
+          goldRate: Math.round(newGold),
+          silverRate: Math.round(newSilver)
+        };
+      });
+    }, 2500);
+
+    return () => clearInterval(interval);
+  }, [baseRates]);
+
   return (
     <div className="min-h-screen bg-[#05050A] flex flex-col font-inter relative overflow-hidden">
       {/* Background Ambience */}
@@ -78,11 +134,30 @@ export default function JewelleryHub() {
           </div>
 
           {/* Live Analytics Dashboard Banner */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex flex-col justify-center relative overflow-hidden group">
               <div className="absolute -right-4 -top-4 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all duration-500"></div>
-              <span className="text-amber-500/80 text-xs font-bold tracking-widest uppercase mb-2">Live Gold Rate</span>
-              <span className="text-3xl font-black text-white">₹{liveRates.goldRate.toLocaleString()} <span className="text-sm font-medium text-gray-400">/ 10g</span></span>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-amber-500/80 text-xs font-bold tracking-widest uppercase">Live Gold Rate</span>
+                {goldTrend !== 0 && (
+                  <span className={goldTrend > 0 ? "text-emerald-400" : "text-red-400"}>
+                    {goldTrend > 0 ? '▲' : '▼'}
+                  </span>
+                )}
+              </div>
+              <span className={`text-3xl font-black transition-colors duration-500 ${goldTrend > 0 ? 'text-emerald-400' : goldTrend < 0 ? 'text-red-400' : 'text-white'}`}>₹{displayRates.goldRate.toLocaleString()} <span className="text-sm font-medium text-gray-400">/ 10g</span></span>
+            </div>
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex flex-col justify-center relative overflow-hidden group">
+              <div className="absolute -right-4 -top-4 w-24 h-24 bg-zinc-300/10 rounded-full blur-2xl group-hover:bg-zinc-300/20 transition-all duration-500"></div>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-zinc-400 text-xs font-bold tracking-widest uppercase">Live Silver Rate</span>
+                {silverTrend !== 0 && (
+                  <span className={silverTrend > 0 ? "text-emerald-400" : "text-red-400"}>
+                    {silverTrend > 0 ? '▲' : '▼'}
+                  </span>
+                )}
+              </div>
+              <span className={`text-3xl font-black transition-colors duration-500 ${silverTrend > 0 ? 'text-emerald-400' : silverTrend < 0 ? 'text-red-400' : 'text-white'}`}>₹{displayRates.silverRate.toLocaleString()} <span className="text-sm font-medium text-gray-400">/ kg</span></span>
             </div>
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex flex-col justify-center relative overflow-hidden group">
               <div className="absolute -right-4 -top-4 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all duration-500"></div>
