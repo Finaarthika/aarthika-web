@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logoIcon from '../../assets/4.png';
 
@@ -22,6 +22,44 @@ const OfficerHeader = () => (
 
 export default function JewelleryHub() {
   const navigate = useNavigate();
+  const [liveRates, setLiveRates] = useState({ goldRate: 0, silverRate: 0 });
+  const [activeOrdersCount, setActiveOrdersCount] = useState(0);
+  const [todayPurchases, setTodayPurchases] = useState(0);
+
+  useEffect(() => {
+    // Fetch Metal Rates
+    fetch('/api/metal-rates')
+      .then(res => res.json())
+      .then(data => {
+        if (!data.error) setLiveRates(data);
+      })
+      .catch(console.error);
+
+    // Fetch Active Custom Orders
+    fetch('/api/open-orders')
+      .then(res => res.json())
+      .then(data => {
+        if (data.openOrders) setActiveOrdersCount(data.openOrders.length);
+      })
+      .catch(console.error);
+
+    // Fetch Today's Purchases
+    fetch('/api/old-jewellery-purchase')
+      .then(res => res.json())
+      .then(data => {
+        if (data.data) {
+          const todayStr = new Date().toLocaleDateString('en-GB'); // DD/MM/YYYY
+          const todayTotal = data.data
+            .filter(item => item.date === todayStr)
+            .reduce((sum, item) => {
+              const val = parseFloat(String(item.finalValue).replace(/[^0-9.-]+/g, "")) || 0;
+              return sum + val;
+            }, 0);
+          setTodayPurchases(todayTotal);
+        }
+      })
+      .catch(console.error);
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#05050A] flex flex-col font-inter relative overflow-hidden">
@@ -34,9 +72,28 @@ export default function JewelleryHub() {
       <div className="flex-grow flex items-center justify-center p-6 sm:p-12 z-10">
         <div className="max-w-7xl w-full">
           
-          <div className="mb-12 text-center sm:text-left">
+          <div className="mb-8 text-center sm:text-left">
             <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight mb-4">Command Center</h1>
             <p className="text-gray-400 text-lg max-w-2xl">Select a terminal to proceed. All actions are logged and secured under enterprise vault protocols.</p>
+          </div>
+
+          {/* Live Analytics Dashboard Banner */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex flex-col justify-center relative overflow-hidden group">
+              <div className="absolute -right-4 -top-4 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all duration-500"></div>
+              <span className="text-amber-500/80 text-xs font-bold tracking-widest uppercase mb-2">Live Gold Rate</span>
+              <span className="text-3xl font-black text-white">₹{liveRates.goldRate.toLocaleString()} <span className="text-sm font-medium text-gray-400">/ 10g</span></span>
+            </div>
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex flex-col justify-center relative overflow-hidden group">
+              <div className="absolute -right-4 -top-4 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all duration-500"></div>
+              <span className="text-indigo-400/80 text-xs font-bold tracking-widest uppercase mb-2">Active Custom Orders</span>
+              <span className="text-3xl font-black text-white">{activeOrdersCount} <span className="text-sm font-medium text-gray-400">Orders Pending</span></span>
+            </div>
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex flex-col justify-center relative overflow-hidden group">
+              <div className="absolute -right-4 -top-4 w-24 h-24 bg-rose-500/10 rounded-full blur-2xl group-hover:bg-rose-500/20 transition-all duration-500"></div>
+              <span className="text-rose-400/80 text-xs font-bold tracking-widest uppercase mb-2">Today's Purchases</span>
+              <span className="text-3xl font-black text-white">₹{todayPurchases.toLocaleString()} <span className="text-sm font-medium text-gray-400">Value Vaulted</span></span>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
