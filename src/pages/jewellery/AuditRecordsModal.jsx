@@ -45,66 +45,82 @@ export default function AuditRecordsModal({ isOpen, onClose, customers, modelsLo
     try {
       const bmp = await window.createImageBitmap(file);
       const MAX_WIDTH = 600;
+      const MAX_HEIGHT = 600;
       let width = bmp.width;
       let height = bmp.height;
-      if (width > MAX_WIDTH) {
-        height = Math.round((height * MAX_WIDTH) / width);
-        width = MAX_WIDTH;
+      if (width > height) {
+        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+      } else {
+        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
       }
-      
       const canvas = document.createElement('canvas');
       canvas.width = width;
       canvas.height = height;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(bmp, 0, 0, width, height);
       
-      const detections = await window.faceapi.detectAllFaces(canvas, new window.faceapi.TinyFaceDetectorOptions());
-      if (!detections || detections.length === 0) {
-        alert("No face detected in the photo! Please ensure proper lighting and try again.");
-        setSearchQuery('');
-        setSearchResults(customers);
-        return;
-      }
+      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
       
-      const box = detections[0].box;
-      const faceCanvas = document.createElement('canvas');
-      faceCanvas.width = 160;
-      faceCanvas.height = 160;
-      const fctx = faceCanvas.getContext('2d');
-      fctx.drawImage(canvas, box.x, box.y, box.width, box.height, 0, 0, 160, 160);
-      
-      let tensor = window.tf.browser.fromPixels(faceCanvas);
-      tensor = window.tf.cast(tensor, 'float32').sub(127.5).div(127.5).expandDims(0);
-      const output = customFaceNet.predict(tensor);
-      const rawVectorArray = Array.from(output.dataSync());
-      tensor.dispose();
-      output.dispose();
-      
-      let sumSq = 0;
-      for (let i = 0; i < rawVectorArray.length; i++) sumSq += rawVectorArray[i] * rawVectorArray[i];
-      const magnitude = Math.sqrt(sumSq) || 1;
-      const liveDescriptor = new Float32Array(rawVectorArray.map(val => val / magnitude));
-      
-      const allMatches = [];
-      customers.forEach(txn => {
-        if (!txn.faceVector || !txn.faceVector.includes(',')) return;
-        const storedArray = txn.faceVector.split(',').map(Number);
-        if (storedArray.length !== 512) return;
-        const storedDescriptor = new Float32Array(storedArray);
-        const dist = window.faceapi.euclideanDistance(liveDescriptor, storedDescriptor);
-        if (dist < 1.0) {
-          allMatches.push({ ...txn, _faceDistance: dist });
+      const normalizedImg = new Image();
+      normalizedImg.onload = async () => {
+        try {
+          const options = new window.faceapi.TinyFaceDetectorOptions({ inputSize: 512, scoreThreshold: 0.2 });
+          const detection = await window.faceapi.detectSingleFace(normalizedImg, options);
+          
+          if (!detection) {
+            alert("No face detected in the photo! Please ensure proper lighting and try again.");
+            setSearchQuery('');
+            setSearchResults(customers);
+            return;
+          }
+          
+          const box = detection.box;
+          const faceCanvas = document.createElement('canvas');
+          faceCanvas.width = 160;
+          faceCanvas.height = 160;
+          const fctx = faceCanvas.getContext('2d');
+          fctx.drawImage(normalizedImg, box.x, box.y, box.width, box.height, 0, 0, 160, 160);
+          
+          let tensor = window.tf.browser.fromPixels(faceCanvas);
+          tensor = window.tf.cast(tensor, 'float32').sub(127.5).div(127.5).expandDims(0);
+          const output = customFaceNet.predict(tensor);
+          const rawVectorArray = Array.from(output.dataSync());
+          tensor.dispose();
+          output.dispose();
+          
+          let sumSq = 0;
+          for (let i = 0; i < rawVectorArray.length; i++) sumSq += rawVectorArray[i] * rawVectorArray[i];
+          const magnitude = Math.sqrt(sumSq) || 1;
+          const liveDescriptor = new Float32Array(rawVectorArray.map(val => val / magnitude));
+          
+          const allMatches = [];
+          customers.forEach(txn => {
+            if (!txn.faceVector || !txn.faceVector.includes(',')) return;
+            const storedArray = txn.faceVector.split(',').map(Number);
+            if (storedArray.length !== 512) return;
+            const storedDescriptor = new Float32Array(storedArray);
+            const dist = window.faceapi.euclideanDistance(liveDescriptor, storedDescriptor);
+            if (dist < 1.0) {
+              allMatches.push({ ...txn, _faceDistance: dist });
+            }
+          });
+          
+          allMatches.sort((a, b) => a._faceDistance - b._faceDistance);
+          
+          setSearchResults(allMatches);
+          setSearchQuery('');
+          if (allMatches.length === 0) alert("No matching records found for this face.");
+        } catch(err) {
+          console.error(err);
+          alert("Face scan failed.");
+          setSearchQuery('');
+          setSearchResults(customers);
         }
-      });
-      
-      allMatches.sort((a, b) => a._faceDistance - b._faceDistance);
-      
-      setSearchResults(allMatches);
-      setSearchQuery('');
-      if (allMatches.length === 0) alert("No matching records found for this face.");
+      };
+      normalizedImg.src = compressedBase64;
     } catch(err) {
       console.error(err);
-      alert("Face scan failed.");
+      alert("Error processing camera image.");
       setSearchQuery('');
       setSearchResults(customers);
     }
