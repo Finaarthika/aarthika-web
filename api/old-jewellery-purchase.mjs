@@ -121,6 +121,7 @@ export default async (req, res) => {
       });
 
       res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Cache-Control', 'no-store, max-age=0');
       return res.status(200).json({ data: customers });
     }
 
