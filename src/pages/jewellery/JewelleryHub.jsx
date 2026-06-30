@@ -27,7 +27,7 @@ export default function JewelleryHub() {
   const [goldTrend, setGoldTrend] = useState(0);
   const [silverTrend, setSilverTrend] = useState(0);
   const [activeOrdersCount, setActiveOrdersCount] = useState(0);
-  const [todayPurchases, setTodayPurchases] = useState(0);
+  const [todaySales, setTodaySales] = useState(0);
 
   const isMarketClosed = () => {
     const now = new Date();
@@ -58,8 +58,8 @@ export default function JewelleryHub() {
       })
       .catch(console.error);
 
-    // Fetch Today's Purchases
-    fetch('/api/old-jewellery-purchase')
+    // Fetch Today's Sales
+    fetch('/api/jewellery-sales')
       .then(res => res.json())
       .then(data => {
         if (data.data) {
@@ -67,10 +67,10 @@ export default function JewelleryHub() {
           const todayTotal = data.data
             .filter(item => item.date === todayStr)
             .reduce((sum, item) => {
-              const val = parseFloat(String(item.finalValue).replace(/[^0-9.-]+/g, "")) || 0;
+              const val = parseFloat(String(item.finalPaid).replace(/[^0-9.-]+/g, "")) || 0;
               return sum + val;
             }, 0);
-          setTodayPurchases(todayTotal);
+          setTodaySales(todayTotal);
         }
       })
       .catch(console.error);
@@ -166,8 +166,8 @@ export default function JewelleryHub() {
             </div>
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex flex-col justify-center relative overflow-hidden group">
               <div className="absolute -right-4 -top-4 w-24 h-24 bg-rose-500/10 rounded-full blur-2xl group-hover:bg-rose-500/20 transition-all duration-500"></div>
-              <span className="text-rose-400/80 text-xs font-bold tracking-widest uppercase mb-2">Today's Purchases</span>
-              <span className="text-3xl font-black text-white">₹{todayPurchases.toLocaleString()} <span className="text-sm font-medium text-gray-400">Value Vaulted</span></span>
+              <span className="text-rose-400/80 text-xs font-bold tracking-widest uppercase mb-2">Today's Sales</span>
+              <span className="text-3xl font-black text-white">₹{todaySales.toLocaleString()} <span className="text-sm font-medium text-gray-400">Total Revenue</span></span>
             </div>
           </div>
 

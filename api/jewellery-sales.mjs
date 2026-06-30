@@ -118,6 +118,7 @@ export default async (req, res) => {
           customerName: row[2] ? String(row[2]).trim() : '',
           village: row[3] ? String(row[3]).trim() : '',
           phone: row[4] ? String(row[4]).trim() : '',
+          finalPaid: row[14] ? String(row[14]).trim() : '0',
           faceVector: row[15] ? String(row[15]).trim() : '',
           items: items
         };
