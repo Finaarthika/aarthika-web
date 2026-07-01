@@ -723,7 +723,7 @@ export default function OldJewelleryTerminal() {
   if (!officerAuth.loggedIn) return null;
 
   return (
-    <div className="min-h-screen bg-[#05050A] text-white flex flex-col font-inter overflow-x-hidden">
+    <div className="min-h-screen bg-[#05050A] text-white flex flex-col font-outfit overflow-x-hidden">
       <OfficerHeader officerName={officerAuth.staffName} onLogout={handleLogout} onAuditRecordsClick={() => setIsAuditModalOpen(true)} onBack={() => navigate('/jewellery')} />
       
       {/* Toast Notification */}

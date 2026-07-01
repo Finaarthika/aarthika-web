@@ -65,7 +65,7 @@ export default function InvoicePrint() {
     }
   };
 
-  if (!data) return <div className="p-10 text-center font-sans text-gray-500">No invoice data found in session.</div>;
+  if (!data) return <div className="p-10 text-center font-outfit text-gray-500">No invoice data found in session.</div>;
 
   const formatINR = (amount) => {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);

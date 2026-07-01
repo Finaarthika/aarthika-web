@@ -12,6 +12,10 @@ export default {
       },
       backgroundImage: {
         'gradient-brand': 'linear-gradient(to right, #14141e, #4745ca)',
+      },
+      fontFamily: {
+        'inter': ['Inter', 'sans-serif'],
+        'outfit': ['Outfit', 'sans-serif'],
       }
     },
   },
