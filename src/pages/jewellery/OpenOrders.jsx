@@ -180,30 +180,32 @@ export default function OpenOrders() {
 
   if (!officerAuth.loggedIn) {
     return (
-      <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center p-4">
-        <div className="bg-white max-w-md w-full rounded-3xl shadow-2xl p-8 border border-gray-100 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
-          <div className="flex justify-center mb-6">
-            <img src={logoIcon} alt="Aarthika" className="w-20 h-20 rounded-full shadow-lg" />
+      <div className="min-h-screen bg-[#05050A] flex flex-col items-center justify-center font-inter relative overflow-hidden p-4">
+        {/* Background Ambience */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-teal-500/10 rounded-full blur-[150px] pointer-events-none" />
+        
+        <div className="relative z-10 bg-white/5 backdrop-blur-xl border border-white/10 p-8 sm:p-12 rounded-[2rem] shadow-2xl w-full max-w-md group overflow-hidden">
+          <div className="absolute -right-4 -top-4 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all duration-500"></div>
+          <div className="flex flex-col items-center mb-10 relative z-10">
+            <h1 className="text-3xl font-black text-white tracking-tight mb-2">AARTHIKA</h1>
+            <div className="text-emerald-400/80 tracking-[0.2em] text-xs font-bold uppercase text-center">Active Orders Auth</div>
           </div>
-          <h2 className="text-2xl font-black text-center text-[#1B1464] mb-2 font-nirand">SECURITY GATEWAY</h2>
-          <p className="text-center text-sm font-semibold text-teal-500 tracking-widest uppercase mb-8">Open Orders Access</p>
-          
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleLogin} className="space-y-6 relative z-10">
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Officer ID</label>
-              <input type="text" className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-lg font-bold text-gray-800 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-gray-50/50" value={loginForm.userId} onChange={e => setLoginForm({...loginForm, userId: e.target.value})} required placeholder="Enter ID" />
+              <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Officer ID</label>
+              <input type="text" className="w-full bg-white/5 border border-white/10 text-white placeholder-gray-500 px-5 py-4 rounded-xl focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-medium" value={loginForm.userId} onChange={e => setLoginForm({...loginForm, userId: e.target.value})} placeholder="Enter ID" required />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Terminal Password</label>
-              <input type="password" className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-lg font-bold text-gray-800 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-gray-50/50" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} required placeholder="••••••••" />
+              <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Vault Key</label>
+              <input type="password" className="w-full bg-white/5 border border-white/10 text-white placeholder-gray-500 px-5 py-4 rounded-xl focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-medium" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} placeholder="••••••••" required />
             </div>
-            {authError && <div className="p-3 bg-red-50 text-red-600 text-sm font-semibold rounded-lg text-center border border-red-100">{authError}</div>}
-            <button type="submit" disabled={authLoading} className="w-full bg-[#1B1464] hover:bg-emerald-900 text-white font-bold py-4 rounded-xl shadow-[0_8px_20px_-6px_rgba(27,20,100,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(27,20,100,0.6)] hover:-translate-y-0.5 transition-all duration-300">
-              {authLoading ? 'AUTHENTICATING...' : 'AUTHORIZE ACCESS'}
+            {authError && <div className="text-red-400 text-sm font-semibold bg-red-400/10 p-3 rounded-lg border border-red-400/20 text-center">{authError}</div>}
+            <button type="submit" disabled={authLoading} className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black py-4 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all uppercase tracking-wider text-sm mt-4">
+              {authLoading ? 'VERIFYING...' : 'AUTHORIZE ACCESS'}
             </button>
           </form>
-          <button onClick={() => navigate('/jewellery')} className="mt-6 w-full text-center text-sm font-bold text-gray-400 hover:text-emerald-600 transition-colors uppercase tracking-wider">
+          <button onClick={() => navigate('/jewellery')} className="mt-6 w-full text-center text-xs font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest relative z-10">
             ← Back to Hub
           </button>
         </div>

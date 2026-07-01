@@ -581,20 +581,36 @@ export default function JewellerySalesTerminal() {
 
   if (!officerAuth.loggedIn) {
     return (
-      <div className="bg-gradient-to-br from-gray-900 via-[#0d0d14] to-amber-900 min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#05050A] flex flex-col items-center justify-center font-inter relative overflow-hidden p-4">
+        {/* Background Ambience */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[150px] pointer-events-none" />
+        
         <ToastComponent />
-        <div className="relative z-10 bg-white/10 backdrop-blur-xl border border-white/20 p-8 sm:p-12 rounded-[2rem] shadow-2xl w-full max-w-md">
-          <div className="flex flex-col items-center mb-10">
-            <div className="text-amber-400 tracking-[0.2em] text-xs font-bold uppercase">Jewellery POS Authentication</div>
+        
+        <div className="relative z-10 bg-white/5 backdrop-blur-xl border border-white/10 p-8 sm:p-12 rounded-[2rem] shadow-2xl w-full max-w-md group overflow-hidden">
+          <div className="absolute -right-4 -top-4 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all duration-500"></div>
+          <div className="flex flex-col items-center mb-10 relative z-10">
+            <h1 className="text-3xl font-black text-white tracking-tight mb-2">AARTHIKA</h1>
+            <div className="text-amber-500/80 tracking-[0.2em] text-xs font-bold uppercase text-center">Retail Terminal Auth</div>
           </div>
-          <form onSubmit={handleLogin} className="space-y-6">
-            <input type="text" className="w-full bg-white/5 border border-white/10 text-white placeholder-white/50 px-5 py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500" value={loginForm.userId} onChange={e => setLoginForm({...loginForm, userId: e.target.value})} placeholder="Officer ID" required />
-            <input type="password" className="w-full bg-white/5 border border-white/10 text-white placeholder-white/50 px-5 py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} placeholder="Password" required />
-            {authError && <div className="text-red-400 text-sm font-semibold">{authError}</div>}
-            <button type="submit" disabled={authLoading} className="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-4 rounded-xl shadow-lg transition-all">
-              {authLoading ? 'Verifying...' : 'Secure Login'}
+          <form onSubmit={handleLogin} className="space-y-6 relative z-10">
+            <div>
+              <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Officer ID</label>
+              <input type="text" className="w-full bg-white/5 border border-white/10 text-white placeholder-gray-500 px-5 py-4 rounded-xl focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-all font-medium" value={loginForm.userId} onChange={e => setLoginForm({...loginForm, userId: e.target.value})} placeholder="Enter ID" required />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Vault Key</label>
+              <input type="password" className="w-full bg-white/5 border border-white/10 text-white placeholder-gray-500 px-5 py-4 rounded-xl focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-all font-medium" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} placeholder="••••••••" required />
+            </div>
+            {authError && <div className="text-red-400 text-sm font-semibold bg-red-400/10 p-3 rounded-lg border border-red-400/20 text-center">{authError}</div>}
+            <button type="submit" disabled={authLoading} className="w-full bg-amber-500 hover:bg-amber-400 text-black font-black py-4 rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all uppercase tracking-wider text-sm mt-4">
+              {authLoading ? 'VERIFYING...' : 'AUTHORIZE ACCESS'}
             </button>
           </form>
+          <button onClick={() => navigate('/jewellery')} className="mt-6 w-full text-center text-xs font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest relative z-10">
+            ← Back to Hub
+          </button>
         </div>
       </div>
     );

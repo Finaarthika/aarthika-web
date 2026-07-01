@@ -723,27 +723,34 @@ export default function OldJewelleryTerminal() {
 
   if (!officerAuth.loggedIn) {
     return (
-      <div className="min-h-screen bg-[#05050A] flex flex-col font-inter">
-        <OfficerHeader />
-        <div className="flex-grow flex items-center justify-center p-6">
-          <div className="bg-[#0D0D14]/80 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl max-w-sm w-full relative overflow-hidden">
-             <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/20 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
-             <h2 className="text-2xl font-black text-white mb-6 tracking-tight text-center">Officer Login</h2>
-             {authError && <div className="bg-red-500/10 border border-red-500/50 text-red-500 text-sm p-3 rounded-lg mb-6 font-medium text-center">{authError}</div>}
-             <form onSubmit={handleLogin} className="space-y-4 relative z-10">
-               <div>
-                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Passbook ID</label>
-                 <input type="text" value={loginForm.userId} onChange={e => setLoginForm({...loginForm, userId: e.target.value})} className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-rose-500 transition-colors font-medium" required />
-               </div>
-               <div>
-                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Vault Key</label>
-                 <input type="password" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-rose-500 transition-colors font-medium" required />
-               </div>
-               <button type="submit" disabled={authLoading} className="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-3.5 rounded-xl shadow-[0_0_20px_rgba(225,29,72,0.3)] transition-all mt-4">
-                 {authLoading ? 'VERIFYING...' : 'AUTHORIZE ACCESS'}
-               </button>
-             </form>
+      <div className="min-h-screen bg-[#05050A] flex flex-col items-center justify-center font-inter relative overflow-hidden p-4">
+        {/* Background Ambience */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-rose-500/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-red-500/10 rounded-full blur-[150px] pointer-events-none" />
+        
+        <div className="relative z-10 bg-white/5 backdrop-blur-xl border border-white/10 p-8 sm:p-12 rounded-[2rem] shadow-2xl w-full max-w-md group overflow-hidden">
+          <div className="absolute -right-4 -top-4 w-32 h-32 bg-rose-500/10 rounded-full blur-2xl group-hover:bg-rose-500/20 transition-all duration-500"></div>
+          <div className="flex flex-col items-center mb-10 relative z-10">
+            <h1 className="text-3xl font-black text-white tracking-tight mb-2">AARTHIKA</h1>
+            <div className="text-rose-400/80 tracking-[0.2em] text-xs font-bold uppercase text-center">Scrap Terminal Auth</div>
           </div>
+          <form onSubmit={handleLogin} className="space-y-6 relative z-10">
+            <div>
+              <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Officer ID</label>
+              <input type="text" className="w-full bg-white/5 border border-white/10 text-white placeholder-gray-500 px-5 py-4 rounded-xl focus:outline-none focus:border-rose-500/50 focus:ring-1 focus:ring-rose-500/50 transition-all font-medium" value={loginForm.userId} onChange={e => setLoginForm({...loginForm, userId: e.target.value})} placeholder="Enter ID" required />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Vault Key</label>
+              <input type="password" className="w-full bg-white/5 border border-white/10 text-white placeholder-gray-500 px-5 py-4 rounded-xl focus:outline-none focus:border-rose-500/50 focus:ring-1 focus:ring-rose-500/50 transition-all font-medium" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} placeholder="••••••••" required />
+            </div>
+            {authError && <div className="text-red-400 text-sm font-semibold bg-red-400/10 p-3 rounded-lg border border-red-400/20 text-center">{authError}</div>}
+            <button type="submit" disabled={authLoading} className="w-full bg-rose-500 hover:bg-rose-400 text-black font-black py-4 rounded-xl shadow-[0_0_20px_rgba(244,63,94,0.3)] transition-all uppercase tracking-wider text-sm mt-4">
+              {authLoading ? 'VERIFYING...' : 'AUTHORIZE ACCESS'}
+            </button>
+          </form>
+          <button onClick={() => navigate('/jewellery')} className="mt-6 w-full text-center text-xs font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest relative z-10">
+            ← Back to Hub
+          </button>
         </div>
       </div>
     );
