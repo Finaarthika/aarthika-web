@@ -29,6 +29,87 @@ export default function JewelleryHub() {
   const [activeOrdersCount, setActiveOrdersCount] = useState(0);
   const [todaySales, setTodaySales] = useState(0);
 
+  // Authentication State
+  const getDeviceId = () => {
+    let id = localStorage.getItem('aarthika_device_id');
+    if (!id) {
+      id = 'dev_' + Math.random().toString(36).substring(2, 15);
+      localStorage.setItem('aarthika_device_id', id);
+    }
+    return id;
+  };
+
+  const [officerAuth, setOfficerAuth] = useState(() => {
+    const saved = localStorage.getItem('aarthika_staff_auth');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return { loggedIn: false, userId: '', password: '', staffName: '' };
+  });
+
+  const [authError, setAuthError] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+  const [loginForm, setLoginForm] = useState({ userId: '', password: '' });
+
+  const verifyAuthSentinel = async (currentAuth) => {
+    if (!currentAuth.loggedIn) return false;
+    try {
+      const deviceId = getDeviceId();
+      const res = await fetch('/api/passbook-auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentAuth.userId, action: 'check', deviceId })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.authorized) {
+        localStorage.removeItem('aarthika_staff_auth');
+        setOfficerAuth({ loggedIn: false, userId: '', password: '', staffName: '' });
+        return false;
+      }
+      return true;
+    } catch (err) {
+      return true;
+    }
+  };
+
+  useEffect(() => {
+    if (officerAuth.loggedIn) {
+      verifyAuthSentinel(officerAuth);
+    }
+  }, [officerAuth.loggedIn]);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError('');
+    try {
+      const deviceId = getDeviceId();
+      const res = await fetch('/api/passbook-auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: loginForm.userId, password: loginForm.password, action: 'login', deviceId })
+      });
+      const data = await res.json();
+      if (res.ok && data.authorized) {
+        const newAuth = {
+          loggedIn: true,
+          userId: loginForm.userId,
+          password: loginForm.password,
+          staffName: data.staffName,
+          branchName: data.branchName || 'Main Branch'
+        };
+        setOfficerAuth(newAuth);
+        localStorage.setItem('aarthika_staff_auth', JSON.stringify(newAuth));
+      } else {
+        setAuthError(data.error || 'Invalid credentials or unauthorized device.');
+      }
+    } catch (err) {
+      setAuthError('Network error connecting to Auth Server.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
   const isMarketClosed = () => {
     const now = new Date();
     const day = now.getDay();
@@ -116,6 +197,41 @@ export default function JewelleryHub() {
 
     return () => clearInterval(interval);
   }, [baseRates]);
+
+  if (!officerAuth.loggedIn) {
+    return (
+      <div className="min-h-screen bg-[#05050A] flex flex-col items-center justify-center font-inter relative overflow-hidden p-4">
+        {/* Background Ambience */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[150px] pointer-events-none" />
+        
+        <div className="relative z-10 bg-white/5 backdrop-blur-xl border border-white/10 p-8 sm:p-12 rounded-[2rem] shadow-2xl w-full max-w-md group overflow-hidden">
+          <div className="absolute -right-4 -top-4 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all duration-500"></div>
+          <div className="flex flex-col items-center mb-10 relative z-10">
+            <h1 className="text-3xl font-black text-white tracking-tight mb-2">AARTHIKA</h1>
+            <div className="text-amber-500/80 tracking-[0.2em] text-xs font-bold uppercase text-center">Enterprise Console Auth</div>
+          </div>
+          <form onSubmit={handleLogin} className="space-y-6 relative z-10">
+            <div>
+              <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Officer ID</label>
+              <input type="text" className="w-full bg-white/5 border border-white/10 text-white placeholder-gray-500 px-5 py-4 rounded-xl focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-all font-medium" value={loginForm.userId} onChange={e => setLoginForm({...loginForm, userId: e.target.value})} placeholder="Enter ID" required />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Vault Key</label>
+              <input type="password" className="w-full bg-white/5 border border-white/10 text-white placeholder-gray-500 px-5 py-4 rounded-xl focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-all font-medium" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} placeholder="••••••••" required />
+            </div>
+            {authError && <div className="text-red-400 text-sm font-semibold bg-red-400/10 p-3 rounded-lg border border-red-400/20 text-center">{authError}</div>}
+            <button type="submit" disabled={authLoading} className="w-full bg-amber-500 hover:bg-amber-400 text-black font-black py-4 rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all uppercase tracking-wider text-sm mt-4">
+              {authLoading ? 'VERIFYING...' : 'AUTHORIZE ACCESS'}
+            </button>
+          </form>
+          <button onClick={() => navigate('/')} className="mt-6 w-full text-center text-xs font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest relative z-10">
+            ← Exit System
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#05050A] flex flex-col font-inter relative overflow-hidden">
