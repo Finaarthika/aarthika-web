@@ -22,6 +22,17 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.025em;
 }
 
+/* Jewellery POS Typography Override */
+.font-outfit,
+.font-outfit h1,
+.font-outfit h2,
+.font-outfit h3,
+.font-outfit h4,
+.font-outfit h5,
+.font-outfit h6 {
+  font-family: 'Outfit', sans-serif !important;
+}
+
 @layer components {
   .container {
     @apply px-0 mx-auto w-full max-w-full;
