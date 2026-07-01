@@ -297,7 +297,7 @@ export default function CustomOrderTerminal() {
   if (!officerAuth.loggedIn) return null;
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] flex flex-col font-outfit">
+    <div className="min-h-screen bg-[#FDFBF7] flex flex-col font-inter">
       <OfficerHeader officerName={officerAuth.staffName} onLogout={handleLogout} onBack={() => navigate('/jewellery')} />
       
       {/* Toast Notification */}
