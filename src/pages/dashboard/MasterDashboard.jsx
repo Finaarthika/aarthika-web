@@ -113,8 +113,6 @@ export default function MasterDashboard() {
 
   // --- Business Logic & KPI Calculation ---
   const kpis = useMemo(() => {
-    if (!datasets['jewellery-sales']) return null;
-
     let totalSales = 0;
     let makingCharges = 0;
     let scrapGoldBought = 0;
