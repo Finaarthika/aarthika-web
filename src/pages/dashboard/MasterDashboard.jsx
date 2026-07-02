@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, AreaChart, Area
+  AreaChart, Area, PieChart, Pie, Cell, Legend
 } from 'recharts';
 import { 
-  LayoutDashboard, Package, Search, Calendar, ChevronDown, Activity, 
-  DollarSign, TrendingUp, Wallet, ArrowDownRight, ArrowUpRight, FileText, ExternalLink, RefreshCw, X
+  LayoutDashboard, Search, Activity, 
+  DollarSign, TrendingUp, Wallet, RefreshCw,
+  PieChart as PieChartIcon, BarChart3
 } from 'lucide-react';
 
 const FIREBASE_API_URL = 'https://us-central1-aarthika-backend.cloudfunctions.net/masterApi';
@@ -45,71 +46,6 @@ const Input = ({ className = '', icon: Icon, ...props }) => (
     />
   </div>
 );
-
-// -- Modal Component --
-const DataTableModal = ({ isOpen, onClose, title, data }) => {
-  if (!isOpen) return null;
-
-  // Close on Escape key
-  useEffect(() => {
-    const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [onClose]);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-zinc-950/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-7xl max-h-[90vh] flex flex-col overflow-hidden ring-1 ring-zinc-200 animate-in zoom-in-95 duration-200">
-        
-        {/* Modal Header */}
-        <div className="flex items-center justify-between p-4 px-6 border-b border-zinc-200 bg-zinc-50">
-          <h2 className="text-xl font-semibold tracking-tight text-zinc-900 capitalize">{title.replace('-', ' ')}</h2>
-          <button 
-            onClick={onClose}
-            className="p-2 rounded-md hover:bg-zinc-200 text-zinc-500 hover:text-zinc-900 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Modal Body / Table */}
-        <div className="flex-1 overflow-x-auto overflow-y-auto custom-scrollbar p-0 bg-white">
-          {!data || !Array.isArray(data) || data.length <= 1 ? (
-            <div className="h-[400px] flex items-center justify-center text-zinc-500 text-sm">
-              No data entries found.
-            </div>
-          ) : (
-            <table className="w-full text-sm text-left relative">
-              <thead className="bg-zinc-50/95 backdrop-blur sticky top-0 z-10 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-                <tr>
-                  {Array.isArray(data[0]) && data[0].map((header, i) => (
-                    <th key={i} className="h-12 px-6 text-left align-middle font-semibold text-zinc-600 whitespace-nowrap">
-                      {header || `Col ${i+1}`}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="[&_tr:last-child]:border-0">
-                {data.slice(1).map((row, rowIndex) => {
-                  if (!Array.isArray(row)) return null;
-                  return (
-                    <tr key={rowIndex} className="border-b border-zinc-100 transition-colors hover:bg-zinc-50/50">
-                      {data[0].map((_, colIndex) => (
-                        <td key={colIndex} className="p-4 px-6 align-middle text-zinc-700 max-w-[250px] truncate" title={row[colIndex]}>
-                          {row[colIndex] || '-'}
-                        </td>
-                      ))}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // -- Helper Functions --
 const parseDate = (dateStr) => {
@@ -156,10 +92,6 @@ export default function MasterDashboard() {
   const [dateRange, setDateRange] = useState('30d');
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Modal State
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalTarget, setModalTarget] = useState(null);
-  
   const [activeChart, setActiveChart] = useState('sales');
 
   const TARGETS = [
@@ -193,11 +125,6 @@ export default function MasterDashboard() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const openModal = (target) => {
-    setModalTarget(target);
-    setModalOpen(true);
   };
 
   // --- Business Logic & KPI Calculation ---
@@ -295,7 +222,9 @@ export default function MasterDashboard() {
       }
     }
 
-    // 4. Process Savings Deposits (from transaction-ledger)
+    // 4. Process Savings Deposits & Payment Methods
+    let cashCount = 0;
+    let upiCount = 0;
     const ledgerData = datasets['transaction-ledger'];
     let recentLedger = [];
     if (ledgerData && Array.isArray(ledgerData) && ledgerData.length > 1) {
@@ -303,8 +232,8 @@ export default function MasterDashboard() {
       const dateIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('timestamp'));
       const typeIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('transaction type'));
       const amtIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('amount'));
+      const paymentIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('cash / upi'));
       
-      // Store recent ledger entries for the Passbook widget
       recentLedger = ledgerData.slice(1).reverse().filter(r => Array.isArray(r) && r[0]).slice(0, 5).map(r => ({
         date: r[dateIdx],
         acc: r[1],
@@ -319,6 +248,11 @@ export default function MasterDashboard() {
         if (d && !isWithinRange(d, dateRange)) continue;
         
         const type = typeIdx > -1 ? String(row[typeIdx] || '').toUpperCase() : '';
+        const paymentMethod = paymentIdx > -1 ? String(row[paymentIdx] || '').toUpperCase() : '';
+        
+        if (paymentMethod.includes('CASH')) cashCount++;
+        else if (paymentMethod.includes('UPI')) upiCount++;
+
         if (type.includes('DEPOSIT')) {
            const amtStr = amtIdx > -1 ? String(row[amtIdx] || '').replace(/[^0-9.-]+/g,"") : '';
            const amt = parseFloat(amtStr);
@@ -334,8 +268,25 @@ export default function MasterDashboard() {
     }
 
     const trendData = Object.values(trendMap).sort((a, b) => a.timestamp - b.timestamp);
+    const paymentData = [
+      { name: 'CASH', value: cashCount, color: '#18181b' },
+      { name: 'UPI', value: upiCount, color: '#71717a' }
+    ];
 
-    return { totalSales, makingCharges, scrapGoldBought, savingsDeposits, trendData, recentLedger };
+    // 5. Inventory Chart Data
+    const inventoryData = [];
+    if (datasets['inventory'] && Array.isArray(datasets['inventory']) && datasets['inventory'].length > 1) {
+      datasets['inventory'].slice(1).forEach(row => {
+        if (!Array.isArray(row)) return;
+        const category = row[0];
+        const weight = parseFloat(row[10] || 0);
+        if (category && !isNaN(weight) && weight > 0) {
+          inventoryData.push({ name: String(category), weight });
+        }
+      });
+    }
+
+    return { totalSales, makingCharges, scrapGoldBought, savingsDeposits, trendData, recentLedger, paymentData, inventoryData };
   }, [datasets, dateRange]);
 
   // --- Global Search Logic ---
@@ -357,23 +308,15 @@ export default function MasterDashboard() {
         const rowStr = row.join(' ').toLowerCase();
         if (rowStr.includes(query)) {
           const itemObj = {};
-          let pdfLink = null;
           
           headers.forEach((h, idx) => {
             const headerStr = h ? String(h) : `Column ${idx + 1}`;
             itemObj[headerStr] = row[idx];
-            const headerLower = headerStr.toLowerCase();
-            if (headerLower.includes('pdf') || headerLower.includes('drive') || headerLower.includes('link')) {
-               if (typeof row[idx] === 'string' && row[idx].includes('http')) {
-                 pdfLink = row[idx];
-               }
-            }
           });
 
           results.push({
             sheet: sheetName,
-            data: itemObj,
-            pdfLink
+            data: itemObj
           });
         }
       }
@@ -388,7 +331,7 @@ export default function MasterDashboard() {
       <div className="min-h-screen bg-[#f4f4f5] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4 text-zinc-500">
           <Activity className="w-8 h-8 animate-pulse text-zinc-900" />
-          <h2 className="text-sm font-medium tracking-widest uppercase">Aggregating Business Data...</h2>
+          <h2 className="text-sm font-medium tracking-widest uppercase">Aggregating Business Insights...</h2>
         </div>
       </div>
     );
@@ -411,7 +354,7 @@ export default function MasterDashboard() {
           <div className="w-full sm:w-[400px]">
              <Input 
                icon={Search} 
-               placeholder="Global Search (Customer, Order ID, Phone...)" 
+               placeholder="Global Insights Search..." 
                value={searchQuery}
                onChange={(e) => setSearchQuery(e.target.value)}
              />
@@ -425,10 +368,10 @@ export default function MasterDashboard() {
         {searchResults !== null ? (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-semibold tracking-tight">Search Results for "{searchQuery}"</h2>
+              <h2 className="text-2xl font-semibold tracking-tight">Insight Results for "{searchQuery}"</h2>
               <button onClick={() => setSearchQuery('')} className="text-sm text-blue-600 hover:underline font-medium">Clear Search</button>
             </div>
-            <div className="text-sm text-zinc-500 mb-4">Found {searchResults.length} matching records across all databases.</div>
+            <div className="text-sm text-zinc-500 mb-4">Found {searchResults.length} matching data points across all databases.</div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {searchResults.map((result, idx) => (
@@ -438,11 +381,6 @@ export default function MasterDashboard() {
                       <Badge variant="outline" className="uppercase tracking-wider text-[10px] bg-white">
                         {result.sheet.replace('-', ' ')}
                       </Badge>
-                      {result.pdfLink && (
-                        <a href={result.pdfLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:text-blue-800 flex items-center text-xs font-medium gap-1 bg-blue-50 px-2 py-1 rounded">
-                          <FileText className="w-3 h-3" /> View Doc
-                        </a>
-                      )}
                     </div>
                   </CardHeader>
                   <CardContent className="pt-4 space-y-3">
@@ -461,13 +399,6 @@ export default function MasterDashboard() {
                 </Card>
               ))}
             </div>
-            {searchResults.length === 0 && (
-              <div className="text-center py-20 bg-white rounded-xl border border-zinc-200">
-                <Search className="w-10 h-10 text-zinc-300 mx-auto mb-3" />
-                <h3 className="text-lg font-medium text-zinc-900">No results found</h3>
-                <p className="text-sm text-zinc-500">Try a different name, order ID, or phone number.</p>
-              </div>
-            )}
           </div>
         ) : (
           /* Normal Dashboard View */
@@ -550,7 +481,7 @@ export default function MasterDashboard() {
               </div>
             )}
 
-            {/* Widgets Area */}
+            {/* Top Charts Row */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
               
               {/* Dynamic Trend Chart */}
@@ -640,82 +571,92 @@ export default function MasterDashboard() {
                        <div className="text-sm text-zinc-500 text-center py-4">No recent activity.</div>
                      )}
                    </div>
-                   <div className="mt-4 pt-4 border-t border-zinc-100 text-center">
-                     <button 
-                       onClick={() => openModal('transaction-ledger')}
-                       className="text-sm font-medium text-blue-600 hover:text-blue-800 flex items-center justify-center w-full gap-1"
-                     >
-                       View Full Ledger <ArrowUpRight className="w-4 h-4" />
-                     </button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Bottom Charts Row */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
+              
+              {/* Inventory Weight Distribution Bar Chart */}
+              <Card className="col-span-12 lg:col-span-8 flex flex-col">
+                <CardHeader className="pb-0 mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-zinc-100 rounded-md">
+                      <BarChart3 className="w-4 h-4 text-zinc-900" />
+                    </div>
+                    <div>
+                      <CardTitle>Inventory Weight Distribution</CardTitle>
+                      <p className="text-sm text-zinc-500">Total weight (g) mapped across all categories.</p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="flex-1">
+                   <div className="h-[280px] w-full">
+                     {kpis && kpis.inventoryData.length > 0 ? (
+                       <ResponsiveContainer width="100%" height="100%">
+                         <BarChart data={kpis.inventoryData} margin={{ top: 20, right: 20, left: -20, bottom: 20 }}>
+                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e4e7" />
+                           <XAxis dataKey="name" stroke="#71717a" fontSize={12} tickLine={false} axisLine={false} />
+                           <YAxis stroke="#71717a" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `${val}g`} />
+                           <Tooltip 
+                             cursor={{ fill: '#f4f4f5' }}
+                             contentStyle={{ borderRadius: '8px', border: '1px solid #e4e4e7', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                             formatter={(value) => [`${value} g`, 'Weight']}
+                           />
+                           <Bar dataKey="weight" fill="#18181b" radius={[4, 4, 0, 0]} barSize={40} />
+                         </BarChart>
+                       </ResponsiveContainer>
+                     ) : (
+                       <div className="flex h-full items-center justify-center text-zinc-400 text-sm">No inventory data found.</div>
+                     )}
                    </div>
                 </CardContent>
               </Card>
 
-              {/* Inventory Levels Snapshot Widget */}
+              {/* Payment Methods Pie Chart */}
               <Card className="col-span-12 lg:col-span-4 flex flex-col">
-                <CardHeader>
-                  <CardTitle>Live Inventory Snapshot</CardTitle>
-                  <p className="text-sm text-zinc-500">Current vault holdings.</p>
+                <CardHeader className="pb-0 mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-zinc-100 rounded-md">
+                      <PieChartIcon className="w-4 h-4 text-zinc-900" />
+                    </div>
+                    <div>
+                      <CardTitle>Payment Methods</CardTitle>
+                      <p className="text-sm text-zinc-500">Cash vs UPI distribution.</p>
+                    </div>
+                  </div>
                 </CardHeader>
-                <CardContent className="flex-1 flex flex-col justify-between">
-                   <div className="space-y-5">
-                     {datasets['inventory'] && datasets['inventory'].slice(1, 6).map((row, i) => {
-                       if (!Array.isArray(row)) return null;
-                       const category = row[0];
-                       const weight = parseFloat(row[10] || 0);
-                       const count = row[9];
-                       const status = row[11];
-                       if (!category) return null;
-                       
-                       return (
-                         <div key={i} className="flex items-center justify-between border-b border-zinc-100 pb-3 last:border-0 last:pb-0">
-                           <div>
-                             <div className="font-medium text-zinc-900">{String(category)}</div>
-                             <div className="text-xs text-zinc-500">{String(count)} Items in Vault</div>
-                           </div>
-                           <div className="text-right">
-                             <div className="font-bold text-zinc-900">{isNaN(weight) ? '0.00' : weight.toFixed(2)} g</div>
-                             {status && String(status).includes('DEEP') ? (
-                               <Badge variant="destructive">{String(status)}</Badge>
-                             ) : (
-                               <Badge variant="success">Verified</Badge>
-                             )}
-                           </div>
-                         </div>
-                       )
-                     })}
-                   </div>
-                   <div className="mt-4 pt-4 border-t border-zinc-100 text-center">
-                     <button 
-                       onClick={() => openModal('inventory')}
-                       className="text-sm font-medium text-blue-600 hover:text-blue-800 flex items-center justify-center w-full gap-1"
-                     >
-                       View Full Inventory Book <ArrowUpRight className="w-4 h-4" />
-                     </button>
+                <CardContent className="flex-1">
+                   <div className="h-[280px] w-full">
+                     {kpis && kpis.paymentData.some(d => d.value > 0) ? (
+                       <ResponsiveContainer width="100%" height="100%">
+                         <PieChart>
+                           <Pie
+                             data={kpis.paymentData}
+                             cx="50%"
+                             cy="50%"
+                             innerRadius={60}
+                             outerRadius={90}
+                             paddingAngle={5}
+                             dataKey="value"
+                           >
+                             {kpis.paymentData.map((entry, index) => (
+                               <Cell key={`cell-${index}`} fill={entry.color} />
+                             ))}
+                           </Pie>
+                           <Tooltip 
+                             contentStyle={{ borderRadius: '8px', border: '1px solid #e4e4e7', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                             formatter={(value) => [value, 'Transactions']}
+                           />
+                           <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                         </PieChart>
+                       </ResponsiveContainer>
+                     ) : (
+                       <div className="flex h-full items-center justify-center text-zinc-400 text-sm">No payment data in this range.</div>
+                     )}
                    </div>
                 </CardContent>
-              </Card>
-              
-              {/* Other Quick Links Widget (Optional) */}
-              <Card className="col-span-12 lg:col-span-8 flex flex-col items-center justify-center bg-zinc-900 text-white p-8">
-                 <h3 className="text-2xl font-bold tracking-tight mb-2">Command Center Links</h3>
-                 <p className="text-zinc-400 text-sm mb-8">Access all deep databases securely.</p>
-                 <div className="flex flex-wrap gap-3 justify-center">
-                   {[
-                     { id: 'custom-orders', label: 'Custom Orders' },
-                     { id: 'jewellery-sales', label: 'Jewellery Sales' },
-                     { id: 'old-jewellery', label: 'Old Gold Purchases' },
-                     { id: 'customer-profiles', label: 'Customer Profiles' },
-                   ].map(nav => (
-                     <button
-                        key={nav.id}
-                        onClick={() => openModal(nav.id)}
-                        className="bg-white/10 hover:bg-white/20 transition-colors border border-white/10 rounded-full px-4 py-2 text-sm font-medium"
-                     >
-                       {nav.label}
-                     </button>
-                   ))}
-                 </div>
               </Card>
               
             </div>
@@ -723,37 +664,6 @@ export default function MasterDashboard() {
         )}
       </main>
 
-      {/* Global Data Table Modal */}
-      <DataTableModal 
-        isOpen={modalOpen} 
-        onClose={() => setModalOpen(false)} 
-        title={modalTarget || ''} 
-        data={modalTarget ? datasets[modalTarget] : null} 
-      />
-
-      <style dangerouslySetInnerHTML={{__html: `
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 8px;
-          height: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: #f4f4f5;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #d4d4d8;
-          border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #a1a1aa;
-        }
-      `}} />
     </div>
   );
 }
