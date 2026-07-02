@@ -92,9 +92,53 @@ export default function VaultAuditTerminal() {
     }
   };
 
-  const logAuditToDatabase = () => {
-    showToast("Audit successfully recorded to secure ledger.", "success");
-    resetAudit();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const logAuditToDatabase = async () => {
+    if (!scalePhoto && auditResult?.status !== 'error') {
+      return showToast("Please capture a photo before submitting.", "error");
+    }
+    
+    setIsSubmitting(true);
+    showToast("Uploading to secure vault...", "success");
+
+    try {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      
+      const payload = {
+        date: dateStr,
+        time: timeStr,
+        staffName: officerAuth.staffName || 'Unknown',
+        categoryName: selectedCategory ? selectedCategory.name : 'Unknown',
+        expectedCount: expectedClosingCount,
+        expectedWeight: expectedClosingWeight,
+        actualCount: auditInput.count,
+        actualWeight: auditInput.weight,
+        discrepancy: (auditInput.weight - expectedClosingWeight).toFixed(3),
+        auditType: selectedCategory?.requiresDeepAudit ? 'DEEP AUDIT' : 'Standard',
+        status: auditResult?.status === 'error' ? '❌ ALERT' : '✅ Match',
+        scalePhoto: scalePhoto || ''
+      };
+
+      const res = await fetch('/api/vault-audit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      
+      if (!res.ok) throw new Error(data.error || 'Server error');
+      
+      showToast("Audit successfully recorded to Drive & Sheets!", "success");
+      resetAudit();
+    } catch (err) {
+      showToast("Failed: " + err.message, "error");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const selectedCategory = categories.find(c => c.id === selectedCategoryId);
@@ -267,8 +311,8 @@ export default function VaultAuditTerminal() {
                       ) : (
                         <div className="w-full h-full flex flex-col items-center">
                           <img src={scalePhoto} className="w-full h-32 object-cover rounded-lg mb-4" alt="Scale" />
-                          <button onClick={logAuditToDatabase} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-lg shadow-lg transition-all text-sm uppercase tracking-wider">
-                            Submit Audit Log
+                          <button onClick={logAuditToDatabase} disabled={isSubmitting} className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:bg-gray-600 text-white font-bold py-3 rounded-lg shadow-lg transition-all text-sm uppercase tracking-wider">
+                            {isSubmitting ? 'UPLOADING...' : 'Submit Audit Log'}
                           </button>
                         </div>
                       )}
@@ -287,8 +331,8 @@ export default function VaultAuditTerminal() {
                           value={adminPin}
                           onChange={(e) => setAdminPin(e.target.value)}
                         />
-                        <button onClick={logAuditToDatabase} className="w-full mt-4 bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-lg shadow-lg transition-all text-sm uppercase tracking-wider">
-                          Authorize Discrepancy Log
+                        <button onClick={logAuditToDatabase} disabled={isSubmitting} className="w-full mt-4 bg-red-600 hover:bg-red-500 disabled:bg-gray-600 text-white font-bold py-3 rounded-lg shadow-lg transition-all text-sm uppercase tracking-wider">
+                          {isSubmitting ? 'UPLOADING...' : 'Authorize Discrepancy Log'}
                         </button>
                       </div>
                     </div>
