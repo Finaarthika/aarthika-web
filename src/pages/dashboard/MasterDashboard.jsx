@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import { 
   LayoutDashboard, Package, Search, Calendar, ChevronDown, Activity, 
-  DollarSign, TrendingUp, Wallet, ArrowDownRight, ArrowUpRight, FileText, ExternalLink, RefreshCw
+  DollarSign, TrendingUp, Wallet, ArrowDownRight, ArrowUpRight, FileText, ExternalLink, RefreshCw, X
 } from 'lucide-react';
 
 const FIREBASE_API_URL = 'https://us-central1-aarthika-backend.cloudfunctions.net/masterApi';
@@ -27,6 +27,8 @@ const Badge = ({ children, variant = 'default', className = '' }) => {
   const variants = {
     default: 'border-transparent bg-zinc-900 text-zinc-50',
     outline: 'text-zinc-950 border-zinc-200',
+    success: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    destructive: 'bg-red-50 text-red-700 border-red-200',
   };
   return (
     <div className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${variants[variant]} ${className}`}>
@@ -44,16 +46,92 @@ const Input = ({ className = '', icon: Icon, ...props }) => (
   </div>
 );
 
+// -- Modal Component --
+const DataTableModal = ({ isOpen, onClose, title, data }) => {
+  if (!isOpen) return null;
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-zinc-950/40 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-7xl max-h-[90vh] flex flex-col overflow-hidden ring-1 ring-zinc-200 animate-in zoom-in-95 duration-200">
+        
+        {/* Modal Header */}
+        <div className="flex items-center justify-between p-4 px-6 border-b border-zinc-200 bg-zinc-50">
+          <h2 className="text-xl font-semibold tracking-tight text-zinc-900 capitalize">{title.replace('-', ' ')}</h2>
+          <button 
+            onClick={onClose}
+            className="p-2 rounded-md hover:bg-zinc-200 text-zinc-500 hover:text-zinc-900 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Modal Body / Table */}
+        <div className="flex-1 overflow-x-auto overflow-y-auto custom-scrollbar p-0 bg-white">
+          {!data || !Array.isArray(data) || data.length <= 1 ? (
+            <div className="h-[400px] flex items-center justify-center text-zinc-500 text-sm">
+              No data entries found.
+            </div>
+          ) : (
+            <table className="w-full text-sm text-left relative">
+              <thead className="bg-zinc-50/95 backdrop-blur sticky top-0 z-10 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+                <tr>
+                  {Array.isArray(data[0]) && data[0].map((header, i) => (
+                    <th key={i} className="h-12 px-6 text-left align-middle font-semibold text-zinc-600 whitespace-nowrap">
+                      {header || `Col ${i+1}`}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="[&_tr:last-child]:border-0">
+                {data.slice(1).map((row, rowIndex) => {
+                  if (!Array.isArray(row)) return null;
+                  return (
+                    <tr key={rowIndex} className="border-b border-zinc-100 transition-colors hover:bg-zinc-50/50">
+                      {data[0].map((_, colIndex) => (
+                        <td key={colIndex} className="p-4 px-6 align-middle text-zinc-700 max-w-[250px] truncate" title={row[colIndex]}>
+                          {row[colIndex] || '-'}
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // -- Helper Functions --
 const parseDate = (dateStr) => {
   if (!dateStr || typeof dateStr !== 'string') return null;
-  const parts = dateStr.split(/[-/]/);
-  if (parts.length === 3) {
-    const day = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1;
-    const year = parseInt(parts[2].length === 2 ? `20${parts[2]}` : parts[2], 10);
-    const d = new Date(year, month, day);
-    if (!isNaN(d.getTime())) return d;
+  const parts = dateStr.split(/[-/\s]/);
+  
+  if (parts.length >= 3) {
+    if (parts[0].length === 4) {
+      // Format: YYYY-MM-DD
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const d = new Date(year, month, day);
+      if (!isNaN(d.getTime())) return d;
+    } else {
+      // Format: DD-MM-YYYY or DD-MM-YY
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parseInt(parts[2].length === 2 ? `20${parts[2]}` : parts[2], 10);
+      const d = new Date(year, month, day);
+      if (!isNaN(d.getTime())) return d;
+    }
   }
   const fallback = new Date(dateStr);
   return isNaN(fallback.getTime()) ? null : fallback;
@@ -77,28 +155,17 @@ export default function MasterDashboard() {
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState('30d');
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('overview');
+  
+  // Modal State
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTarget, setModalTarget] = useState(null);
+  
   const [activeChart, setActiveChart] = useState('sales');
-
-  const navigation = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'inventory', label: 'Inventory' },
-    { id: 'custom-orders', label: 'Orders' },
-    { id: 'jewellery-sales', label: 'Sales' },
-    { id: 'old-jewellery', label: 'Old Gold' },
-    { id: 'vault-audit', label: 'Vault Audits' },
-    { id: 'metal-rates', label: 'Metal Rates' },
-    { id: 'staff-access', label: 'Staff' },
-    { id: 'customer-profiles', label: 'Customers' },
-    { id: 'transaction-ledger', label: 'Ledger' },
-    { id: 'savings-transaction', label: 'Savings' },
-  ];
 
   const TARGETS = [
     'inventory', 'custom-orders', 'jewellery-sales', 
     'old-jewellery', 'vault-audit', 'metal-rates', 
-    'savings-transaction', 'customer-profiles',
-    'staff-access', 'transaction-ledger'
+    'customer-profiles', 'transaction-ledger'
   ];
 
   useEffect(() => {
@@ -128,6 +195,11 @@ export default function MasterDashboard() {
     }
   };
 
+  const openModal = (target) => {
+    setModalTarget(target);
+    setModalOpen(true);
+  };
+
   // --- Business Logic & KPI Calculation ---
   const kpis = useMemo(() => {
     let totalSales = 0;
@@ -154,8 +226,7 @@ export default function MasterDashboard() {
       for (let i = 1; i < salesData.length; i++) {
         const row = salesData[i];
         if (!Array.isArray(row)) continue;
-        const dateStr = dateIdx > -1 ? row[dateIdx] : null;
-        const d = parseDate(dateStr);
+        const d = parseDate(dateIdx > -1 ? row[dateIdx] : null);
         if (d && !isWithinRange(d, dateRange)) continue;
 
         const saleAmt = totalIdx > -1 ? parseFloat(row[totalIdx]) : 0;
@@ -185,7 +256,7 @@ export default function MasterDashboard() {
       for (let i = 1; i < ordersData.length; i++) {
         const row = ordersData[i];
         if (!Array.isArray(row)) continue;
-        const d = dateIdx > -1 ? parseDate(row[dateIdx]) : null;
+        const d = parseDate(dateIdx > -1 ? row[dateIdx] : null);
         if (d && !isWithinRange(d, dateRange)) continue;
         
         const amt = labourIdx > -1 ? parseFloat(row[labourIdx]) : 0;
@@ -209,7 +280,7 @@ export default function MasterDashboard() {
       for (let i = 1; i < scrapData.length; i++) {
         const row = scrapData[i];
         if (!Array.isArray(row)) continue;
-        const d = dateIdx > -1 ? parseDate(row[dateIdx]) : null;
+        const d = parseDate(dateIdx > -1 ? row[dateIdx] : null);
         if (d && !isWithinRange(d, dateRange)) continue;
         
         const valStr = totalValueIdx > -1 ? String(row[totalValueIdx] || '').replace(/[^0-9.-]+/g,"") : '';
@@ -224,23 +295,33 @@ export default function MasterDashboard() {
       }
     }
 
-    // 4. Process Savings Deposits
-    const savingsData = datasets['savings-transaction'];
-    if (savingsData && Array.isArray(savingsData) && savingsData.length > 1) {
-      const headers = savingsData[0] || [];
-      const dateIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('date'));
-      const amtIdx = headers.findIndex(h => h && (String(h).toLowerCase().includes('deposit') || String(h).toLowerCase() === 'amount' || String(h).toLowerCase().includes('received')));
-      const typeIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('type'));
+    // 4. Process Savings Deposits (from transaction-ledger)
+    const ledgerData = datasets['transaction-ledger'];
+    let recentLedger = [];
+    if (ledgerData && Array.isArray(ledgerData) && ledgerData.length > 1) {
+      const headers = ledgerData[0] || [];
+      const dateIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('timestamp'));
+      const typeIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('transaction type'));
+      const amtIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('amount'));
       
-      for (let i = 1; i < savingsData.length; i++) {
-        const row = savingsData[i];
+      // Store recent ledger entries for the Passbook widget
+      recentLedger = ledgerData.slice(1).reverse().filter(r => Array.isArray(r) && r[0]).slice(0, 5).map(r => ({
+        date: r[dateIdx],
+        acc: r[1],
+        type: r[typeIdx],
+        amt: r[amtIdx]
+      }));
+      
+      for (let i = 1; i < ledgerData.length; i++) {
+        const row = ledgerData[i];
         if (!Array.isArray(row)) continue;
-        const d = dateIdx > -1 ? parseDate(row[dateIdx]) : null;
+        const d = parseDate(dateIdx > -1 ? row[dateIdx] : null);
         if (d && !isWithinRange(d, dateRange)) continue;
         
-        const type = typeIdx > -1 ? String(row[typeIdx] || '').toLowerCase() : '';
-        if (type.includes('deposit') || typeIdx === -1) {
-           const amt = amtIdx > -1 ? parseFloat(row[amtIdx]) : 0;
+        const type = typeIdx > -1 ? String(row[typeIdx] || '').toUpperCase() : '';
+        if (type.includes('DEPOSIT')) {
+           const amtStr = amtIdx > -1 ? String(row[amtIdx] || '').replace(/[^0-9.-]+/g,"") : '';
+           const amt = parseFloat(amtStr);
            const validAmt = isNaN(amt) ? 0 : amt;
            savingsDeposits += validAmt;
 
@@ -254,7 +335,7 @@ export default function MasterDashboard() {
 
     const trendData = Object.values(trendMap).sort((a, b) => a.timestamp - b.timestamp);
 
-    return { totalSales, makingCharges, scrapGoldBought, savingsDeposits, trendData };
+    return { totalSales, makingCharges, scrapGoldBought, savingsDeposits, trendData, recentLedger };
   }, [datasets, dateRange]);
 
   // --- Global Search Logic ---
@@ -320,34 +401,17 @@ export default function MasterDashboard() {
       <div className="bg-white border-b border-zinc-200 sticky top-0 z-30 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 px-6 max-w-[1600px] mx-auto gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-zinc-900 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-zinc-900 rounded-lg flex items-center justify-center shadow-sm">
               <LayoutDashboard className="w-4 h-4 text-white" />
             </div>
             <h1 className="text-xl font-bold tracking-tight text-zinc-900">Aarthika Command Center</h1>
           </div>
           
-          {/* Top Horizontal Tabs */}
-          <div className="hidden md:flex items-center space-x-1 overflow-x-auto no-scrollbar">
-            {navigation.slice(0, 7).map(nav => (
-              <button
-                key={nav.id}
-                onClick={() => setActiveTab(nav.id)}
-                className={`text-sm font-medium transition-colors px-4 py-2 rounded-md whitespace-nowrap ${
-                  activeTab === nav.id 
-                  ? 'text-zinc-900 bg-zinc-100' 
-                  : 'text-zinc-500 hover:text-zinc-900'
-                }`}
-              >
-                {nav.label}
-              </button>
-            ))}
-          </div>
-          
           {/* Global Search Bar */}
-          <div className="w-full sm:w-[350px]">
+          <div className="w-full sm:w-[400px]">
              <Input 
                icon={Search} 
-               placeholder="Global Search..." 
+               placeholder="Global Search (Customer, Order ID, Phone...)" 
                value={searchQuery}
                onChange={(e) => setSearchQuery(e.target.value)}
              />
@@ -362,7 +426,7 @@ export default function MasterDashboard() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-semibold tracking-tight">Search Results for "{searchQuery}"</h2>
-              <button onClick={() => setSearchQuery('')} className="text-sm text-blue-600 hover:underline">Clear Search</button>
+              <button onClick={() => setSearchQuery('')} className="text-sm text-blue-600 hover:underline font-medium">Clear Search</button>
             </div>
             <div className="text-sm text-zinc-500 mb-4">Found {searchResults.length} matching records across all databases.</div>
             
@@ -375,7 +439,7 @@ export default function MasterDashboard() {
                         {result.sheet.replace('-', ' ')}
                       </Badge>
                       {result.pdfLink && (
-                        <a href={result.pdfLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:text-blue-800 flex items-center text-xs font-medium gap-1">
+                        <a href={result.pdfLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:text-blue-800 flex items-center text-xs font-medium gap-1 bg-blue-50 px-2 py-1 rounded">
                           <FileText className="w-3 h-3" /> View Doc
                         </a>
                       )}
@@ -405,7 +469,7 @@ export default function MasterDashboard() {
               </div>
             )}
           </div>
-        ) : activeTab === 'overview' ? (
+        ) : (
           /* Normal Dashboard View */
           <>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
@@ -444,7 +508,7 @@ export default function MasterDashboard() {
                     <DollarSign className="h-4 w-4 text-zinc-500" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">₹{kpis.totalSales.toLocaleString()}</div>
+                    <div className="text-3xl font-bold tracking-tight">₹{kpis.totalSales.toLocaleString()}</div>
                     <p className="text-xs text-emerald-600 font-medium flex items-center mt-1">
                       <TrendingUp className="w-3 h-3 mr-1" /> Metrics based on selected date range
                     </p>
@@ -457,7 +521,7 @@ export default function MasterDashboard() {
                     <Activity className="h-4 w-4 text-zinc-500" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">₹{kpis.makingCharges.toLocaleString()}</div>
+                    <div className="text-3xl font-bold tracking-tight">₹{kpis.makingCharges.toLocaleString()}</div>
                     <p className="text-xs text-zinc-500 mt-1">Pure profit from labor & craft</p>
                   </CardContent>
                 </Card>
@@ -468,7 +532,7 @@ export default function MasterDashboard() {
                     <RefreshCw className="h-4 w-4 text-zinc-500" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">₹{kpis.scrapGoldBought.toLocaleString()}</div>
+                    <div className="text-3xl font-bold tracking-tight">₹{kpis.scrapGoldBought.toLocaleString()}</div>
                     <p className="text-xs text-zinc-500 mt-1">Value of old jewellery purchased</p>
                   </CardContent>
                 </Card>
@@ -479,24 +543,24 @@ export default function MasterDashboard() {
                     <Wallet className="h-4 w-4 text-zinc-500" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">₹{kpis.savingsDeposits.toLocaleString()}</div>
+                    <div className="text-3xl font-bold tracking-tight">₹{kpis.savingsDeposits.toLocaleString()}</div>
                     <p className="text-xs text-zinc-500 mt-1">Total customer deposits collected</p>
                   </CardContent>
                 </Card>
               </div>
             )}
 
-            {/* Charts Area */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+            {/* Widgets Area */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
+              
               {/* Dynamic Trend Chart */}
-              <Card className="col-span-4 flex flex-col">
+              <Card className="col-span-12 lg:col-span-8 flex flex-col">
                 <CardHeader className="pb-2 border-b border-zinc-100 mb-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <CardTitle>Business Trends</CardTitle>
                       <p className="text-sm text-zinc-500 mt-1">Visualizing selected date range.</p>
                     </div>
-                    {/* Chart Metric Selector */}
                     <div className="flex items-center gap-1 bg-zinc-50 rounded-lg p-1 border border-zinc-200">
                        {[
                          { id: 'sales', label: 'Sales' },
@@ -523,7 +587,7 @@ export default function MasterDashboard() {
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={kpis.trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                           <defs>
-                            <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                            <linearGradient id="colorArea" x1="0" y1="0" x2="0" y2="1">
                               <stop offset="5%" stopColor="#18181b" stopOpacity={0.3}/>
                               <stop offset="95%" stopColor="#18181b" stopOpacity={0}/>
                             </linearGradient>
@@ -535,7 +599,7 @@ export default function MasterDashboard() {
                             contentStyle={{ borderRadius: '8px', border: '1px solid #e4e4e7', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                             formatter={(value) => [`₹${value.toLocaleString()}`, activeChart.toUpperCase()]}
                           />
-                          <Area type="monotone" dataKey={activeChart} stroke="#18181b" strokeWidth={2} fillOpacity={1} fill="url(#colorSales)" />
+                          <Area type="monotone" dataKey={activeChart} stroke="#18181b" strokeWidth={2} fillOpacity={1} fill="url(#colorArea)" />
                         </AreaChart>
                       </ResponsiveContainer>
                     ) : (
@@ -545,8 +609,50 @@ export default function MasterDashboard() {
                 </CardContent>
               </Card>
 
-              {/* Inventory Levels Snapshot */}
-              <Card className="col-span-3 flex flex-col">
+              {/* Passbook / Ledger Activity Widget */}
+              <Card className="col-span-12 lg:col-span-4 flex flex-col">
+                <CardHeader>
+                  <CardTitle>Recent Passbook Activity</CardTitle>
+                  <p className="text-sm text-zinc-500">Latest savings ledger transactions.</p>
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col justify-between">
+                   <div className="space-y-4">
+                     {kpis && kpis.recentLedger.map((txn, i) => {
+                       const isDeposit = String(txn.type).toUpperCase().includes('DEPOSIT');
+                       return (
+                         <div key={i} className="flex items-center justify-between border-b border-zinc-100 pb-3 last:border-0 last:pb-0">
+                           <div>
+                             <div className="font-medium text-zinc-900">{String(txn.acc)}</div>
+                             <div className="text-[10px] text-zinc-500 uppercase tracking-wider">{parseDate(txn.date)?.toLocaleDateString('en-GB') || txn.date}</div>
+                           </div>
+                           <div className="text-right">
+                             <div className={`font-bold text-sm ${isDeposit ? 'text-emerald-600' : 'text-zinc-900'}`}>
+                               {isDeposit ? '+' : ''}{String(txn.amt)}
+                             </div>
+                             <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${isDeposit ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+                               {String(txn.type)}
+                             </span>
+                           </div>
+                         </div>
+                       )
+                     })}
+                     {(!kpis || kpis.recentLedger.length === 0) && (
+                       <div className="text-sm text-zinc-500 text-center py-4">No recent activity.</div>
+                     )}
+                   </div>
+                   <div className="mt-4 pt-4 border-t border-zinc-100 text-center">
+                     <button 
+                       onClick={() => openModal('transaction-ledger')}
+                       className="text-sm font-medium text-blue-600 hover:text-blue-800 flex items-center justify-center w-full gap-1"
+                     >
+                       View Full Ledger <ArrowUpRight className="w-4 h-4" />
+                     </button>
+                   </div>
+                </CardContent>
+              </Card>
+
+              {/* Inventory Levels Snapshot Widget */}
+              <Card className="col-span-12 lg:col-span-4 flex flex-col">
                 <CardHeader>
                   <CardTitle>Live Inventory Snapshot</CardTitle>
                   <p className="text-sm text-zinc-500">Current vault holdings.</p>
@@ -562,7 +668,7 @@ export default function MasterDashboard() {
                        if (!category) return null;
                        
                        return (
-                         <div key={i} className="flex items-center justify-between border-b border-zinc-100 pb-3 last:border-0">
+                         <div key={i} className="flex items-center justify-between border-b border-zinc-100 pb-3 last:border-0 last:pb-0">
                            <div>
                              <div className="font-medium text-zinc-900">{String(category)}</div>
                              <div className="text-xs text-zinc-500">{String(count)} Items in Vault</div>
@@ -570,9 +676,9 @@ export default function MasterDashboard() {
                            <div className="text-right">
                              <div className="font-bold text-zinc-900">{isNaN(weight) ? '0.00' : weight.toFixed(2)} g</div>
                              {status && String(status).includes('DEEP') ? (
-                               <span className="text-[10px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded uppercase tracking-wider">{String(status)}</span>
+                               <Badge variant="destructive">{String(status)}</Badge>
                              ) : (
-                               <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded uppercase tracking-wider">Verified</span>
+                               <Badge variant="success">Verified</Badge>
                              )}
                            </div>
                          </div>
@@ -581,7 +687,7 @@ export default function MasterDashboard() {
                    </div>
                    <div className="mt-4 pt-4 border-t border-zinc-100 text-center">
                      <button 
-                       onClick={() => setActiveTab('inventory')}
+                       onClick={() => openModal('inventory')}
                        className="text-sm font-medium text-blue-600 hover:text-blue-800 flex items-center justify-center w-full gap-1"
                      >
                        View Full Inventory Book <ArrowUpRight className="w-4 h-4" />
@@ -589,61 +695,41 @@ export default function MasterDashboard() {
                    </div>
                 </CardContent>
               </Card>
+              
+              {/* Other Quick Links Widget (Optional) */}
+              <Card className="col-span-12 lg:col-span-8 flex flex-col items-center justify-center bg-zinc-900 text-white p-8">
+                 <h3 className="text-2xl font-bold tracking-tight mb-2">Command Center Links</h3>
+                 <p className="text-zinc-400 text-sm mb-8">Access all deep databases securely.</p>
+                 <div className="flex flex-wrap gap-3 justify-center">
+                   {[
+                     { id: 'custom-orders', label: 'Custom Orders' },
+                     { id: 'jewellery-sales', label: 'Jewellery Sales' },
+                     { id: 'old-jewellery', label: 'Old Gold Purchases' },
+                     { id: 'customer-profiles', label: 'Customer Profiles' },
+                   ].map(nav => (
+                     <button
+                        key={nav.id}
+                        onClick={() => openModal(nav.id)}
+                        className="bg-white/10 hover:bg-white/20 transition-colors border border-white/10 rounded-full px-4 py-2 text-sm font-medium"
+                     >
+                       {nav.label}
+                     </button>
+                   ))}
+                 </div>
+              </Card>
+              
             </div>
           </>
-        ) : (
-          /* Table Views for Other Tabs */
-          <div className="space-y-4 animate-in fade-in duration-500">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-semibold capitalize tracking-tight">{activeTab.replace('-', ' ')}</h2>
-              <button 
-                onClick={() => setActiveTab('overview')}
-                className="text-sm text-zinc-500 hover:text-zinc-900 flex items-center gap-1"
-              >
-                &larr; Back to Overview
-              </button>
-            </div>
-            
-            <Card className="overflow-hidden flex flex-col border-zinc-200 shadow-sm bg-white">
-              <div className="overflow-x-auto w-full custom-scrollbar">
-                {!datasets[activeTab] || !Array.isArray(datasets[activeTab]) || datasets[activeTab].length <= 1 ? (
-                  <div className="h-[400px] flex items-center justify-center text-zinc-500 text-sm">
-                    No data entries found.
-                  </div>
-                ) : (
-                  <div className="w-full min-w-max">
-                    <table className="w-full text-sm text-left">
-                      <thead className="bg-zinc-50/50">
-                        <tr className="border-b border-zinc-200">
-                          {Array.isArray(datasets[activeTab][0]) && datasets[activeTab][0].map((header, i) => (
-                            <th key={i} className="h-12 px-4 text-left align-middle font-medium text-zinc-500 whitespace-nowrap">
-                              {header || `Col ${i+1}`}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody className="[&_tr:last-child]:border-0">
-                        {datasets[activeTab].slice(1).map((row, rowIndex) => {
-                          if (!Array.isArray(row)) return null;
-                          return (
-                            <tr key={rowIndex} className="border-b border-zinc-100 transition-colors hover:bg-zinc-50/50">
-                              {datasets[activeTab][0].map((_, colIndex) => (
-                                <td key={colIndex} className="p-4 align-middle text-zinc-700 max-w-[200px] truncate" title={row[colIndex]}>
-                                  {row[colIndex] || '-'}
-                                </td>
-                              ))}
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            </Card>
-          </div>
         )}
       </main>
+
+      {/* Global Data Table Modal */}
+      <DataTableModal 
+        isOpen={modalOpen} 
+        onClose={() => setModalOpen(false)} 
+        title={modalTarget || ''} 
+        data={modalTarget ? datasets[modalTarget] : null} 
+      />
 
       <style dangerouslySetInnerHTML={{__html: `
         .no-scrollbar::-webkit-scrollbar {
