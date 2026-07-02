@@ -5,6 +5,7 @@ import logoIcon from '../../assets/4.png';
 import logoTextUrl from '../../assets/Aarthika (1).png';
 import premiumLogo from '../../assets/3.png';
 import InvoicePrint from './InvoicePrint';
+import { dummyInventoryData } from './dummyInventory';
 
 const OfficerHeader = ({ officerName, onLogout, onBack }) => (
   <div className="sticky top-0 z-50 w-full bg-gradient-to-r from-[#0d0d14] via-aarthikaDark to-amber-900 py-3 sm:py-4 px-4 sm:px-8 shadow-2xl border-b border-white/10 overflow-hidden backdrop-blur-md">
@@ -639,7 +640,7 @@ export default function JewellerySalesTerminal() {
                 <button 
                   onClick={() => {
                     if (allItems.length >= 6) return showToast("Maximum 6 items allowed.", "error");
-                    setSilverItems([...silverItems, { category: 'Payal', purity: '75%', grossWeight: '', netWeight: '', rate: liveRates ? liveRates.silverRate : '' }]);
+                    setSilverItems([...silverItems, { category: 'Silver Payals', purity: '75%', grossWeight: '', netWeight: '', rate: liveRates ? liveRates.silverRate : '' }]);
                   }}
                   className="text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
                 >
@@ -652,7 +653,10 @@ export default function JewellerySalesTerminal() {
                 <div key={index} className="grid grid-cols-12 gap-3 mb-4 items-end bg-gray-50 p-3 rounded-xl border border-gray-100 relative group">
                   <div className="col-span-3">
                     <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Category</label>
-                    <input type="text" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:border-amber-500" value={item.category} onChange={e => { const newItems = [...silverItems]; newItems[index].category = e.target.value; setSilverItems(newItems); }} placeholder="e.g. Payal" />
+                    <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:border-amber-500" value={item.category} onChange={e => { const newItems = [...silverItems]; newItems[index].category = e.target.value; setSilverItems(newItems); }}>
+                      <option value="">Select</option>
+                      {dummyInventoryData.categories.filter(c => c.metalType === 'Silver').map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                    </select>
                   </div>
                   <div className="col-span-2">
                     <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Purity</label>
@@ -692,7 +696,7 @@ export default function JewellerySalesTerminal() {
                 <button 
                   onClick={() => {
                     if (allItems.length >= 6) return showToast("Maximum 6 items allowed.", "error");
-                    setGoldItems([...goldItems, { category: 'Ring', purity: '22K', grossWeight: '', netWeight: '', rate: liveRates ? liveRates.goldRate : '' }]);
+                    setGoldItems([...goldItems, { category: 'Gold Rings', purity: '22K', grossWeight: '', netWeight: '', rate: liveRates ? liveRates.goldRate : '' }]);
                   }}
                   className="text-xs font-bold bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 text-yellow-700 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 shadow-sm"
                 >
@@ -705,7 +709,10 @@ export default function JewellerySalesTerminal() {
                 <div key={index} className="grid grid-cols-12 gap-3 mb-4 items-end bg-yellow-50/30 p-3 rounded-xl border border-yellow-100 relative group z-10">
                   <div className="col-span-3">
                     <label className="block text-[10px] font-bold text-yellow-700/60 uppercase mb-1">Category</label>
-                    <input type="text" className="w-full border border-yellow-200 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:border-amber-500" value={item.category} onChange={e => { const newItems = [...goldItems]; newItems[index].category = e.target.value; setGoldItems(newItems); }} placeholder="e.g. Ring" />
+                    <select className="w-full border border-yellow-200 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:border-amber-500" value={item.category} onChange={e => { const newItems = [...goldItems]; newItems[index].category = e.target.value; setGoldItems(newItems); }}>
+                      <option value="">Select</option>
+                      {dummyInventoryData.categories.filter(c => c.metalType.includes('Gold')).map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                    </select>
                   </div>
                   <div className="col-span-2">
                     <label className="block text-[10px] font-bold text-yellow-700/60 uppercase mb-1">Purity</label>

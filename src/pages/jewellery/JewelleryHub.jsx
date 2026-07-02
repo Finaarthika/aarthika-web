@@ -385,6 +385,30 @@ export default function JewelleryHub() {
               </div>
             </div>
 
+            {/* Vault Audit Terminal Card */}
+            <div 
+              onClick={() => navigate('/jewellery/vault-audit')}
+              className="group relative bg-[#0D0D14]/80 backdrop-blur-2xl border border-white/5 rounded-3xl p-8 lg:p-10 hover:border-red-500/30 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col justify-between min-h-[320px]"
+            >
+              <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-red-500/5 rounded-full blur-3xl -mr-32 -mb-32 group-hover:bg-red-500/10 transition-colors duration-700"></div>
+              
+              <div className="relative z-10 flex justify-between items-start mb-8">
+                <div className="w-20 h-20 bg-gradient-to-br from-red-500/20 to-red-800/10 border border-red-500/20 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(239,68,68,0.15)] group-hover:shadow-[0_0_40px_rgba(239,68,68,0.3)] transition-shadow">
+                  <svg className="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                </div>
+                <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-red-500 group-hover:border-red-500 group-hover:text-white text-white/30 transition-all duration-300">
+                  <svg className="w-5 h-5 group-hover:rotate-45 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                </div>
+              </div>
+              
+              <div className="relative z-10">
+                <h2 className="text-3xl font-black text-white mb-4 tracking-tight group-hover:text-red-400 transition-colors">Vault Audit</h2>
+                <p className="text-gray-400 text-base font-medium leading-relaxed max-w-md">
+                  Perform End-of-Day closing. Log blind weight counts, trigger Deep Audits, and verify physical inventory against the secure digital ledger.
+                </p>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
