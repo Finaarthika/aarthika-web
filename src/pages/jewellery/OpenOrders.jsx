@@ -122,7 +122,7 @@ export default function OpenOrders() {
       setLoadingOrders(true);
       setFetchError('');
       try {
-          const res = await fetch('/api/open-orders');
+          const res = await fetch('/api/orders');
           const data = await res.json();
           if (!res.ok) throw new Error(data.error || 'Failed to fetch orders');
           setOrders(data.openOrders || []);
@@ -141,7 +141,7 @@ export default function OpenOrders() {
       }
       setActionLoading(true);
       try {
-          const res = await fetch('/api/update-order', {
+          const res = await fetch('/api/orders', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ action: 'assign_goldsmith', rowIndex, goldsmithName: gName.trim() })
@@ -160,7 +160,7 @@ export default function OpenOrders() {
       if (!window.confirm("Are you sure you want to fulfill and complete this order? It will be removed from this dashboard.")) return;
       setActionLoading(true);
       try {
-          const res = await fetch('/api/update-order', {
+          const res = await fetch('/api/orders', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ action: 'fulfill_order', rowIndex })

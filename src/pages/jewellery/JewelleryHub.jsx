@@ -132,7 +132,7 @@ export default function JewelleryHub() {
       .catch(console.error);
 
     // Fetch Active Custom Orders
-    fetch('/api/open-orders')
+    fetch('/api/orders')
       .then(res => res.json())
       .then(data => {
         if (data.openOrders) setActiveOrdersCount(data.openOrders.length);

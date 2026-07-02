@@ -162,7 +162,7 @@ export default function JewellerySalesTerminal() {
 
   useEffect(() => {
     if (officerAuth.loggedIn) {
-        fetch('/api/open-orders')
+        fetch('/api/orders')
           .then(res => res.json())
           .then(data => {
               if (data.openOrders) setOpenOrders(data.openOrders);
