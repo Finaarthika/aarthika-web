@@ -1,522 +1,479 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line
+  LineChart, Line, AreaChart, Area
 } from 'recharts';
 import { 
-  LayoutDashboard, Package, ShoppingCart, Activity, FileText, 
-  Users, Wallet, RefreshCw, Plus, CreditCard, DollarSign
+  LayoutDashboard, Package, Search, Calendar, ChevronDown, Activity, 
+  DollarSign, TrendingUp, Wallet, ArrowDownRight, ArrowUpRight, FileText, ExternalLink
 } from 'lucide-react';
 
 const FIREBASE_API_URL = 'https://us-central1-aarthika-backend.cloudfunctions.net/masterApi';
 
-// -- Exact Shadcn UI Replicas --
-
+// -- Shadcn UI Replicas --
 const Card = ({ children, className = '' }) => (
-  <div className={`rounded-xl border border-zinc-200 bg-white text-zinc-950 shadow-sm ${className}`}>
-    {children}
-  </div>
+  <div className={`rounded-xl border border-zinc-200 bg-white text-zinc-950 shadow-sm ${className}`}>{children}</div>
 );
-
 const CardHeader = ({ children, className = '' }) => (
-  <div className={`flex flex-col space-y-1.5 p-6 ${className}`}>
-    {children}
-  </div>
+  <div className={`flex flex-col space-y-1.5 p-6 ${className}`}>{children}</div>
 );
-
 const CardTitle = ({ children, className = '' }) => (
-  <h3 className={`text-lg font-semibold leading-none tracking-tight ${className}`}>
-    {children}
-  </h3>
+  <h3 className={`font-semibold leading-none tracking-tight ${className}`}>{children}</h3>
 );
-
-const CardDescription = ({ children, className = '' }) => (
-  <p className={`text-sm text-zinc-500 ${className}`}>
-    {children}
-  </p>
-);
-
 const CardContent = ({ children, className = '' }) => (
-  <div className={`p-6 pt-0 ${className}`}>
-    {children}
+  <div className={`p-6 pt-0 ${className}`}>{children}</div>
+);
+const Input = ({ className = '', icon: Icon, ...props }) => (
+  <div className="relative flex items-center w-full">
+    {Icon && <Icon className="absolute left-3 w-4 h-4 text-zinc-500" />}
+    <input 
+      className={`flex h-10 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${Icon ? 'pl-9' : ''} ${className}`}
+      {...props}
+    />
   </div>
 );
 
-const Badge = ({ children, variant = 'default' }) => {
-  const variants = {
-    default: 'border-transparent bg-zinc-900 text-zinc-50 hover:bg-zinc-900/80',
-    secondary: 'border-transparent bg-zinc-100 text-zinc-900 hover:bg-zinc-100/80',
-    outline: 'text-zinc-950 border-zinc-200',
-  };
-  return (
-    <div className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 ${variants[variant]}`}>
-      {children}
-    </div>
-  );
+// -- Helper Functions --
+const parseDate = (dateStr) => {
+  if (!dateStr) return null;
+  const parts = dateStr.split(/[-/]/);
+  if (parts.length === 3) {
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const year = parseInt(parts[2].length === 2 ? `20${parts[2]}` : parts[2], 10);
+    const d = new Date(year, month, day);
+    if (!isNaN(d.getTime())) return d;
+  }
+  const fallback = new Date(dateStr);
+  return isNaN(fallback.getTime()) ? null : fallback;
 };
 
-const Button = ({ children, variant = 'default', className = '', ...props }) => {
-  const variants = {
-    default: 'bg-zinc-900 text-zinc-50 hover:bg-zinc-900/90 shadow',
-    outline: 'border border-zinc-200 bg-white hover:bg-zinc-100 hover:text-zinc-900',
-    ghost: 'hover:bg-zinc-100 hover:text-zinc-900'
-  };
-  return (
-    <button 
-      className={`inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 ${variants[variant]} ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
-  );
+const isWithinRange = (date, range) => {
+  if (!date) return true; // If no date, include it by default or exclude it? Let's include for global metrics if unknown.
+  const now = new Date();
+  const diffTime = Math.abs(now - date);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (range === 'today') return diffDays <= 1;
+  if (range === '7d') return diffDays <= 7;
+  if (range === '30d') return diffDays <= 30;
+  if (range === '90d') return diffDays <= 90;
+  return true; // 'all'
 };
-
-const Input = ({ className = '', ...props }) => (
-  <input 
-    className={`flex h-10 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
-    {...props}
-  />
-);
-
-// -- Main Application --
 
 export default function MasterDashboard() {
-  const [activeTab, setActiveTab] = useState('overview');
   const [datasets, setDatasets] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [dateRange, setDateRange] = useState('30d'); // 'today', '7d', '30d', 'all'
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const navigation = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'inventory', label: 'Inventory' },
-    { id: 'custom-orders', label: 'Orders' },
-    { id: 'jewellery-sales', label: 'Sales' },
-    { id: 'old-jewellery', label: 'Old Gold' },
-    { id: 'vault-audit', label: 'Vault Audits' },
-    { id: 'metal-rates', label: 'Metal Rates' },
-    { id: 'staff-access', label: 'Staff' },
-    { id: 'customer-profiles', label: 'Customers' },
-    { id: 'transaction-ledger', label: 'Ledger' },
-    { id: 'savings-transaction', label: 'Savings' },
+  const TARGETS = [
+    'inventory', 'custom-orders', 'jewellery-sales', 
+    'old-jewellery', 'vault-audit', 'metal-rates', 
+    'savings-transaction', 'customer-profiles'
   ];
 
-  // Fetch initial datasets for overview
   useEffect(() => {
-    if (activeTab === 'overview') {
-      fetchMultiple(['inventory', 'custom-orders', 'jewellery-sales']);
-    } else {
-      if (!datasets[activeTab]) {
-        fetchData(activeTab);
-      }
-    }
-  }, [activeTab]);
+    fetchAllData();
+  }, []);
 
-  const fetchData = async (target) => {
+  const fetchAllData = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${FIREBASE_API_URL}/read?target=${target}`);
-      const body = await res.json();
-      if (res.ok && body.success) {
-        setDatasets(prev => ({ ...prev, [target]: body.data }));
-      }
-    } catch (err) {
-      console.error(`Failed to fetch ${target}:`, err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchMultiple = async (targets) => {
-    setLoading(true);
-    try {
-      await Promise.all(targets.map(async (target) => {
-        if (!datasets[target]) {
-          const res = await fetch(`${FIREBASE_API_URL}/read?target=${target}`);
-          const body = await res.json();
-          if (res.ok && body.success) {
-            setDatasets(prev => ({ ...prev, [target]: body.data }));
-          }
+      const results = {};
+      await Promise.all(TARGETS.map(async (target) => {
+        const res = await fetch(`${FIREBASE_API_URL}/read?target=${target}`);
+        const body = await res.json();
+        if (res.ok && body.success) {
+          results[target] = body.data;
         }
       }));
+      setDatasets(results);
     } catch (err) {
-      console.error('Failed to fetch overview data:', err);
+      console.error('Failed to fetch data:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUpdateInventory = async (e) => {
-    e.preventDefault();
-    setActionLoading(true);
-    const formData = new FormData(e.target);
-    const payload = Object.fromEntries(formData.entries());
-    
-    try {
-      const res = await fetch(`${FIREBASE_API_URL}/add-inventory`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const body = await res.json();
-      
-      if (!res.ok || !body.success) throw new Error(body.error || 'Failed');
-      
-      alert('Inventory Updated Successfully via Firebase!');
-      e.target.reset();
-      fetchData('inventory');
-    } catch (err) {
-      alert(`Error: ${err.message}`);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  // --- KPI Calculations ---
-  
-  const inventoryData = datasets['inventory'] || [];
-  const ordersData = datasets['custom-orders'] || [];
-
+  // --- Business Logic & KPI Calculation ---
   const kpis = useMemo(() => {
-    let totalGoldWeight = 0;
-    let totalSilverWeight = 0;
-    
-    if (inventoryData.length > 1) {
-      const headers = inventoryData[0];
-      const metalTypeIdx = headers.indexOf('Metal Type');
-      const expectedWtIdx = headers.indexOf('Expected Closing Weight (g)');
+    if (!datasets['jewellery-sales'] || !datasets['custom-orders'] || !datasets['old-jewellery'] || !datasets['savings-transaction']) return null;
+
+    let totalSales = 0;
+    let makingCharges = 0;
+    let scrapGoldBought = 0;
+    let savingsDeposits = 0;
+    const salesTrendMap = {}; // For chart
+
+    // 1. Process Jewellery Sales
+    const salesData = datasets['jewellery-sales'];
+    if (salesData.length > 1) {
+      const headers = salesData[0];
+      const dateIdx = headers.findIndex(h => h.toLowerCase().includes('date'));
+      const totalIdx = headers.findIndex(h => h.toLowerCase() === 'total' || h.toLowerCase() === 'total paid');
+      const labourIdx = headers.findIndex(h => h.toLowerCase().includes('labour') || h.toLowerCase().includes('making'));
       
-      if (metalTypeIdx > -1 && expectedWtIdx > -1) {
-        for (let i = 1; i < inventoryData.length; i++) {
-          const row = inventoryData[i];
-          const type = (row[metalTypeIdx] || '').toLowerCase();
-          const weight = parseFloat(row[expectedWtIdx] || 0);
-          
-          if (type.includes('gold')) totalGoldWeight += weight;
-          if (type.includes('silver')) totalSilverWeight += weight;
+      for (let i = 1; i < salesData.length; i++) {
+        const row = salesData[i];
+        const dateStr = row[dateIdx];
+        const d = parseDate(dateStr);
+        if (d && !isWithinRange(d, dateRange)) continue;
+
+        const saleAmt = parseFloat(row[totalIdx]) || 0;
+        const labourAmt = parseFloat(row[labourIdx]) || 0;
+        
+        totalSales += saleAmt;
+        makingCharges += labourAmt;
+
+        // Group for chart
+        if (d) {
+          const key = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+          salesTrendMap[key] = (salesTrendMap[key] || 0) + saleAmt;
         }
       }
     }
 
-    let activeOrdersCount = 0;
+    // 2. Process Custom Orders (Making Charges)
+    const ordersData = datasets['custom-orders'];
     if (ordersData.length > 1) {
       const headers = ordersData[0];
-      const statusIdx = headers.findIndex(h => h && h.toLowerCase().includes('status'));
-      if (statusIdx > -1) {
-        for (let i = 1; i < ordersData.length; i++) {
-          const status = (ordersData[i][statusIdx] || '').toLowerCase();
-          if (status && !status.includes('fulfill') && !status.includes('complete')) {
-            activeOrdersCount++;
-          }
+      const dateIdx = headers.findIndex(h => h.toLowerCase().includes('date'));
+      const labourIdx = headers.findIndex(h => h.toLowerCase().includes('labour') || h.toLowerCase().includes('making'));
+      
+      for (let i = 1; i < ordersData.length; i++) {
+        const row = ordersData[i];
+        const d = parseDate(row[dateIdx]);
+        if (d && !isWithinRange(d, dateRange)) continue;
+        makingCharges += parseFloat(row[labourIdx]) || 0;
+      }
+    }
+
+    // 3. Process Old Gold Scrap
+    const scrapData = datasets['old-jewellery'];
+    if (scrapData.length > 1) {
+      const headers = scrapData[0];
+      const dateIdx = headers.findIndex(h => h.toLowerCase().includes('date'));
+      const totalValueIdx = headers.findIndex(h => h.toLowerCase().includes('total value') || h.toLowerCase().includes('final value'));
+      
+      for (let i = 1; i < scrapData.length; i++) {
+        const row = scrapData[i];
+        const d = parseDate(row[dateIdx]);
+        if (d && !isWithinRange(d, dateRange)) continue;
+        const valStr = (row[totalValueIdx] || '').replace(/[^0-9.-]+/g,"");
+        scrapGoldBought += parseFloat(valStr) || 0;
+      }
+    }
+
+    // 4. Process Savings Deposits
+    const savingsData = datasets['savings-transaction'];
+    if (savingsData.length > 1) {
+      const headers = savingsData[0];
+      const dateIdx = headers.findIndex(h => h.toLowerCase().includes('date'));
+      const amtIdx = headers.findIndex(h => h.toLowerCase().includes('deposit') || h.toLowerCase() === 'amount');
+      const typeIdx = headers.findIndex(h => h.toLowerCase().includes('type'));
+      
+      for (let i = 1; i < savingsData.length; i++) {
+        const row = savingsData[i];
+        const d = parseDate(row[dateIdx]);
+        if (d && !isWithinRange(d, dateRange)) continue;
+        
+        const type = (row[typeIdx] || '').toLowerCase();
+        if (type.includes('deposit') || !typeIdx) {
+           savingsDeposits += parseFloat(row[amtIdx]) || 0;
         }
       }
     }
 
-    return {
-      goldWt: totalGoldWeight.toFixed(2),
-      silverWt: (totalSilverWeight / 1000).toFixed(2), 
-      activeOrders: activeOrdersCount
-    };
-  }, [inventoryData, ordersData]);
+    const trendData = Object.keys(salesTrendMap).sort((a, b) => new Date(a) - new Date(b)).map(k => ({
+      date: k,
+      sales: salesTrendMap[k]
+    }));
 
-  const pieChartData = useMemo(() => {
-    if (inventoryData.length <= 1) return [];
-    const headers = inventoryData[0];
-    const nameIdx = headers.indexOf('Category Name');
-    const expectedWtIdx = headers.indexOf('Expected Closing Weight (g)');
-    const metalTypeIdx = headers.indexOf('Metal Type');
-    
-    if (nameIdx === -1 || expectedWtIdx === -1) return [];
-    
-    return inventoryData.slice(1)
-      .filter(row => (row[metalTypeIdx] || '').toLowerCase().includes('gold'))
-      .map(row => ({
-        name: row[nameIdx] || 'Unknown',
-        value: parseFloat(row[expectedWtIdx] || 0)
-      }))
-      .filter(item => item.value > 0)
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 5); 
-  }, [inventoryData]);
+    return { totalSales, makingCharges, scrapGoldBought, savingsDeposits, trendData };
+  }, [datasets, dateRange]);
 
-  const COLORS = ['#09090b', '#27272a', '#52525b', '#71717a', '#a1a1aa'];
+  // --- Global Search Logic ---
+  const searchResults = useMemo(() => {
+    if (!searchQuery || searchQuery.length < 2) return null;
+    const results = [];
+    const query = searchQuery.toLowerCase();
 
-  // --- Rendering ---
+    Object.keys(datasets).forEach(sheetName => {
+      const sheetData = datasets[sheetName];
+      if (!sheetData || sheetData.length <= 1) return;
+      const headers = sheetData[0];
+
+      for (let i = 1; i < sheetData.length; i++) {
+        const row = sheetData[i];
+        const rowStr = row.join(' ').toLowerCase();
+        if (rowStr.includes(query)) {
+          // Convert row to object mapped to headers
+          const itemObj = {};
+          let pdfLink = null;
+          
+          headers.forEach((h, idx) => {
+            itemObj[h] = row[idx];
+            if (h.toLowerCase().includes('pdf') || h.toLowerCase().includes('drive') || h.toLowerCase().includes('link')) {
+               if (row[idx] && row[idx].includes('http')) pdfLink = row[idx];
+            }
+          });
+
+          results.push({
+            sheet: sheetName,
+            data: itemObj,
+            pdfLink
+          });
+        }
+      }
+    });
+    return results;
+  }, [searchQuery, datasets]);
+
+
+  // --- Render ---
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#f4f4f5] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4 text-zinc-500">
+          <Activity className="w-8 h-8 animate-pulse text-zinc-900" />
+          <h2 className="text-sm font-medium tracking-widest uppercase">Aggregating Business Data...</h2>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-white text-zinc-950 font-sans">
+    <div className="min-h-screen bg-[#f4f4f5] text-zinc-950 font-sans pb-20">
       
-      {/* Top Navbar */}
-      <div className="border-b border-zinc-200">
-        <div className="flex h-16 items-center px-4 md:px-8 max-w-[1600px] mx-auto">
-          <h2 className="text-xl font-bold tracking-tight mr-8 flex items-center gap-2">
-            <LayoutDashboard className="w-5 h-5" />
-            Dashboard
-          </h2>
+      {/* Top Header */}
+      <div className="bg-white border-b border-zinc-200 sticky top-0 z-30 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 px-6 max-w-[1600px] mx-auto gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-zinc-900 rounded-lg flex items-center justify-center">
+              <LayoutDashboard className="w-4 h-4 text-white" />
+            </div>
+            <h1 className="text-xl font-bold tracking-tight text-zinc-900">Aarthika Command Center</h1>
+          </div>
           
-          {/* Top Horizontal Tabs */}
-          <div className="hidden md:flex items-center space-x-1">
-            {navigation.slice(0, 5).map(nav => (
-              <button
-                key={nav.id}
-                onClick={() => setActiveTab(nav.id)}
-                className={`text-sm font-medium transition-colors px-4 py-2 rounded-md ${
-                  activeTab === nav.id 
-                  ? 'text-zinc-900 bg-zinc-100' 
-                  : 'text-zinc-500 hover:text-zinc-900'
-                }`}
-              >
-                {nav.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="ml-auto flex items-center space-x-4">
-            <Badge variant="outline" className="hidden sm:inline-flex">Live Cloud Sync</Badge>
+          {/* Global Search Bar */}
+          <div className="w-full sm:w-[400px]">
+             <Input 
+               icon={Search} 
+               placeholder="Global Search (Customer, Order ID, Phone...)" 
+               value={searchQuery}
+               onChange={(e) => setSearchQuery(e.target.value)}
+             />
           </div>
         </div>
       </div>
 
-      {/* Secondary Mobile/Overflow Tabs */}
-      <div className="border-b border-zinc-200 bg-zinc-50/50 md:hidden">
-        <div className="flex overflow-x-auto p-2 space-x-1 no-scrollbar">
-          {navigation.map(nav => (
-             <button
-             key={nav.id}
-             onClick={() => setActiveTab(nav.id)}
-             className={`whitespace-nowrap text-sm font-medium transition-colors px-4 py-2 rounded-md ${
-               activeTab === nav.id 
-               ? 'text-zinc-900 bg-white shadow-sm ring-1 ring-zinc-200' 
-               : 'text-zinc-500 hover:text-zinc-900'
-             }`}
-           >
-             {nav.label}
-           </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Main Content Area */}
-      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6 max-w-[1600px] mx-auto">
+      <main className="p-4 md:p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-500">
         
-        {/* Full Desktop Tab List below header */}
-        <div className="hidden md:flex items-center justify-between space-y-2 mb-6">
-           <div className="bg-zinc-100/80 p-1 rounded-lg inline-flex flex-wrap gap-1">
-             {navigation.map(nav => (
-                <button
-                key={nav.id}
-                onClick={() => setActiveTab(nav.id)}
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 ${
-                  activeTab === nav.id 
-                  ? 'bg-white text-zinc-950 shadow-sm' 
-                  : 'text-zinc-500 hover:text-zinc-950'
-                }`}
-              >
-                {nav.label}
-              </button>
-             ))}
-           </div>
-        </div>
-
-        {activeTab === 'overview' && (
-          <div className="space-y-4 animate-in fade-in duration-500">
-            {/* KPI Cards */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Gold Value</CardTitle>
-                  <DollarSign className="h-4 w-4 text-zinc-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{kpis.goldWt} g</div>
-                  <p className="text-xs text-zinc-500">Expected vault closing weight</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Silver Value</CardTitle>
-                  <CreditCard className="h-4 w-4 text-zinc-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{kpis.silverWt} kg</div>
-                  <p className="text-xs text-zinc-500">Expected vault closing weight</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Active Orders</CardTitle>
-                  <Activity className="h-4 w-4 text-zinc-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">+{kpis.activeOrders}</div>
-                  <p className="text-xs text-zinc-500">Pending fulfillment</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">System Status</CardTitle>
-                  <Activity className="h-4 w-4 text-zinc-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-zinc-950">Online</div>
-                  <p className="text-xs text-zinc-500">Google Cloud synced</p>
-                </CardContent>
-              </Card>
+        {/* If searching, show only search results */}
+        {searchResults !== null ? (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-semibold tracking-tight">Search Results for "{searchQuery}"</h2>
+            <div className="text-sm text-zinc-500 mb-4">Found {searchResults.length} matching records across all databases.</div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {searchResults.map((result, idx) => (
+                <Card key={idx} className="hover:shadow-md transition-shadow">
+                  <CardHeader className="bg-zinc-50 border-b border-zinc-100 pb-4">
+                    <div className="flex justify-between items-start">
+                      <Badge variant="outline" className="uppercase tracking-wider text-[10px] bg-white">
+                        {result.sheet.replace('-', ' ')}
+                      </Badge>
+                      {result.pdfLink && (
+                        <a href={result.pdfLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:text-blue-800 flex items-center text-xs font-medium gap-1">
+                          <FileText className="w-3 h-3" /> View Doc
+                        </a>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-4 space-y-3">
+                    {Object.entries(result.data).map(([k, v]) => {
+                      if (!v || v === '-' || k.toLowerCase().includes('pdf') || k.toLowerCase().includes('link')) return null;
+                      return (
+                        <div key={k} className="flex justify-between border-b border-zinc-100 pb-2 last:border-0 last:pb-0">
+                          <span className="text-xs text-zinc-500 font-medium uppercase tracking-wider">{k}</span>
+                          <span className="text-sm font-medium text-zinc-900 text-right max-w-[60%] truncate" title={v}>{v}</span>
+                        </div>
+                      );
+                    })}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            {searchResults.length === 0 && (
+              <div className="text-center py-20 bg-white rounded-xl border border-zinc-200">
+                <Search className="w-10 h-10 text-zinc-300 mx-auto mb-3" />
+                <h3 className="text-lg font-medium text-zinc-900">No results found</h3>
+                <p className="text-sm text-zinc-500">Try a different name, order ID, or phone number.</p>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Normal Dashboard View */
+          <>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+              <div>
+                <h2 className="text-3xl font-bold tracking-tight">Business Overview</h2>
+                <p className="text-zinc-500 mt-1">Real-time financial metrics and operational performance.</p>
+              </div>
+              
+              {/* Date Filter Dropdown */}
+              <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-lg p-1 shadow-sm">
+                {[
+                  { id: 'today', label: 'Today' },
+                  { id: '7d', label: '7 Days' },
+                  { id: '30d', label: '30 Days' },
+                  { id: 'all', label: 'All Time' }
+                ].map(opt => (
+                  <button
+                    key={opt.id}
+                    onClick={() => setDateRange(opt.id)}
+                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                      dateRange === opt.id ? 'bg-zinc-100 text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Charts Section */}
+            {/* Core Financial KPIs */}
+            {kpis && (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-zinc-500">Total Sales Revenue</CardTitle>
+                    <DollarSign className="h-4 w-4 text-zinc-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">₹{kpis.totalSales.toLocaleString()}</div>
+                    <p className="text-xs text-emerald-600 font-medium flex items-center mt-1">
+                      <TrendingUp className="w-3 h-3 mr-1" /> Metrics based on selected date range
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-zinc-500">Making Charges Earned</CardTitle>
+                    <Activity className="h-4 w-4 text-zinc-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">₹{kpis.makingCharges.toLocaleString()}</div>
+                    <p className="text-xs text-zinc-500 mt-1">Pure profit from labor & craft</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-zinc-500">Old Scrap Gold Bought</CardTitle>
+                    <RefreshCw className="h-4 w-4 text-zinc-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">₹{kpis.scrapGoldBought.toLocaleString()}</div>
+                    <p className="text-xs text-zinc-500 mt-1">Value of old jewellery purchased</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-zinc-500">Savings Deposits</CardTitle>
+                    <Wallet className="h-4 w-4 text-zinc-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">₹{kpis.savingsDeposits.toLocaleString()}</div>
+                    <p className="text-xs text-zinc-500 mt-1">Total customer deposits collected</p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Charts Area */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+              {/* Sales Trend Chart */}
               <Card className="col-span-4">
                 <CardHeader>
-                  <CardTitle>Gold Inventory Breakdown</CardTitle>
-                  <CardDescription>Top 5 categories by weight distribution.</CardDescription>
+                  <CardTitle>Sales Trend</CardTitle>
+                  <p className="text-sm text-zinc-500">Daily sales revenue visualization.</p>
                 </CardHeader>
-                <CardContent className="pl-2">
-                  <div className="h-[350px] w-full mt-4">
-                    {pieChartData.length > 0 ? (
+                <CardContent>
+                  <div className="h-[300px] w-full mt-4">
+                    {kpis && kpis.trendData.length > 0 ? (
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={pieChartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                        <AreaChart data={kpis.trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#18181b" stopOpacity={0.3}/>
+                              <stop offset="95%" stopColor="#18181b" stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e4e7" />
-                          <XAxis 
-                            dataKey="name" 
-                            stroke="#71717a" 
-                            fontSize={12}
-                            tickLine={false}
-                            axisLine={false}
-                          />
-                          <YAxis 
-                            stroke="#71717a" 
-                            fontSize={12}
-                            tickLine={false}
-                            axisLine={false}
-                            tickFormatter={(value) => `${value}g`}
-                          />
+                          <XAxis dataKey="date" stroke="#71717a" fontSize={12} tickLine={false} axisLine={false} />
+                          <YAxis stroke="#71717a" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${value/1000}k`} />
                           <Tooltip 
-                            cursor={{ fill: '#f4f4f5' }}
                             contentStyle={{ borderRadius: '8px', border: '1px solid #e4e4e7', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                            formatter={(value) => [`₹${value.toLocaleString()}`, 'Sales']}
                           />
-                          <Bar dataKey="value" fill="#09090b" radius={[4, 4, 0, 0]} />
-                        </BarChart>
+                          <Area type="monotone" dataKey="sales" stroke="#18181b" strokeWidth={2} fillOpacity={1} fill="url(#colorSales)" />
+                        </AreaChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="flex h-full items-center justify-center text-zinc-500 text-sm">
-                        No chart data available
-                      </div>
+                      <div className="flex h-full items-center justify-center text-zinc-400">Not enough data in this date range.</div>
                     )}
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Add Inventory Widget */}
+              {/* Inventory Levels Snapshot */}
               <Card className="col-span-3">
                 <CardHeader>
-                  <CardTitle>Update Inventory</CardTitle>
-                  <CardDescription>Push live count and weight updates to the sheet.</CardDescription>
+                  <CardTitle>Live Inventory Snapshot</CardTitle>
+                  <p className="text-sm text-zinc-500">Current vault holdings.</p>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleUpdateInventory} className="space-y-4 mt-2">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Category Name</label>
-                      <Input name="category" required placeholder="e.g. Gold Rings" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium leading-none">Added Count</label>
-                        <Input name="addedCount" type="number" required placeholder="0" />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium leading-none">Added Wt (g)</label>
-                        <Input name="addedWeight" type="number" step="0.01" required placeholder="0.00" />
-                      </div>
-                    </div>
-                    <Button type="submit" className="w-full mt-4" disabled={actionLoading}>
-                      {actionLoading ? 'Updating Database...' : 'Push to Database'}
-                    </Button>
-                  </form>
+                   <div className="space-y-6 mt-4">
+                     {datasets['inventory'] && datasets['inventory'].slice(1, 6).map((row, i) => {
+                       const category = row[0];
+                       const weight = parseFloat(row[10] || 0); // Expected Closing Weight
+                       const count = row[9]; // Expected Closing Count
+                       const status = row[11];
+                       if (!category) return null;
+                       
+                       return (
+                         <div key={i} className="flex items-center justify-between border-b border-zinc-100 pb-3 last:border-0">
+                           <div>
+                             <div className="font-medium text-zinc-900">{category}</div>
+                             <div className="text-xs text-zinc-500">{count} Items in Vault</div>
+                           </div>
+                           <div className="text-right">
+                             <div className="font-bold text-zinc-900">{weight.toFixed(2)} g</div>
+                             {status && status.includes('DEEP') ? (
+                               <span className="text-[10px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded uppercase tracking-wider">{status}</span>
+                             ) : (
+                               <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded uppercase tracking-wider">Verified</span>
+                             )}
+                           </div>
+                         </div>
+                       )
+                     })}
+                   </div>
+                   <div className="mt-6 pt-4 border-t border-zinc-100 text-center">
+                     <button className="text-sm font-medium text-blue-600 hover:text-blue-800 flex items-center justify-center w-full gap-1">
+                       View Full Inventory Book <ArrowUpRight className="w-4 h-4" />
+                     </button>
+                   </div>
                 </CardContent>
               </Card>
             </div>
-          </div>
+          </>
         )}
-
-        {/* Dynamic Data Table Rendering */}
-        {activeTab !== 'overview' && (
-          <div className="space-y-4 animate-in fade-in duration-500">
-            <Card className="overflow-hidden flex flex-col border-zinc-200 shadow-sm bg-white">
-              <div className="overflow-x-auto w-full custom-scrollbar">
-                {loading ? (
-                  <div className="h-[400px] flex items-center justify-center text-zinc-500 gap-2">
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span className="text-sm">Fetching data...</span>
-                  </div>
-                ) : !datasets[activeTab] || datasets[activeTab].length === 0 ? (
-                  <div className="h-[400px] flex items-center justify-center text-zinc-500 text-sm">
-                    No data entries found.
-                  </div>
-                ) : (
-                  <div className="w-full min-w-max">
-                    <table className="w-full text-sm text-left">
-                      <thead className="bg-zinc-50/50">
-                        <tr className="border-b border-zinc-200">
-                          {datasets[activeTab][0].map((header, i) => (
-                            <th key={i} className="h-12 px-4 text-left align-middle font-medium text-zinc-500">
-                              {header || `Col ${i+1}`}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody className="[&_tr:last-child]:border-0">
-                        {datasets[activeTab].slice(1).map((row, rowIndex) => (
-                          <tr key={rowIndex} className="border-b border-zinc-100 transition-colors hover:bg-zinc-50/50 data-[state=selected]:bg-zinc-100">
-                            {datasets[activeTab][0].map((_, colIndex) => (
-                              <td key={colIndex} className="p-4 align-middle text-zinc-700">
-                                {row[colIndex] || '-'}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-              
-              {!loading && datasets[activeTab] && (
-                <div className="flex items-center justify-between px-4 py-4 border-t border-zinc-200 text-sm text-zinc-500 bg-white">
-                  <span>Showing {datasets[activeTab].length - 1} records</span>
-                  <span>Data synced with Cloud</span>
-                </div>
-              )}
-            </Card>
-          </div>
-        )}
-      </div>
-
-      <style dangerouslySetInnerHTML={{__html: `
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 8px;
-          height: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: #f4f4f5;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #d4d4d8;
-          border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #a1a1aa;
-        }
-      `}} />
+      </main>
     </div>
   );
 }
