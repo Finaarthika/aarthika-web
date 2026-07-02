@@ -67,7 +67,7 @@ export default function OldJewelleryTerminal() {
     if (!currentAuth.loggedIn) return false;
     try {
       const deviceId = getDeviceId();
-      const res = await fetch('/api/passbook-auth', {
+      const res = await fetch('/api/passbook?action=auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: currentAuth.userId, action: 'check', deviceId })
@@ -91,7 +91,7 @@ export default function OldJewelleryTerminal() {
     setAuthError('');
     try {
       const deviceId = getDeviceId();
-      const res = await fetch('/api/passbook-auth', {
+      const res = await fetch('/api/passbook?action=auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: loginForm.userId, password: loginForm.password, action: 'login', deviceId })
