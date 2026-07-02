@@ -77,11 +77,28 @@ export default function MasterDashboard() {
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState('30d');
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('overview');
+  const [activeChart, setActiveChart] = useState('sales');
+
+  const navigation = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'inventory', label: 'Inventory' },
+    { id: 'custom-orders', label: 'Orders' },
+    { id: 'jewellery-sales', label: 'Sales' },
+    { id: 'old-jewellery', label: 'Old Gold' },
+    { id: 'vault-audit', label: 'Vault Audits' },
+    { id: 'metal-rates', label: 'Metal Rates' },
+    { id: 'staff-access', label: 'Staff' },
+    { id: 'customer-profiles', label: 'Customers' },
+    { id: 'transaction-ledger', label: 'Ledger' },
+    { id: 'savings-transaction', label: 'Savings' },
+  ];
 
   const TARGETS = [
     'inventory', 'custom-orders', 'jewellery-sales', 
     'old-jewellery', 'vault-audit', 'metal-rates', 
-    'savings-transaction', 'customer-profiles'
+    'savings-transaction', 'customer-profiles',
+    'staff-access', 'transaction-ledger'
   ];
 
   useEffect(() => {
@@ -117,7 +134,14 @@ export default function MasterDashboard() {
     let makingCharges = 0;
     let scrapGoldBought = 0;
     let savingsDeposits = 0;
-    const salesTrendMap = {}; 
+    
+    // Maps for the unified chart
+    const trendMap = {}; 
+    const ensureDate = (dateObj) => {
+      const key = dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+      if (!trendMap[key]) trendMap[key] = { date: key, sales: 0, makingCharges: 0, scrap: 0, savings: 0, timestamp: dateObj.getTime() };
+      return key;
+    };
 
     // 1. Process Jewellery Sales
     const salesData = datasets['jewellery-sales'];
@@ -137,12 +161,16 @@ export default function MasterDashboard() {
         const saleAmt = totalIdx > -1 ? parseFloat(row[totalIdx]) : 0;
         const labourAmt = labourIdx > -1 ? parseFloat(row[labourIdx]) : 0;
         
-        totalSales += (isNaN(saleAmt) ? 0 : saleAmt);
-        makingCharges += (isNaN(labourAmt) ? 0 : labourAmt);
+        const validSale = isNaN(saleAmt) ? 0 : saleAmt;
+        const validLabour = isNaN(labourAmt) ? 0 : labourAmt;
 
-        if (d && !isNaN(saleAmt)) {
-          const key = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-          salesTrendMap[key] = (salesTrendMap[key] || 0) + saleAmt;
+        totalSales += validSale;
+        makingCharges += validLabour;
+
+        if (d) {
+          const key = ensureDate(d);
+          trendMap[key].sales += validSale;
+          trendMap[key].makingCharges += validLabour;
         }
       }
     }
@@ -159,8 +187,15 @@ export default function MasterDashboard() {
         if (!Array.isArray(row)) continue;
         const d = dateIdx > -1 ? parseDate(row[dateIdx]) : null;
         if (d && !isWithinRange(d, dateRange)) continue;
+        
         const amt = labourIdx > -1 ? parseFloat(row[labourIdx]) : 0;
-        makingCharges += (isNaN(amt) ? 0 : amt);
+        const validAmt = isNaN(amt) ? 0 : amt;
+        makingCharges += validAmt;
+
+        if (d) {
+          const key = ensureDate(d);
+          trendMap[key].makingCharges += validAmt;
+        }
       }
     }
 
@@ -176,9 +211,16 @@ export default function MasterDashboard() {
         if (!Array.isArray(row)) continue;
         const d = dateIdx > -1 ? parseDate(row[dateIdx]) : null;
         if (d && !isWithinRange(d, dateRange)) continue;
+        
         const valStr = totalValueIdx > -1 ? String(row[totalValueIdx] || '').replace(/[^0-9.-]+/g,"") : '';
         const val = parseFloat(valStr);
-        scrapGoldBought += (isNaN(val) ? 0 : val);
+        const validVal = isNaN(val) ? 0 : val;
+        scrapGoldBought += validVal;
+
+        if (d) {
+          const key = ensureDate(d);
+          trendMap[key].scrap += validVal;
+        }
       }
     }
 
@@ -199,15 +241,18 @@ export default function MasterDashboard() {
         const type = typeIdx > -1 ? String(row[typeIdx] || '').toLowerCase() : '';
         if (type.includes('deposit') || typeIdx === -1) {
            const amt = amtIdx > -1 ? parseFloat(row[amtIdx]) : 0;
-           savingsDeposits += (isNaN(amt) ? 0 : amt);
+           const validAmt = isNaN(amt) ? 0 : amt;
+           savingsDeposits += validAmt;
+
+           if (d) {
+             const key = ensureDate(d);
+             trendMap[key].savings += validAmt;
+           }
         }
       }
     }
 
-    const trendData = Object.keys(salesTrendMap).sort((a, b) => new Date(a) - new Date(b)).map(k => ({
-      date: k,
-      sales: salesTrendMap[k]
-    }));
+    const trendData = Object.values(trendMap).sort((a, b) => a.timestamp - b.timestamp);
 
     return { totalSales, makingCharges, scrapGoldBought, savingsDeposits, trendData };
   }, [datasets, dateRange]);
@@ -281,11 +326,28 @@ export default function MasterDashboard() {
             <h1 className="text-xl font-bold tracking-tight text-zinc-900">Aarthika Command Center</h1>
           </div>
           
+          {/* Top Horizontal Tabs */}
+          <div className="hidden md:flex items-center space-x-1 overflow-x-auto no-scrollbar">
+            {navigation.slice(0, 7).map(nav => (
+              <button
+                key={nav.id}
+                onClick={() => setActiveTab(nav.id)}
+                className={`text-sm font-medium transition-colors px-4 py-2 rounded-md whitespace-nowrap ${
+                  activeTab === nav.id 
+                  ? 'text-zinc-900 bg-zinc-100' 
+                  : 'text-zinc-500 hover:text-zinc-900'
+                }`}
+              >
+                {nav.label}
+              </button>
+            ))}
+          </div>
+          
           {/* Global Search Bar */}
-          <div className="w-full sm:w-[400px]">
+          <div className="w-full sm:w-[350px]">
              <Input 
                icon={Search} 
-               placeholder="Global Search (Customer, Order ID, Phone...)" 
+               placeholder="Global Search..." 
                value={searchQuery}
                onChange={(e) => setSearchQuery(e.target.value)}
              />
@@ -298,7 +360,10 @@ export default function MasterDashboard() {
         {/* If searching, show only search results */}
         {searchResults !== null ? (
           <div className="space-y-6">
-            <h2 className="text-2xl font-semibold tracking-tight">Search Results for "{searchQuery}"</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-semibold tracking-tight">Search Results for "{searchQuery}"</h2>
+              <button onClick={() => setSearchQuery('')} className="text-sm text-blue-600 hover:underline">Clear Search</button>
+            </div>
             <div className="text-sm text-zinc-500 mb-4">Found {searchResults.length} matching records across all databases.</div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -340,7 +405,7 @@ export default function MasterDashboard() {
               </div>
             )}
           </div>
-        ) : (
+        ) : activeTab === 'overview' ? (
           /* Normal Dashboard View */
           <>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
@@ -423,17 +488,40 @@ export default function MasterDashboard() {
 
             {/* Charts Area */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-              {/* Sales Trend Chart */}
-              <Card className="col-span-4">
-                <CardHeader>
-                  <CardTitle>Sales Trend</CardTitle>
-                  <p className="text-sm text-zinc-500">Daily sales revenue visualization.</p>
+              {/* Dynamic Trend Chart */}
+              <Card className="col-span-4 flex flex-col">
+                <CardHeader className="pb-2 border-b border-zinc-100 mb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <CardTitle>Business Trends</CardTitle>
+                      <p className="text-sm text-zinc-500 mt-1">Visualizing selected date range.</p>
+                    </div>
+                    {/* Chart Metric Selector */}
+                    <div className="flex items-center gap-1 bg-zinc-50 rounded-lg p-1 border border-zinc-200">
+                       {[
+                         { id: 'sales', label: 'Sales' },
+                         { id: 'makingCharges', label: 'Making Chg' },
+                         { id: 'scrap', label: 'Scrap' },
+                         { id: 'savings', label: 'Savings' }
+                       ].map(metric => (
+                         <button 
+                           key={metric.id}
+                           onClick={() => setActiveChart(metric.id)}
+                           className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+                             activeChart === metric.id ? 'bg-white shadow-sm ring-1 ring-zinc-200 text-zinc-900' : 'text-zinc-500 hover:text-zinc-900'
+                           }`}
+                         >
+                           {metric.label}
+                         </button>
+                       ))}
+                    </div>
+                  </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="h-[300px] w-full mt-4">
+                <CardContent className="flex-1">
+                  <div className="h-[280px] w-full">
                     {kpis && kpis.trendData.length > 0 ? (
                       <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={kpis.trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                        <AreaChart data={kpis.trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                           <defs>
                             <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
                               <stop offset="5%" stopColor="#18181b" stopOpacity={0.3}/>
@@ -445,9 +533,9 @@ export default function MasterDashboard() {
                           <YAxis stroke="#71717a" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${value/1000}k`} />
                           <Tooltip 
                             contentStyle={{ borderRadius: '8px', border: '1px solid #e4e4e7', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                            formatter={(value) => [`₹${value.toLocaleString()}`, 'Sales']}
+                            formatter={(value) => [`₹${value.toLocaleString()}`, activeChart.toUpperCase()]}
                           />
-                          <Area type="monotone" dataKey="sales" stroke="#18181b" strokeWidth={2} fillOpacity={1} fill="url(#colorSales)" />
+                          <Area type="monotone" dataKey={activeChart} stroke="#18181b" strokeWidth={2} fillOpacity={1} fill="url(#colorSales)" />
                         </AreaChart>
                       </ResponsiveContainer>
                     ) : (
@@ -458,13 +546,13 @@ export default function MasterDashboard() {
               </Card>
 
               {/* Inventory Levels Snapshot */}
-              <Card className="col-span-3">
+              <Card className="col-span-3 flex flex-col">
                 <CardHeader>
                   <CardTitle>Live Inventory Snapshot</CardTitle>
                   <p className="text-sm text-zinc-500">Current vault holdings.</p>
                 </CardHeader>
-                <CardContent>
-                   <div className="space-y-6 mt-4">
+                <CardContent className="flex-1 flex flex-col justify-between">
+                   <div className="space-y-5">
                      {datasets['inventory'] && datasets['inventory'].slice(1, 6).map((row, i) => {
                        if (!Array.isArray(row)) return null;
                        const category = row[0];
@@ -491,8 +579,11 @@ export default function MasterDashboard() {
                        )
                      })}
                    </div>
-                   <div className="mt-6 pt-4 border-t border-zinc-100 text-center">
-                     <button className="text-sm font-medium text-blue-600 hover:text-blue-800 flex items-center justify-center w-full gap-1">
+                   <div className="mt-4 pt-4 border-t border-zinc-100 text-center">
+                     <button 
+                       onClick={() => setActiveTab('inventory')}
+                       className="text-sm font-medium text-blue-600 hover:text-blue-800 flex items-center justify-center w-full gap-1"
+                     >
                        View Full Inventory Book <ArrowUpRight className="w-4 h-4" />
                      </button>
                    </div>
@@ -500,8 +591,83 @@ export default function MasterDashboard() {
               </Card>
             </div>
           </>
+        ) : (
+          /* Table Views for Other Tabs */
+          <div className="space-y-4 animate-in fade-in duration-500">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-semibold capitalize tracking-tight">{activeTab.replace('-', ' ')}</h2>
+              <button 
+                onClick={() => setActiveTab('overview')}
+                className="text-sm text-zinc-500 hover:text-zinc-900 flex items-center gap-1"
+              >
+                &larr; Back to Overview
+              </button>
+            </div>
+            
+            <Card className="overflow-hidden flex flex-col border-zinc-200 shadow-sm bg-white">
+              <div className="overflow-x-auto w-full custom-scrollbar">
+                {!datasets[activeTab] || !Array.isArray(datasets[activeTab]) || datasets[activeTab].length <= 1 ? (
+                  <div className="h-[400px] flex items-center justify-center text-zinc-500 text-sm">
+                    No data entries found.
+                  </div>
+                ) : (
+                  <div className="w-full min-w-max">
+                    <table className="w-full text-sm text-left">
+                      <thead className="bg-zinc-50/50">
+                        <tr className="border-b border-zinc-200">
+                          {Array.isArray(datasets[activeTab][0]) && datasets[activeTab][0].map((header, i) => (
+                            <th key={i} className="h-12 px-4 text-left align-middle font-medium text-zinc-500 whitespace-nowrap">
+                              {header || `Col ${i+1}`}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="[&_tr:last-child]:border-0">
+                        {datasets[activeTab].slice(1).map((row, rowIndex) => {
+                          if (!Array.isArray(row)) return null;
+                          return (
+                            <tr key={rowIndex} className="border-b border-zinc-100 transition-colors hover:bg-zinc-50/50">
+                              {datasets[activeTab][0].map((_, colIndex) => (
+                                <td key={colIndex} className="p-4 align-middle text-zinc-700 max-w-[200px] truncate" title={row[colIndex]}>
+                                  {row[colIndex] || '-'}
+                                </td>
+                              ))}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </Card>
+          </div>
         )}
       </main>
+
+      <style dangerouslySetInnerHTML={{__html: `
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f4f4f5;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #d4d4d8;
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #a1a1aa;
+        }
+      `}} />
     </div>
   );
 }
