@@ -61,7 +61,7 @@ const getSecurePhotoUrl = (link) => {
     const strLink = String(link);
     if (strLink.includes('drive.google.com')) {
       const idMatch = strLink.match(/id=([^&]+)/);
-      if (idMatch && idMatch[1]) return `/api/passbook?action=image&id=${idMatch[1]}`;
+      if (idMatch && idMatch[1]) return `/api/passbook-image?id=${idMatch[1]}`;
     }
     return strLink;
   } catch (e) {
@@ -148,7 +148,7 @@ export default function SearchGrid() {
     // Hardware Binding & Revocation Check
     try {
       const deviceId = getDeviceId();
-      const res = await fetch('/api/passbook?action=auth', {
+      const res = await fetch('/api/passbook-auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -185,7 +185,7 @@ export default function SearchGrid() {
     setAuthError('');
     try {
       const deviceId = getDeviceId();
-      const res = await fetch('/api/passbook?action=auth', {
+      const res = await fetch('/api/passbook-auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...loginForm, action: 'login', deviceId })
@@ -411,7 +411,7 @@ export default function SearchGrid() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/passbook?action=search${query}`);
+      const res = await fetch(`/api/passbook-search`);
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
       const data = body.data || [];
@@ -447,7 +447,7 @@ export default function SearchGrid() {
   const fetchLedger = async (accountNumber) => {
     setLedgerLoading(true);
     try {
-      const res = await fetch(`/api/passbook?action=ledger&accountNumber=${encodeURIComponent(accountNumber)}`);
+      const res = await fetch(`/api/passbook-ledger?accountNumber=${encodeURIComponent(accountNumber)}`);
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
       setLedger(body.data || []);
@@ -516,7 +516,7 @@ export default function SearchGrid() {
     setTransactionMsg({ type: '', text: 'Processing and uploading secure images... Please wait.' });
 
     try {
-      const res = await fetch('/api/passbook?action=transaction', {
+      const res = await fetch('/api/passbook-transaction', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -768,7 +768,7 @@ export default function SearchGrid() {
       const cleanBase64 = pdfBase64Str.split(',')[1];
 
       // 2. Transmit to backend
-      const res = await fetch('/api/passbook?action=create', {
+      const res = await fetch('/api/passbook-create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

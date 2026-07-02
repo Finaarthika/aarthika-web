@@ -67,7 +67,7 @@ export default function OpenOrders() {
 
   const verifyAuthSentinel = async (authObj) => {
     try {
-      const res = await fetch('/api/passbook?action=auth', {
+      const res = await fetch('/api/passbook-auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: authObj.userId, password: authObj.password, action: 'login', deviceId: getDeviceId() })
@@ -94,7 +94,7 @@ export default function OpenOrders() {
     setAuthError('');
     try {
       const deviceId = getDeviceId();
-      const res = await fetch('/api/passbook?action=auth', {
+      const res = await fetch('/api/passbook-auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: loginForm.userId, password: loginForm.password, action: 'login', deviceId })
