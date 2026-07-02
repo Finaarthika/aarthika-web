@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import { 
   LayoutDashboard, Package, Search, Calendar, ChevronDown, Activity, 
-  DollarSign, TrendingUp, Wallet, ArrowDownRight, ArrowUpRight, FileText, ExternalLink
+  DollarSign, TrendingUp, Wallet, ArrowDownRight, ArrowUpRight, FileText, ExternalLink, RefreshCw
 } from 'lucide-react';
 
 const FIREBASE_API_URL = 'https://us-central1-aarthika-backend.cloudfunctions.net/masterApi';
