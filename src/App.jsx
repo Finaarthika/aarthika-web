@@ -33,6 +33,7 @@ import InvoicePrint from './pages/jewellery/InvoicePrint'
 import OldJewelleryTerminal from './pages/jewellery/OldJewelleryTerminal'
 import OldJewelleryPrint from './pages/jewellery/OldJewelleryPrint'
 import VaultAuditTerminal from './pages/jewellery/VaultAuditTerminal'
+import MasterDashboard from './pages/dashboard/MasterDashboard'
 import './App.css'
 
 const NAV_OFFSET = -80;
@@ -134,6 +135,7 @@ function App() {
         <Route path="/jewellery/old-purchase" element={<OldJewelleryTerminal />} />
         <Route path="/jewellery/old-purchase/print" element={<OldJewelleryPrint />} />
         <Route path="/jewellery/vault-audit" element={<VaultAuditTerminal />} />
+        <Route path="/dashboard" element={<MasterDashboard />} />
       </Routes>
       {isJoinFormVisible && <JoinAarthika onClose={toggleJoinForm} />}
     </Router>
