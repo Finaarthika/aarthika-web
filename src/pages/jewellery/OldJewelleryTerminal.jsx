@@ -1,409 +1,634 @@
-import React, { useState, useRef, useEffect } from 'react';
-import Webcam from 'react-webcam';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import html2pdf from 'html2pdf.js';
-import { Camera, CheckCircle, Search, Save, PackagePlus, AlertCircle, TrendingDown, ArrowRight, ShieldCheck, X } from 'lucide-react';
+import logoIcon from '../../assets/4.png';
+import AuditRecordsModal from './AuditRecordsModal';
 import OldJewelleryPrint from './OldJewelleryPrint';
 
-// --- Toast Component ---
-const Toast = ({ message, type, onClose }) => {
-  useEffect(() => {
-    const timer = setTimeout(onClose, 3000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
-  const bg = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
-  return (
-    <div className={`fixed bottom-4 right-4 ${bg} text-white px-6 py-3 rounded shadow-lg flex items-center gap-3 z-50 animate-in slide-in-from-bottom-5`}>
-      {type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-      <span className="font-medium tracking-wide">{message}</span>
-    </div>
-  );
-};
-
-// --- Terminal Header ---
-const TerminalHeader = ({ officerName, onLogout }) => (
-  <div className="flex justify-between items-center bg-gray-900 border-b border-gray-800 px-6 py-3 shrink-0">
-    <div className="flex items-center gap-3">
-      <ShieldCheck className="w-5 h-5 text-green-500" />
-      <div>
-        <h1 className="font-bold text-gray-100 tracking-widest text-sm uppercase">Aarthika Security</h1>
-        <p className="text-[10px] text-gray-500 font-mono tracking-widest">OLD JEWELLERY INTAKE PROTOCOL</p>
+const OfficerHeader = ({ officerName, onLogout, onAuditRecordsClick, onBack }) => (
+  <div className="sticky top-0 z-50 w-full bg-[#0D0D14] py-3 sm:py-4 px-4 sm:px-8 shadow-2xl border-b border-rose-500/20 overflow-hidden backdrop-blur-md">
+    <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between relative z-10 gap-3 sm:gap-0">
+      <div className="flex items-center gap-4">
+        <button onClick={onBack} className="text-white hover:text-rose-300 transition-colors bg-white/5 p-2 rounded-lg">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+        </button>
+        <div className="flex items-center group cursor-default">
+          <div className="relative bg-white rounded-full w-12 h-12 sm:w-14 sm:h-14 mr-4 shadow-xl flex-shrink-0 overflow-hidden flex items-center justify-center p-0.5">
+            <img src={logoIcon} alt="Aarthika Icon" className="h-full w-full object-cover rounded-full" />
+          </div>
+        <div className="flex flex-col">
+          <span className="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-rose-100 to-rose-400 tracking-tight flex items-center gap-2">
+            AARTHIKA <span className="text-xs px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-200 border border-rose-500/30">OLD SCRAP POS</span>
+          </span>
+          <span className="text-rose-200/80 text-[10px] sm:text-xs font-semibold tracking-[0.2em] uppercase">Enterprise Purchase Terminal</span>
+        </div>
       </div>
-    </div>
-    <div className="flex items-center gap-4">
-      <div className="text-right">
-        <div className="text-xs text-gray-400 font-mono">AUTHORIZED OFFICER</div>
-        <div className="text-sm font-bold text-green-400 uppercase tracking-widest">{officerName}</div>
       </div>
-      <button onClick={onLogout} className="bg-red-900/30 hover:bg-red-900/60 text-red-400 border border-red-800/50 px-3 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-colors">
-        End Session
-      </button>
+      
+      <div className="flex items-center gap-4 sm:gap-6 z-10">
+        <button onClick={onAuditRecordsClick} className="group flex items-center gap-2 bg-rose-500/20 hover:bg-rose-500/40 border border-rose-500/50 px-4 py-2 rounded-xl transition-all duration-300">
+          <span className="text-sm font-bold text-rose-200 group-hover:text-white uppercase">Vault Records</span>
+        </button>
+      </div>
     </div>
   </div>
 );
 
 export default function OldJewelleryTerminal() {
+  const navigate = useNavigate();
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
+  const showToast = (message, type = 'success') => {
+    setToast({ visible: true, message, type });
+    setTimeout(() => setToast({ visible: false, message: '', type: 'success' }), 4000);
+  };
+
+  const getDeviceId = () => {
+    let id = localStorage.getItem('aarthika_device_id');
+    if (!id) {
+      id = 'dev_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      localStorage.setItem('aarthika_device_id', id);
+    }
+    return id;
+  };
+
   const [officerAuth, setOfficerAuth] = useState(() => {
-    const saved = localStorage.getItem('aarthika_officer_auth');
+    const saved = localStorage.getItem('aarthika_staff_auth');
     if (saved) {
       try { return JSON.parse(saved); } catch (e) {}
     }
     return { loggedIn: false, userId: '', password: '', staffName: '' };
   });
 
-  const checkAuth = async () => {
-    const currentAuth = JSON.parse(localStorage.getItem('aarthika_officer_auth') || '{}');
+  const [authError, setAuthError] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+  const [loginForm, setLoginForm] = useState({ userId: '', password: '' });
+
+  const verifyAuthSentinel = async (currentAuth) => {
     if (!currentAuth.loggedIn) return false;
-    
     try {
-      const res = await fetch('https://us-central1-aarthika-backend.cloudfunctions.net/masterApi/read?target=staff');
-      const json = await res.json();
-      if (json.success && json.data) {
-        const staffRow = json.data.find(r => r[0] === currentAuth.userId && r[2] === currentAuth.password);
-        if (!staffRow) {
-          localStorage.removeItem('aarthika_officer_auth');
-          setOfficerAuth({ loggedIn: false, userId: '', password: '', staffName: '' });
-          return false;
-        }
+      const deviceId = getDeviceId();
+      const res = await fetch('/api/passbook-auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentAuth.userId, action: 'check', deviceId })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.authorized) {
+        localStorage.removeItem('aarthika_staff_auth');
+        setOfficerAuth({ loggedIn: false, userId: '', password: '', staffName: '' });
+        showToast(`SECURITY ALERT: ${data.reason || 'Access Revoked'}.`, 'error');
+        return false;
       }
       return true;
-    } catch (e) {
+    } catch (err) {
       return true;
     }
   };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError('');
+    try {
+      const deviceId = getDeviceId();
+      const res = await fetch('/api/passbook-auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: loginForm.userId, password: loginForm.password, action: 'login', deviceId })
+      });
+      const data = await res.json();
+      if (res.ok && data.authorized) {
+        const newAuth = {
+          loggedIn: true,
+          userId: loginForm.userId,
+          password: loginForm.password,
+          staffName: data.staffName
+        };
+        localStorage.setItem('aarthika_staff_auth', JSON.stringify(newAuth));
+        setOfficerAuth(newAuth);
+      } else {
+        setAuthError(data.error || 'Invalid credentials');
+      }
+    } catch (err) {
+      setAuthError('Network error. Please check connection.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('aarthika_staff_auth');
+    setOfficerAuth({ loggedIn: false, userId: '', password: '', staffName: '' });
+  };
+
+  // Face Scan Models state
+  const [modelsLoaded, setModelsLoaded] = useState(false);
+  const [modelLoadingStatus, setModelLoadingStatus] = useState("INITIALIZING SECURE ENGINE...");
+  const [customFaceNet, setCustomFaceNet] = useState(null);
+
+  const getCachedModelUrl = async (setStatus) => {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('AarthikaBiometricDB', 1);
+      
+      request.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains('models')) {
+          db.createObjectStore('models');
+        }
+      };
+      
+      request.onsuccess = async (e) => {
+        const db = e.target.result;
+        const transaction = db.transaction(['models'], 'readonly');
+        const store = transaction.objectStore('models');
+        const getReq = store.get('facenet_512');
+        
+        getReq.onsuccess = async () => {
+          if (getReq.result) {
+            setStatus("LOADING BIOMETRIC MODEL FROM INSTANT LOCAL CACHE...");
+            const blob = new Blob([getReq.result], { type: 'application/octet-stream' });
+            resolve(URL.createObjectURL(blob));
+          } else {
+            setStatus("DOWNLOADING 47MB BIOMETRIC MODEL... (MAY TAKE 10-30 SECONDS)");
+            try {
+              const response = await fetch('/facenet_512.tflite');
+              if (!response.ok) throw new Error("Failed to fetch model");
+              const buffer = await response.arrayBuffer();
+              
+              const writeTx = db.transaction(['models'], 'readwrite');
+              const writeStore = writeTx.objectStore('models');
+              writeStore.put(buffer, 'facenet_512');
+              
+              const blob = new Blob([buffer], { type: 'application/octet-stream' });
+              resolve(URL.createObjectURL(blob));
+            } catch (err) {
+              reject(err);
+            }
+          }
+        };
+        getReq.onerror = () => reject(getReq.error);
+      };
+      request.onerror = () => reject(request.error);
+    });
+  };
+
+  useEffect(() => {
+    const loadScript = async () => {
+      if (!window.faceapi) {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js';
+        script.async = true;
+        document.body.appendChild(script);
+        await new Promise((resolve) => { script.onload = resolve; });
+      }
+      try {
+        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+        await Promise.all([
+          window.faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+          window.faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL)
+        ]);
+      } catch (err) {
+        console.error("Failed to load face-api models", err);
+      }
+      
+      try {
+        setModelLoadingStatus("DOWNLOADING TENSORFLOW...");
+        if (!window.tf) {
+          const tfScript = document.createElement('script');
+          tfScript.src = 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js';
+          document.body.appendChild(tfScript);
+          await new Promise((resolve, reject) => { 
+            tfScript.onload = resolve; 
+            tfScript.onerror = () => reject(new Error("Failed to load tf.min.js"));
+          });
+        }
+        
+        setModelLoadingStatus("DOWNLOADING TFLITE ENGINE...");
+        if (!window.tflite) {
+          const tfliteScript = document.createElement('script');
+          tfliteScript.src = 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/dist/tf-tflite.min.js';
+          document.body.appendChild(tfliteScript);
+          await new Promise((resolve, reject) => { 
+            tfliteScript.onload = resolve; 
+            tfliteScript.onerror = () => reject(new Error("Failed to load tf-tflite.min.js"));
+          });
+        }
+        
+        const modelUrl = await getCachedModelUrl(setModelLoadingStatus);
+        window.tflite.setWasmPath('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/wasm/');
+        const tfliteModel = await window.tflite.loadTFLiteModel(modelUrl);
+        setCustomFaceNet(tfliteModel);
+        setModelLoadingStatus("MODELS LOADED SUCCESSFULLY");
+        setModelsLoaded(true);
+      } catch (err) {
+        console.error("Failed to load custom TFLite FaceNet 512", err);
+        setModelLoadingStatus("ERROR: " + err.message);
+      }
+    };
+    loadScript();
+  }, []);
+
+  const [liveRates, setLiveRates] = useState(null);
+  const [customers, setCustomers] = useState([]);
 
   useEffect(() => {
     if (officerAuth.loggedIn) {
-      checkAuth();
+      verifyAuthSentinel(officerAuth);
+      fetch('/api/metal-rates')
+        .then(res => res.json())
+        .then(data => {
+          if (!data.error) setLiveRates(data);
+        })
+        .catch(console.error);
+
+      // Fetch existing customers and their items — keep FLAT, do NOT group
+      fetch(`/api/old-jewellery-purchase?t=${Date.now()}`)
+        .then(res => res.json())
+        .then(data => {
+           console.log("OLD JEWELLERY FETCH DATA:", data);
+           if (data.data) {
+             setCustomers(data.data); // Each element is one transaction row
+           }
+        })
+        .catch(err => console.error("OLD JEWELLERY FETCH ERROR:", err));
     }
   }, [officerAuth.loggedIn]);
 
-  const [toast, setToast] = useState(null);
-  const showToast = (message, type = 'success') => setToast({ message, type });
-
-  // --- Live Rates ---
-  const [liveRates, setLiveRates] = useState(null);
-  
-  // --- Mode ---
+  // Terminal State
   const [activeTab, setActiveTab] = useState('search'); // 'search' or 'manual'
-
-  // --- Customer Search & Data ---
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState([]);
   
-  const [selectedTransaction, setSelectedTransaction] = useState(null);
-  const [selectedItems, setSelectedItems] = useState([]);
+  // Search State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [selectedTransaction, setSelectedTransaction] = useState(null); // one flat transaction row
+  const [selectedItems, setSelectedItems] = useState([]); // array of indexes from that transaction
+  const [isFaceScanning, setIsFaceScanning] = useState(false);
 
-  // --- Manual Entry Data ---
-  const [manualCustomer, setManualCustomer] = useState({ name: '', phone: '', village: '' });
-  const [manualItems, setManualItems] = useState([{ name: '', metalType: 'Gold', weight: '', purity: '75', remarks: '' }]);
+  // Manual Form State
+  const [manualCustomer, setManualCustomer] = useState({
+    name: '', phone: '', village: ''
+  });
+  
+  const [manualItems, setManualItems] = useState([
+    { name: '', weight: '', purity: '', metalType: 'Gold' }
+  ]);
+  const [finalValueInput, setFinalValueInput] = useState('');
 
-  // --- Camera & AI Verification ---
-  const webcamRef = useRef(null);
-  const [customerPhoto, setCustomerPhoto] = useState(null);
-  const [jewelleryPhoto, setJewelleryPhoto] = useState(null);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [faceVectorStr, setFaceVectorStr] = useState(null);
-  const [modelsLoaded, setModelsLoaded] = useState(false);
-
-  // --- PDF Payload State ---
+  // Common Media State
+  const [customerPhoto, setCustomerPhoto] = useState('');
+  const [jewelleryPhoto, setJewelleryPhoto] = useState('');
+  const [faceVectorStr, setFaceVectorStr] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [payloadForPdf, setPayloadForPdf] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isPdfProcessing, setIsPdfProcessing] = useState(false);
 
-  useEffect(() => {
-    const loadModels = async () => {
-      try {
-        if (!window.faceapi) {
-          await new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js';
-            script.onload = resolve;
-            script.onerror = reject;
-            document.body.appendChild(script);
-          });
-        }
-        await Promise.all([
-          window.faceapi.nets.ssdMobilenetv1.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights'),
-          window.faceapi.nets.faceLandmark68Net.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights'),
-          window.faceapi.nets.faceRecognitionNet.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights')
-        ]);
-        setModelsLoaded(true);
-      } catch (e) {
-        console.error("FaceAPI Load Error", e);
-      }
-    };
-    loadModels();
-    fetchLiveRates();
-  }, []);
-
-  const fetchLiveRates = async () => {
-    try {
-      const res = await fetch('https://us-central1-aarthika-backend.cloudfunctions.net/masterApi/read?target=metal-rates');
-      const body = await res.json();
-      if (res.ok && body.success && body.data.length > 1) {
-        const row = body.data[1];
-        setLiveRates({
-          goldBuyRate: parseFloat(String(row[1]).replace(/[^0-9.]/g, '')),
-          silverBuyRate: parseFloat(String(row[2]).replace(/[^0-9.]/g, '')),
-          goldScrapRate: parseFloat(String(row[3]).replace(/[^0-9.]/g, '')),
-          silverScrapRate: parseFloat(String(row[4]).replace(/[^0-9.]/g, ''))
-        });
-      }
-    } catch (e) {}
-  };
-
-  const getBase64FromUrl = async (url) => {
-    try {
-      const res = await fetch(url);
-      const blob = await res.blob();
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-    } catch (e) {
-      return null;
-    }
-  };
-
-  const capturePhoto = (type) => {
-    if (webcamRef.current) {
-      const imageSrc = webcamRef.current.getScreenshot();
-      if (type === 'customer') setCustomerPhoto(imageSrc);
-      else setJewelleryPhoto(imageSrc);
-    }
-  };
-
-  const verifyCustomerFace = async (file) => {
+  // Face Scan Logic with 512D
+  const handleFaceScanSearch = async (e) => {
+    const file = e.target.files[0];
     if (!file) return;
-    setIsVerifying(true);
-    try {
-      if (!modelsLoaded) {
-        setIsVerifying(false);
-        return showToast("AI Models not loaded yet. Please wait.", "error");
-      }
 
-      const img = await window.faceapi.fetchImage(file);
-      const detection = await window.faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
-      
-      if (!detection) {
-        setIsVerifying(false);
-        return showToast("No face detected in photo. Try again.", "error");
-      }
-
-      const currentDescriptor = detection.descriptor;
-      setFaceVectorStr(currentDescriptor.toString());
-
-      if (activeTab === 'search' && selectedTransaction) {
-        // Fetch all transactions to find matching face vector
-        const res = await fetch('https://us-central1-aarthika-backend.cloudfunctions.net/masterApi/read?target=jewellery-sales');
-        const body = await res.json();
-        
-        let matchFound = false;
-        
-        if (body.success && body.data.length > 1) {
-          const headers = body.data[0];
-          const vectorIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('face vector'));
-          const phoneIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('phone'));
-          
-          if (vectorIdx > -1) {
-            for (let i = 1; i < body.data.length; i++) {
-              const row = body.data[i];
-              if (row[phoneIdx] !== selectedTransaction.phone) continue;
-              
-              const vecStr = row[vectorIdx];
-              if (!vecStr || typeof vecStr !== 'string' || !vecStr.includes(',')) continue;
-              
-              const storedArray = new Float32Array(vecStr.split(',').map(Number));
-              if (storedArray.length !== 512) continue;
-              
-              const distance = window.faceapi.euclideanDistance(currentDescriptor, storedArray);
-              if (distance < 0.5) {
-                matchFound = true;
-                break;
-              }
-            }
-          }
-        }
-
-        if (matchFound) {
-          showToast("Identity Verified successfully!", "success");
-        } else {
-          showToast("Warning: Face does not match previous records.", "error");
-        }
-      } else {
-        showToast("Face captured successfully.", "success");
-      }
-    } catch (e) {
-      console.error(e);
-      showToast("Face Verification Failed", "error");
+    if (!modelsLoaded || !window.faceapi || !customFaceNet) {
+      return showToast("AI Models not loaded yet. Please wait.", "error");
     }
-    setIsVerifying(false);
-  };
 
-  const handleSearch = async () => {
-    if (!searchQuery || searchQuery.length < 3) return;
-    setIsSearching(true);
+    setIsFaceScanning(true);
+    setSearchQuery('Scanning face...');
     setSearchResults([]);
-    setSelectedTransaction(null);
-    setSelectedItems([]);
-    
-    try {
-      const res = await fetch('https://us-central1-aarthika-backend.cloudfunctions.net/masterApi/read?target=jewellery-sales');
-      const body = await res.json();
-      
-      if (body.success && body.data.length > 1) {
-        const headers = body.data[0];
-        const rows = body.data.slice(1);
-        
-        const q = searchQuery.toLowerCase();
-        const matches = rows.filter(row => {
-          if (!row || row.length === 0) return false;
-          const searchString = `${row[1]} ${row[4]} ${row[5]}`.toLowerCase(); // Inv, Name, Phone
-          return searchString.includes(q);
-        });
 
-        if (matches.length > 0) {
-          // Return all matching transaction rows individually
-          const mapped = matches.map(row => ({
-            rawRow: row,
-            headers: headers,
-            invoice: row[1],
-            date: row[0],
-            name: row[4],
-            phone: row[5],
-            village: row[6],
-            itemsStr: row[7],
-            photoUrl: row[18]
-          }));
-          setSearchResults(mapped);
-        } else {
-          showToast("No records found", "error");
-        }
+    try {
+      // IDENTICAL image preprocessing to Passbook SearchGrid.jsx
+      const bmp = await window.createImageBitmap(file);
+      const MAX_WIDTH = 600;
+      const MAX_HEIGHT = 600;
+      let width = bmp.width;
+      let height = bmp.height;
+      if (width > height) {
+        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+      } else {
+        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
       }
-    } catch (e) {
-      showToast("Search failed", "error");
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(bmp, 0, 0, width, height);
+      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6); // same as passbook
+      
+      const normalizedImg = new Image();
+      normalizedImg.onload = async () => {
+        const options = new window.faceapi.TinyFaceDetectorOptions({ inputSize: 512, scoreThreshold: 0.2 });
+        try {
+          // 1. Detect face bounding box
+          const detection = await window.faceapi.detectSingleFace(normalizedImg, options);
+          if (!detection) {
+            setSearchQuery('');
+            setIsFaceScanning(false);
+            return showToast("No face detected in photo. Try again.", "error");
+          }
+          
+          // 2. Crop face for TFLite model (identical to passbook)
+          const box = detection.box;
+          const faceCanvas = document.createElement('canvas');
+          faceCanvas.width = 160;
+          faceCanvas.height = 160;
+          const faceCtx = faceCanvas.getContext('2d');
+          faceCtx.drawImage(
+            normalizedImg,
+            box.x, box.y, box.width, box.height,
+            0, 0, 160, 160
+          );
+          
+          // 3. Extract 512D vector (identical to passbook)
+          let tensor = window.tf.browser.fromPixels(faceCanvas);
+          tensor = window.tf.cast(tensor, 'float32').sub(127.5).div(127.5).expandDims(0);
+          const output = customFaceNet.predict(tensor);
+          const rawVectorArray = Array.from(output.dataSync());
+          tensor.dispose();
+          output.dispose();
+          
+          // 4. L2 Normalization (identical to passbook)
+          let sumSq = 0;
+          for (let i = 0; i < rawVectorArray.length; i++) sumSq += rawVectorArray[i] * rawVectorArray[i];
+          const magnitude = Math.sqrt(sumSq) || 1;
+          const vectorArray = rawVectorArray.map(val => val / magnitude);
+          const liveDescriptor = new Float32Array(vectorArray);
+          setFaceVectorStr(vectorArray.join(','));
+          setCustomerPhoto(compressedBase64);
+          
+          // 5. Match against EVERY transaction row (same threshold as passbook: < 1.0)
+          const allMatches = [];
+          customers.forEach(txn => {
+            if (!txn.faceVector || !txn.faceVector.includes(',')) return;
+            const storedArray = txn.faceVector.split(',').map(Number);
+            if (storedArray.length !== 512) return;
+            const storedDescriptor = new Float32Array(storedArray);
+            const dist = window.faceapi.euclideanDistance(liveDescriptor, storedDescriptor);
+            if (dist < 1.0) { // same strict threshold as passbook
+              allMatches.push({ ...txn, _faceDistance: dist });
+            }
+          });
+          
+          // Sort by closest match first
+          allMatches.sort((a, b) => a._faceDistance - b._faceDistance);
+
+          setSearchQuery('');
+          if (allMatches.length > 0) {
+            setSearchResults(allMatches);
+            showToast(`${allMatches.length} match(es) found!`, "success");
+          } else {
+            showToast("No matching customer found.", "error");
+          }
+        } catch(err) {
+          console.error(err);
+          setSearchQuery('');
+          showToast("Face scan failed: " + err.message, "error");
+        }
+        setIsFaceScanning(false);
+      };
+      normalizedImg.src = compressedBase64;
+
+    } catch(err) {
+      console.error(err);
+      setSearchQuery('');
+      showToast("Face scan failed.", "error");
+      setIsFaceScanning(false);
     }
-    setIsSearching(false);
   };
 
-  const toggleItemSelection = (index) => {
+  const handleTextSearch = (e) => {
+    const q = e.target.value;
+    setSearchQuery(q);
+    if (q.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    const lowerQ = q.toLowerCase();
+    // Return all matching transaction rows individually
+    const results = customers.filter(txn => 
+      (txn.customerName && txn.customerName.toLowerCase().includes(lowerQ)) ||
+      (txn.phone && txn.phone.toLowerCase().includes(lowerQ)) ||
+      (txn.village && txn.village.toLowerCase().includes(lowerQ))
+    );
+    setSearchResults(results);
+  };
+
+  const handleSelectTransaction = (txn) => {
+    setSelectedTransaction(txn);
+    setSearchResults([]);
+    setSearchQuery('');
+    setSelectedItems([]);
+  };
+
+  const handleToggleItem = (index) => {
     setSelectedItems(prev => {
-      if (prev.includes(index)) {
+      const isSelected = prev.includes(index);
+      
+      if (isSelected) {
+        // Remove from manualItems
+        setManualItems(currentItems => currentItems.filter(item => item.originalIndex !== index));
         return prev.filter(i => i !== index);
       } else {
+        // Add to manualItems
+        if (manualItems.length >= 6) {
+          showToast('Maximum 6 items allowed.', 'error');
+          return prev;
+        }
+        
+        const item = selectedTransaction.items[index];
+        const name = item.name || '';
+        const isSilv = name.toLowerCase().includes('silver');
+        
+        const newItem = {
+          name: name,
+          weight: parseWeight(item.weight),
+          purity: parsePurity(item.purity),
+          metalType: isSilv ? 'Silver' : 'Gold',
+          originalIndex: index
+        };
+        
+        // Remove the empty default item if it's the only one and empty
+        if (manualItems.length === 1 && !manualItems[0].name && !manualItems[0].weight) {
+          setManualItems([newItem]);
+        } else {
+          setManualItems(currentItems => [...currentItems, newItem]);
+        }
+        
         return [...prev, index];
       }
     });
   };
 
-  const addManualItem = () => {
-    setManualItems([...manualItems, { name: '', metalType: 'Gold', weight: '', purity: '75', remarks: '' }]);
+  const handleAddManualItem = () => {
+    if (manualItems.length < 6) {
+      setManualItems([...manualItems, { name: '', weight: '', purity: '', metalType: 'Gold' }]);
+    } else {
+      showToast('Maximum 6 items allowed.', 'error');
+    }
+  };
+
+  const handleRemoveManualItem = (index) => {
+    setManualItems(manualItems.filter((_, i) => i !== index));
   };
 
   const updateManualItem = (index, field, value) => {
-    const updated = [...manualItems];
-    updated[index][field] = value;
-    setManualItems(updated);
+    const newItems = [...manualItems];
+    newItems[index][field] = value;
+    setManualItems(newItems);
   };
 
-  const removeManualItem = (index) => {
-    const updated = [...manualItems];
-    updated.splice(index, 1);
-    setManualItems(updated);
-  };
+  // Generic Camera Capture for Record Keeping (also generates Face Vector for customer photo)
+  const handleGenericPhotoCapture = async (e, setter) => {
+    const file = e.target.files[0];
+    if (file) {
+      try {
+        const bmp = await window.createImageBitmap(file);
+        const canvas = document.createElement('canvas');
+        let width = bmp.width;
+        let height = bmp.height;
+        if (width > height) {
+          if (width > 800) { height *= 800 / width; width = 800; }
+        } else {
+          if (height > 800) { width *= 800 / height; height = 800; }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(bmp, 0, 0, width, height);
+        setter(canvas.toDataURL('image/jpeg', 0.7));
 
-  // --- Parsers ---
-  const parseItemsString = (str) => {
-    if (!str) return [];
-    return str.split('|').map(item => {
-      const parts = item.split(':');
-      if (parts.length < 3) return null;
-      return {
-        name: parts[0].trim(),
-        metalType: parts[0].toLowerCase().includes('silver') ? 'Silver' : 'Gold',
-        weight: parseFloat(parts[1]) || 0,
-        purity: parseFloat(parts[2]) || 75
-      };
-    }).filter(Boolean);
-  };
-
-  const parseKaratToPurity = (k) => {
-    if (!k) return 0;
-    if (String(k).includes('%')) return parseFloat(k) || 0;
-    if (String(k).toLowerCase().includes('k')) {
-      const val = parseFloat(k);
-      return (val / 24) * 100;
+        if (setter === setCustomerPhoto && modelsLoaded && customFaceNet && window.faceapi) {
+          try {
+            showToast("Generating face scan...", "success");
+            const detections = await window.faceapi.detectAllFaces(canvas, new window.faceapi.TinyFaceDetectorOptions());
+            if (detections && detections.length > 0) {
+              const box = detections[0].box;
+              const faceCanvas = document.createElement('canvas');
+              faceCanvas.width = 160;
+              faceCanvas.height = 160;
+              const fctx = faceCanvas.getContext('2d');
+              fctx.drawImage(
+                canvas,
+                box.x, box.y, box.width, box.height,
+                0, 0, 160, 160
+              );
+              let tensor = window.tf.browser.fromPixels(faceCanvas);
+              tensor = window.tf.cast(tensor, 'float32').sub(127.5).div(127.5).expandDims(0);
+              const output = customFaceNet.predict(tensor);
+              const rawVectorArray = Array.from(output.dataSync());
+              tensor.dispose();
+              output.dispose();
+              
+              let sumSq = 0;
+              for (let i = 0; i < rawVectorArray.length; i++) sumSq += rawVectorArray[i] * rawVectorArray[i];
+              const magnitude = Math.sqrt(sumSq) || 1;
+              const vectorArray = rawVectorArray.map(val => val / magnitude);
+              
+              setFaceVectorStr(vectorArray.join(','));
+              showToast("Face vector generated successfully", "success");
+            } else {
+              showToast("No face detected in customer photo. Please retake if possible.", "warning");
+            }
+          } catch (err) {
+            console.error("Face extraction error:", err);
+            showToast("Failed to generate face vector", "error");
+          }
+        }
+      } catch(err) {
+        console.error(err);
+        const reader = new FileReader();
+        reader.onloadend = () => setter(reader.result);
+        reader.readAsDataURL(file);
+      }
     }
-    return parseFloat(k) || 0;
   };
 
-  const parseNumber = (val) => {
+  // Compute values
+  let calculatedDescription = '';
+  let calculatedWeight = 0;
+  let calculatedPurity = 0;
+  let suggestedValuation = 0;
+  let goldWeightCalc = 0;
+  let silverWeightCalc = 0;
+  const parsePurity = (val) => {
+    if (!val) return 0;
+    const str = String(val).toUpperCase().replace(/%/g, '').trim();
+    if (str.includes('K')) {
+      const k = parseFloat(str.replace('K', ''));
+      return (k / 24) * 100;
+    }
+    return parseFloat(str) || 0;
+  };
+
+  const parseWeight = (val) => {
     if (!val) return 0;
     return parseFloat(String(val).replace(/[^0-9.]/g, '')) || 0;
   };
 
-  const calculateFinals = () => {
-    let purchasedItems = [];
-    let calculatedWeight = 0;
-    let goldWeightCalc = 0;
-    let silverWeightCalc = 0;
-    let calculatedPurity = 0;
-    let suggestedValuation = 0;
+  calculatedDescription = manualItems.map(i => `${i.metalType} ${i.name}`).join(', ');
+  
+  manualItems.forEach(i => {
+    const w = parseWeight(i.weight);
+    const p = parsePurity(i.purity);
+    calculatedWeight += w;
+    if (i.metalType === 'Silver') silverWeightCalc += w;
+    else goldWeightCalc += w;
+    const rate = i.metalType === 'Silver' ? (liveRates?.silverScrapRate || 0) : (liveRates?.goldScrapRate || 0);
+    suggestedValuation += (w * rate * (p / 100));
+  });
 
-    if (activeTab === 'search' && selectedTransaction) {
-      const allItems = parseItemsString(selectedTransaction.itemsStr);
-      purchasedItems = selectedItems.map(idx => allItems[idx]);
+  if (manualItems.length > 0) {
+    calculatedPurity = manualItems.reduce((acc, i) => acc + parsePurity(i.purity), 0) / manualItems.length;
+  }
+
+
+  // Determine final value (use manual input if provided, otherwise suggested)
+  const finalAgreedValue = Number(finalValueInput) || Math.round(suggestedValuation) || 0;
+
+  const handleSubmit = async () => {
+    if (activeTab === 'search') {
+      if (!selectedTransaction) return showToast('Please select a transaction first.', 'error');
+      if (selectedItems.length === 0) return showToast('Please select at least one item to purchase.', 'error');
     } else {
-      purchasedItems = manualItems;
+      if (!manualCustomer.name) return showToast('Customer Name is required', 'error');
+      if (manualItems.length === 0 || !manualItems[0].name) return showToast('At least one item is required', 'error');
     }
 
-    purchasedItems.forEach(item => {
-      const w = parseNumber(item.weight);
-      const p = parseKaratToPurity(item.purity);
-      calculatedWeight += w;
-      if (item.metalType === 'Silver') {
-        silverWeightCalc += w;
-        suggestedValuation += w * (liveRates?.silverScrapRate || 0) * (p / 100);
-      } else {
-        goldWeightCalc += w;
-        suggestedValuation += w * (liveRates?.goldScrapRate || 0) * (p / 100);
-      }
-    });
+    if (!customerPhoto || !jewelleryPhoto) {
+      return showToast("Both Customer and Jewellery photos are mandatory.", "error");
+    }
 
-    return { purchasedItems, calculatedWeight, goldWeightCalc, silverWeightCalc, calculatedPurity, suggestedValuation };
-  };
-
-  const handlePurchase = async () => {
+    setIsSubmitting(true);
     try {
-      if (activeTab === 'search') {
-        if (!selectedTransaction) return showToast('Please select a transaction first.', 'error');
-        if (selectedItems.length === 0) return showToast('Please select at least one item to purchase.', 'error');
-      } else {
-        if (!manualCustomer.name) return showToast('Customer Name is required', 'error');
-        if (manualItems.length === 0 || !manualItems[0].name) return showToast('At least one item is required', 'error');
-      }
-
-      if (!customerPhoto || !jewelleryPhoto) {
-        return showToast("Both Customer and Jewellery photos are mandatory.", "error");
-      }
-
-      setIsProcessing(true);
-      const { purchasedItems, calculatedWeight, goldWeightCalc, silverWeightCalc, calculatedPurity, suggestedValuation } = calculateFinals();
+      const invoiceNo = 'OLD-' + Math.floor(1000 + Math.random() * 9000);
       
-      const finalAgreedValue = Math.round(suggestedValuation); // Auto-set for simplicity in this terminal
-      const invoiceNo = `OLD-${Math.floor(1000 + Math.random() * 9000)}`;
-
-      const calculatedDescription = purchasedItems.map(i => `${i.name} (${i.weight}g, ${i.purity}%)`).join(' | ');
+      // Build full items list for receipt
+      let purchasedItems = [];
+      if (activeTab === 'search' && selectedTransaction) {
+        purchasedItems = selectedItems.map(i => {
+          const item = selectedTransaction.items[i];
+          const name = (item?.name || '').toLowerCase();
+          return {
+            name: item?.name || '',
+            weight: parseWeight(item?.weight),
+            purity: parsePurity(item?.purity),
+            metalType: name.includes('silver') ? 'Silver' : 'Gold',
+          };
+        });
+      } else {
+        purchasedItems = manualItems.map(i => ({
+          name: i.name,
+          weight: parseWeight(i.weight),
+          purity: parsePurity(i.purity),
+          metalType: i.metalType,
+        }));
+      }
 
       const payload = {
         invoiceNo,
-        date: new Date().toLocaleDateString('en-GB'),
-        timestamp: new Date().toISOString(),
+        date: new Date().toLocaleDateString('en-IN'),
         officerName: officerAuth.staffName,
-        customerName: activeTab === 'search' ? selectedTransaction.name : manualCustomer.name,
+        customerName: activeTab === 'search' ? selectedTransaction.customerName : manualCustomer.name,
         customerPhone: activeTab === 'search' ? selectedTransaction.phone : manualCustomer.phone,
         customerVillage: activeTab === 'search' ? selectedTransaction.village : manualCustomer.village,
         itemsDescription: calculatedDescription,
@@ -421,25 +646,21 @@ export default function OldJewelleryTerminal() {
         jewelleryPhoto: jewelleryPhoto.split(',')[1]
       };
 
-      // Store payload in state so it renders in the hidden container
       setPayloadForPdf(payload);
-
-    } catch (err) {
-      console.error(err);
-      showToast("Fatal Error", "error");
-      setIsProcessing(false);
+      setIsPdfProcessing(true);
+    } catch(err) {
+      showToast('Network error', 'error');
+      setIsSubmitting(false);
     }
   };
 
-  // --- PDF Generation Hook ---
   useEffect(() => {
-    if (payloadForPdf && isProcessing) {
+    if (payloadForPdf && isPdfProcessing) {
       const generatePdfAndSubmit = async () => {
         try {
           showToast("Generating secure vault PDF...", "success");
           
-          // Wait for the hidden component to render properly
-          await new Promise(resolve => setTimeout(resolve, 1500));
+          await new Promise(resolve => setTimeout(resolve, 1500)); // allow render time
           
           const element = document.getElementById('actual-receipt-content');
           if (element) {
@@ -463,306 +684,397 @@ export default function OldJewelleryTerminal() {
           const data = await res.json();
           if (res.ok) {
             showToast('Purchase Logged Successfully!', 'success');
-            localStorage.setItem('aarthika_old_invoice', JSON.stringify(payloadForPdf));
-            window.location.href = '/jewellery/old-purchase/print';
+            
+            // Save for printing
+            localStorage.setItem('aarthika_old_invoice', JSON.stringify({
+              ...payloadForPdf,
+              customerPhoto: customerPhoto // keep full data url for print preview
+            }));
+    
+            // Reset
+            setManualCustomer({ name: '', phone: '', village: '' });
+            setManualItems([{ name: '', weight: '', purity: '', metalType: 'Gold' }]);
+            setFinalValueInput('');
+            setCustomerPhoto('');
+            setJewelleryPhoto('');
+            setFaceVectorStr('');
+            setSelectedTransaction(null);
+            setSelectedItems([]);
+            
+            navigate('/jewellery/old-purchase/print');
           } else {
-            showToast(data.message || 'API Error', 'error');
-            setIsProcessing(false);
+            showToast(data.error || 'Failed to submit', 'error');
+            setIsSubmitting(false);
           }
-        } catch (err) {
+        } catch(err) {
           console.error("Silent PDF Generation Error", err);
           showToast('Failed to generate PDF', 'error');
-          setIsProcessing(false);
+          setIsSubmitting(false);
         }
+        setIsPdfProcessing(false);
+        setPayloadForPdf(null);
       };
       generatePdfAndSubmit();
     }
-  }, [payloadForPdf, isProcessing]);
+  }, [payloadForPdf, isPdfProcessing, customerPhoto, navigate]);
+
+  useEffect(() => {
+    if (!officerAuth.loggedIn) {
+      navigate('/jewellery');
+    }
+  }, [officerAuth.loggedIn, navigate]);
 
   if (!officerAuth.loggedIn) return null;
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-black text-gray-100 font-mono relative">
-      <TerminalHeader officerName={officerAuth.staffName} onLogout={() => { localStorage.removeItem('aarthika_officer_auth'); window.location.href='/jewellery/auth'; }} />
+    <div className="min-h-screen bg-[#05050A] text-white flex flex-col font-inter overflow-x-hidden">
+      <OfficerHeader officerName={officerAuth.staffName} onLogout={handleLogout} onAuditRecordsClick={() => setIsAuditModalOpen(true)} onBack={() => navigate('/jewellery')} />
       
-      {/* Hidden Print Container for Silent PDF Generation */}
       <div style={{ position: 'absolute', top: '-9999px', left: '-9999px', opacity: 0, pointerEvents: 'none' }}>
         <div id="silent-pdf-container">
           {payloadForPdf && <OldJewelleryPrint dataProp={payloadForPdf} silentMode={true} />}
         </div>
       </div>
+      
+      {/* Toast Notification */}
+      {toast.visible && (
+        <div className={`fixed top-24 right-8 z-50 px-6 py-4 rounded-xl shadow-2xl backdrop-blur-md border animate-fade-in-up flex items-center gap-3 ${
+          toast.type === 'success' ? 'bg-emerald-950/80 border-emerald-500/30 text-emerald-100' : 'bg-red-950/80 border-red-500/30 text-red-100'
+        }`}>
+           {toast.type === 'success' ? (
+             <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+           ) : (
+             <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+           )}
+           <span className="font-semibold text-sm">{toast.message}</span>
+        </div>
+      )}
 
-      <div className="flex-1 flex overflow-hidden">
-        {/* LEFT COLUMN: Data Entry */}
-        <div className="w-[60%] border-r border-gray-800 flex flex-col bg-[#0a0a0a]">
+      <div className="max-w-7xl mx-auto w-full p-4 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
+        
+        {/* Left Column: Data Entry */}
+        <div className="lg:col-span-8 space-y-6">
           
-          {/* Mode Selector */}
-          <div className="flex border-b border-gray-800 shrink-0">
+          {/* Tabs */}
+          <div className="flex gap-4 mb-2">
             <button 
-              onClick={() => setActiveTab('search')}
-              className={`flex-1 py-3 text-sm font-bold tracking-widest uppercase transition-colors ${activeTab === 'search' ? 'bg-gray-800 text-white' : 'text-gray-500 hover:bg-gray-900 hover:text-gray-300'}`}
+              onClick={() => { setActiveTab('search'); setSelectedTransaction(null); setSearchResults([]); }}
+              className={`flex-1 py-3 rounded-xl font-bold text-sm tracking-wide transition-all ${activeTab === 'search' ? 'bg-rose-600 shadow-[0_0_20px_rgba(225,29,72,0.3)] text-white' : 'bg-[#0D0D14] border border-white/10 text-gray-500 hover:text-white hover:border-white/20'}`}
             >
-              System Search
+              SEARCH EXISTING CUSTOMER
             </button>
             <button 
-              onClick={() => setActiveTab('manual')}
-              className={`flex-1 py-3 text-sm font-bold tracking-widest uppercase transition-colors ${activeTab === 'manual' ? 'bg-gray-800 text-white' : 'text-gray-500 hover:bg-gray-900 hover:text-gray-300'}`}
+              onClick={() => { setActiveTab('manual'); setSelectedTransaction(null); setSearchResults([]); }}
+              className={`flex-1 py-3 rounded-xl font-bold text-sm tracking-wide transition-all ${activeTab === 'manual' ? 'bg-rose-600 shadow-[0_0_20px_rgba(225,29,72,0.3)] text-white' : 'bg-[#0D0D14] border border-white/10 text-gray-500 hover:text-white hover:border-white/20'}`}
             >
-              Manual Entry
+              MANUAL ENTRY (NEW)
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-            
-            {activeTab === 'search' && (
-              <div className="space-y-6">
-                <div className="flex gap-3">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+          {activeTab === 'search' && !selectedTransaction && (
+            <div className="bg-[#0D0D14] border border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+               <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500/5 rounded-full blur-3xl pointer-events-none"></div>
+               <h3 className="text-sm font-black text-rose-500 tracking-widest uppercase mb-6 flex items-center gap-2">
+                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                 Lookup Customer
+               </h3>
+               
+               <div className="flex gap-4">
+                 <div className="flex-1 relative">
                     <input 
                       type="text" 
-                      placeholder="Enter Invoice No, Name, or Phone..." 
-                      className="w-full bg-gray-900 border border-gray-700 rounded-md py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-green-500 transition-colors"
+                      placeholder="Search by Name, Phone, or Village..." 
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                      onChange={handleTextSearch}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-white focus:outline-none focus:border-rose-500 transition-colors font-medium placeholder-gray-600"
                     />
-                  </div>
-                  <button 
-                    onClick={handleSearch}
-                    disabled={isSearching}
-                    className="bg-green-900/30 text-green-500 border border-green-800 px-6 py-2 rounded-md text-sm font-bold tracking-wider hover:bg-green-900/50 transition-colors disabled:opacity-50"
-                  >
-                    {isSearching ? 'SEARCHING...' : 'EXECUTE'}
-                  </button>
-                </div>
+                    <svg className="w-5 h-5 absolute left-4 top-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                 </div>
+                 
+                 <input type="file" accept="image/*" capture="environment" id="face-search" className="hidden" onChange={handleFaceScanSearch} />
+                 <button 
+                   onClick={() => document.getElementById('face-search').click()}
+                   disabled={isFaceScanning || !modelsLoaded}
+                   className="bg-white/5 hover:bg-white/10 border border-rose-500/30 hover:border-rose-500 rounded-xl px-6 flex flex-col items-center justify-center gap-1 transition-all"
+                 >
+                   {isFaceScanning ? (
+                     <div className="w-6 h-6 border-2 border-rose-500 border-t-transparent rounded-full animate-spin"></div>
+                   ) : (
+                     <>
+                       <svg className="w-6 h-6 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
+                       <span className="text-[10px] font-bold text-rose-200 uppercase tracking-wider">Face Scan</span>
+                     </>
+                   )}
+                 </button>
+               </div>
 
-                {searchResults.length > 0 && !selectedTransaction && (
-                  <div className="border border-gray-800 rounded-lg overflow-hidden animate-in fade-in">
-                    <div className="bg-gray-900 px-4 py-2 text-xs font-bold text-gray-400 tracking-wider uppercase border-b border-gray-800">
-                      Matches Found ({searchResults.length})
-                    </div>
-                    <div className="divide-y divide-gray-800">
-                      {searchResults.map((res, idx) => (
-                        <div key={idx} className="p-4 hover:bg-gray-800/50 transition-colors cursor-pointer flex justify-between items-center" onClick={() => { setSelectedTransaction(res); setSelectedItems([]); }}>
-                          <div>
-                            <div className="font-bold text-green-400">{res.name}</div>
-                            <div className="text-xs text-gray-400 mt-1">{res.phone} • {res.village}</div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-xs font-mono text-gray-300">{res.invoice}</div>
-                            <div className="text-[10px] text-gray-500 mt-1">{res.date}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+               {/* Search Results - show individual transactions */}
+               {searchResults.length > 0 && (
+                 <div className="mt-4 space-y-2 max-h-72 overflow-y-auto">
+                   {searchResults.map((txn, idx) => (
+                     <div 
+                       key={idx} 
+                       onClick={() => handleSelectTransaction(txn)}
+                       className="p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-rose-500/10 hover:border-rose-500/40 cursor-pointer transition-colors"
+                     >
+                       <div className="flex justify-between items-start">
+                         <div>
+                           <div className="font-bold text-white">{txn.customerName}</div>
+                           <div className="text-xs text-gray-400">{txn.village} • {txn.phone}</div>
+                           <div className="text-[10px] text-rose-400 font-bold mt-1 uppercase tracking-wider">
+                             {txn.date} {txn.invoiceNo ? `• Inv: ${txn.invoiceNo}` : ''} • {txn.items.length} item(s)
+                           </div>
+                         </div>
+                         <svg className="w-5 h-5 text-gray-500 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+               )}
+            </div>
+          )}
 
-                {selectedTransaction && (
-                  <div className="space-y-4 animate-in slide-in-from-right-4">
-                    <div className="flex justify-between items-center border-b border-gray-800 pb-2">
-                      <h2 className="text-sm font-bold text-green-400 tracking-widest uppercase">Target Selected</h2>
-                      <button onClick={() => setSelectedTransaction(null)} className="text-xs text-red-400 hover:text-red-300">Clear</button>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-gray-900 border border-gray-800 p-4 rounded-lg">
-                        <div className="text-[10px] text-gray-500 tracking-widest uppercase mb-1">Customer Identity</div>
-                        <div className="font-bold">{selectedTransaction.name}</div>
-                        <div className="text-xs text-gray-400 mt-1">{selectedTransaction.phone}</div>
-                        <div className="text-xs text-gray-400">{selectedTransaction.village}</div>
-                      </div>
-                      <div className="bg-gray-900 border border-gray-800 p-4 rounded-lg">
-                        <div className="text-[10px] text-gray-500 tracking-widest uppercase mb-1">Original Invoice</div>
-                        <div className="font-mono text-sm text-green-400">{selectedTransaction.invoice}</div>
-                        <div className="text-xs text-gray-400 mt-1">Dated: {selectedTransaction.date}</div>
-                      </div>
-                    </div>
+          {activeTab === 'search' && selectedTransaction && (
+            <div className="bg-[#0D0D14] border border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+               <div className="flex justify-between items-start mb-6">
+                 <div>
+                   <h3 className="text-sm font-black text-rose-500 tracking-widest uppercase mb-1">Selected Transaction</h3>
+                   <div className="text-2xl font-black text-white">{selectedTransaction.customerName}</div>
+                   <div className="text-sm text-gray-400 font-medium">{selectedTransaction.village} • {selectedTransaction.phone}</div>
+                   <div className="text-xs text-rose-400 font-bold mt-1">
+                     {selectedTransaction.date} {selectedTransaction.invoiceNo ? `• Invoice: ${selectedTransaction.invoiceNo}` : ''}
+                   </div>
+                 </div>
+                 <button onClick={() => { setSelectedTransaction(null); setSelectedItems([]); }} className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg font-bold text-gray-300">Change</button>
+               </div>
 
-                    <div className="mt-6">
-                      <div className="text-[10px] text-gray-500 tracking-widest uppercase mb-3">Select Items to Buy Back</div>
-                      <div className="border border-gray-800 rounded-lg overflow-hidden bg-gray-900/50">
-                        {parseItemsString(selectedTransaction.itemsStr).map((item, idx) => (
-                          <div 
-                            key={idx} 
-                            onClick={() => toggleItemSelection(idx)}
-                            className={`p-4 border-b border-gray-800 last:border-0 cursor-pointer flex items-center gap-4 transition-colors ${selectedItems.includes(idx) ? 'bg-green-900/20' : 'hover:bg-gray-800'}`}
-                          >
-                            <div className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 ${selectedItems.includes(idx) ? 'bg-green-500 border-green-500 text-black' : 'border-gray-600'}`}>
-                              {selectedItems.includes(idx) && <CheckCircle className="w-3 h-3" />}
-                            </div>
-                            <div className="flex-1">
-                              <div className="font-bold text-sm">{item.name}</div>
-                              <div className="text-xs text-gray-400 mt-1">{item.metalType} • {item.weight}g • {item.purity}% Purity</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+               <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Items Purchased in this Invoice — select the ones they want to sell back</h4>
+               {(!selectedTransaction.items || selectedTransaction.items.length === 0) ? (
+                 <div className="bg-white/5 rounded-xl p-4 text-center text-sm text-gray-400">No items found for this transaction.</div>
+               ) : (
+                 <div className="space-y-2">
+                   {selectedTransaction.items.map((item, idx) => (
+                     <div 
+                       key={idx} 
+                       onClick={() => handleToggleItem(idx)}
+                       className={`p-4 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${selectedItems.includes(idx) ? 'bg-rose-500/10 border-rose-500/50' : 'bg-white/5 border-white/10 hover:border-white/20'}`}
+                     >
+                       <div className="flex items-center gap-4">
+                         <div className={`w-5 h-5 rounded flex items-center justify-center border-2 ${selectedItems.includes(idx) ? 'bg-rose-500 border-rose-500 text-white' : 'border-gray-600'}`}>
+                           {selectedItems.includes(idx) && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                         </div>
+                         <div>
+                           <div className="font-bold text-white text-sm">{item.name}</div>
+                           <div className="text-xs text-gray-400">Wt: {item.weight}g • Purity: {item.purity}%</div>
+                         </div>
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+               )}
+            </div>
+          )}
 
-            {activeTab === 'manual' && (
-              <div className="space-y-8 animate-in fade-in">
-                {/* Manual Customer Info */}
-                <div>
-                  <div className="text-[10px] text-gray-500 tracking-widest uppercase mb-3 border-b border-gray-800 pb-2">Walk-in Customer Details</div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">Full Name</label>
-                      <input type="text" value={manualCustomer.name} onChange={e => setManualCustomer({...manualCustomer, name: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm focus:border-green-500 focus:outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">Phone Number</label>
-                      <input type="text" value={manualCustomer.phone} onChange={e => setManualCustomer({...manualCustomer, phone: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm focus:border-green-500 focus:outline-none" />
-                    </div>
-                    <div className="col-span-2">
-                      <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">Village / Address</label>
-                      <input type="text" value={manualCustomer.village} onChange={e => setManualCustomer({...manualCustomer, village: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm focus:border-green-500 focus:outline-none" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Manual Items */}
-                <div>
-                  <div className="flex justify-between items-center border-b border-gray-800 pb-2 mb-3">
-                    <div className="text-[10px] text-gray-500 tracking-widest uppercase">Item Declaration</div>
-                    <button onClick={addManualItem} className="text-xs text-green-400 hover:text-green-300 flex items-center gap-1 font-bold">
-                      <PackagePlus className="w-3 h-3" /> Add Item
-                    </button>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    {manualItems.map((item, idx) => (
-                      <div key={idx} className="bg-gray-900 border border-gray-800 rounded-lg p-4 relative group">
-                        {manualItems.length > 1 && (
-                          <button onClick={() => removeManualItem(idx)} className="absolute top-2 right-2 text-gray-600 hover:text-red-400">
-                            <X className="w-4 h-4" />
-                          </button>
-                        )}
-                        <div className="grid grid-cols-12 gap-3">
-                          <div className="col-span-12 md:col-span-6">
-                            <label className="block text-[9px] uppercase tracking-wider text-gray-500 mb-1">Description</label>
-                            <input type="text" placeholder="e.g. Broken Gold Chain" value={item.name} onChange={e => updateManualItem(idx, 'name', e.target.value)} className="w-full bg-black border border-gray-700 rounded px-2 py-1.5 text-xs focus:border-green-500 focus:outline-none" />
-                          </div>
-                          <div className="col-span-4 md:col-span-2">
-                            <label className="block text-[9px] uppercase tracking-wider text-gray-500 mb-1">Metal</label>
-                            <select value={item.metalType} onChange={e => updateManualItem(idx, 'metalType', e.target.value)} className="w-full bg-black border border-gray-700 rounded px-2 py-1.5 text-xs focus:border-green-500 focus:outline-none">
-                              <option value="Gold">Gold</option>
-                              <option value="Silver">Silver</option>
-                            </select>
-                          </div>
-                          <div className="col-span-4 md:col-span-2">
-                            <label className="block text-[9px] uppercase tracking-wider text-gray-500 mb-1">Wt (g)</label>
-                            <input type="number" step="0.01" value={item.weight} onChange={e => updateManualItem(idx, 'weight', e.target.value)} className="w-full bg-black border border-gray-700 rounded px-2 py-1.5 text-xs focus:border-green-500 focus:outline-none" />
-                          </div>
-                          <div className="col-span-4 md:col-span-2">
-                            <label className="block text-[9px] uppercase tracking-wider text-gray-500 mb-1">Purity(%)</label>
-                            <input type="number" step="0.1" value={item.purity} onChange={e => updateManualItem(idx, 'purity', e.target.value)} className="w-full bg-black border border-gray-700 rounded px-2 py-1.5 text-xs focus:border-green-500 focus:outline-none" />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+          {activeTab === 'manual' && (
+            <div className="bg-[#0D0D14] border border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl space-y-8">
+               
+               {/* Customer Details Section */}
+               <div>
+                 <h3 className="text-sm font-black text-rose-500 tracking-widest uppercase mb-4 flex items-center gap-2">
+                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                   New Customer Details
+                 </h3>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                   <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Full Name</label>
+                      <input type="text" value={manualCustomer.name} onChange={e => setManualCustomer({...manualCustomer, name: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-500 transition-colors font-medium" />
+                   </div>
+                   <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Phone Number</label>
+                      <input type="text" value={manualCustomer.phone} onChange={e => setManualCustomer({...manualCustomer, phone: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-500 transition-colors font-medium" />
+                   </div>
+                   <div className="sm:col-span-2">
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Village / City</label>
+                      <input type="text" value={manualCustomer.village} onChange={e => setManualCustomer({...manualCustomer, village: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-500 transition-colors font-medium" />
+                   </div>
                 </div>
               </div>
-            )}
+            </div>
+           )}
+
+           {/* Items Section (Always visible) */}
+           <div className="bg-[#0D0D14] border border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl space-y-8 mt-6">
+             <div>
+                 <div className="flex justify-between items-center mb-4">
+                   <h3 className="text-sm font-black text-rose-500 tracking-widest uppercase flex items-center gap-2">
+                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
+                     Item Assessment
+                   </h3>
+                   <span className="text-[10px] font-bold text-gray-500 bg-white/5 px-2 py-1 rounded">{manualItems.length} / 6 ITEMS</span>
+                 </div>
+
+                 <div className="space-y-4">
+                   {manualItems.map((item, index) => (
+                     <div key={index} className="p-4 bg-white/5 border border-white/10 rounded-xl relative">
+                       {manualItems.length > 1 && (
+                         <button onClick={() => handleRemoveManualItem(index)} className="absolute -top-2 -right-2 bg-rose-600 text-white rounded-full p-1 shadow-lg hover:bg-rose-500">
+                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                         </button>
+                       )}
+                       
+                       <div className="flex gap-4 mb-4">
+                         <label className="flex items-center gap-2 text-sm font-bold cursor-pointer">
+                           <input type="radio" name={`metal-${index}`} checked={item.metalType === 'Gold'} onChange={() => updateManualItem(index, 'metalType', 'Gold')} className="accent-amber-500 w-4 h-4" />
+                           <span className={item.metalType === 'Gold' ? 'text-amber-400' : 'text-gray-500'}>Gold</span>
+                         </label>
+                         <label className="flex items-center gap-2 text-sm font-bold cursor-pointer">
+                           <input type="radio" name={`metal-${index}`} checked={item.metalType === 'Silver'} onChange={() => updateManualItem(index, 'metalType', 'Silver')} className="accent-gray-300 w-4 h-4" />
+                           <span className={item.metalType === 'Silver' ? 'text-gray-300' : 'text-gray-500'}>Silver</span>
+                         </label>
+                       </div>
+
+                       <div className="space-y-4">
+                         <div>
+                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Item Description</label>
+                            <input type="text" placeholder="e.g. Chain, Ring..." value={item.name} onChange={e => updateManualItem(index, 'name', e.target.value)} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-500 transition-colors font-medium" />
+                         </div>
+                         <div className="grid grid-cols-2 gap-4">
+                           <div>
+                              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Gross Weight (g)</label>
+                              <input type="number" step="0.01" value={item.weight} onChange={e => updateManualItem(index, 'weight', e.target.value)} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-500 transition-colors font-medium" />
+                           </div>
+                           <div>
+                              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Melting Purity (%)</label>
+                              <input type="number" step="0.1" value={item.purity} onChange={e => updateManualItem(index, 'purity', e.target.value)} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-500 transition-colors font-medium" />
+                           </div>
+                         </div>
+                       </div>
+                     </div>
+                   ))}
+
+                   {manualItems.length < 6 && (
+                     <button onClick={handleAddManualItem} className="w-full py-4 border-2 border-dashed border-white/10 hover:border-rose-500/50 rounded-xl text-gray-400 font-bold text-sm tracking-wide transition-colors flex items-center justify-center gap-2">
+                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                       ADD ANOTHER ITEM
+                     </button>
+                   )}
+                 </div>
+               </div>
+            </div>
+
+          {/* Security Vault Photos (Required for both modes) */}
+          <div className="bg-[#0D0D14] border border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl">
+            <h3 className="text-sm font-black text-rose-500 tracking-widest uppercase mb-6 flex items-center gap-2">
+               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+               Security Vault Photos
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 text-center">Customer Photo</label>
+                <input type="file" accept="image/*" capture="environment" id="cam-cust" className="hidden" onChange={(e) => handleGenericPhotoCapture(e, setCustomerPhoto)} />
+                <div onClick={() => document.getElementById('cam-cust').click()} className={`w-full aspect-square rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-colors ${customerPhoto ? 'border-emerald-500/50 bg-emerald-500/10' : 'border-white/10 hover:border-rose-500/50 bg-white/5'}`}>
+                  {customerPhoto ? <img src={customerPhoto} className="w-full h-full object-cover" /> : <div className="text-gray-500 flex flex-col items-center"><svg className="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg><span className="text-[10px] font-bold uppercase">Tap to Capture</span></div>}
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 text-center">Old Jewellery Item</label>
+                <input type="file" accept="image/*" capture="environment" id="cam-jewel" className="hidden" onChange={(e) => handleGenericPhotoCapture(e, setJewelleryPhoto)} />
+                <div onClick={() => document.getElementById('cam-jewel').click()} className={`w-full aspect-square rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-colors ${jewelleryPhoto ? 'border-emerald-500/50 bg-emerald-500/10' : 'border-white/10 hover:border-rose-500/50 bg-white/5'}`}>
+                  {jewelleryPhoto ? <img src={jewelleryPhoto} className="w-full h-full object-cover" /> : <div className="text-gray-500 flex flex-col items-center"><svg className="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg><span className="text-[10px] font-bold uppercase">Tap to Capture</span></div>}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Evidence & Finalization */}
-        <div className="w-[40%] flex flex-col bg-[#0f0f11]">
-          <div className="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-6">
+        {/* Right Column: Summary & Submit */}
+        <div className="lg:col-span-4">
+          <div className="sticky top-28 space-y-6">
             
-            {/* Rates Box */}
-            <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
-              <div className="text-[10px] text-gray-500 tracking-widest uppercase mb-3 flex items-center justify-between">
-                <span>Live Scrap Rates</span>
-                <span className="text-green-500 flex items-center gap-1"><TrendingDown className="w-3 h-3"/> Locked</span>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className="text-xs text-gray-400">Gold (24K)</div>
-                  <div className="font-mono text-lg text-yellow-500 font-bold">₹{liveRates?.goldScrapRate || '---'}/g</div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-400">Silver</div>
-                  <div className="font-mono text-lg text-gray-300 font-bold">₹{liveRates?.silverScrapRate || '---'}/g</div>
-                </div>
-              </div>
+            <div className="bg-[#0D0D14] border border-white/10 rounded-2xl p-6 shadow-xl">
+               <div className="flex justify-between items-center mb-6">
+                 <h3 className="text-sm font-black text-white tracking-widest uppercase">Financial Summary</h3>
+                 <div className="flex flex-col gap-1">
+                   <div className="bg-amber-500/10 border border-amber-500/30 text-[9px] font-bold text-amber-400 px-2 py-0.5 rounded">
+                      Gold Rate: ₹{liveRates?.goldScrapRate || 0}/g
+                   </div>
+                   <div className="bg-gray-500/10 border border-gray-500/30 text-[9px] font-bold text-gray-300 px-2 py-0.5 rounded">
+                      Silver Rate: ₹{liveRates?.silverScrapRate || 0}/g
+                   </div>
+                 </div>
+               </div>
+               
+               <div className="space-y-2.5 text-sm border-b border-white/10 pb-4 mb-4">
+                  {goldWeightCalc > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-amber-400/80 font-medium text-xs">Gold Weight</span>
+                      <div className="text-right">
+                        <span className="text-white font-bold">{goldWeightCalc.toFixed(2)} g</span>
+                        <span className="text-amber-400/60 text-[10px] ml-1">@ ₹{liveRates?.goldScrapRate || 0}/g</span>
+                      </div>
+                    </div>
+                  )}
+                  {silverWeightCalc > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400/80 font-medium text-xs">Silver Weight</span>
+                      <div className="text-right">
+                        <span className="text-white font-bold">{silverWeightCalc.toFixed(2)} g</span>
+                        <span className="text-gray-400/60 text-[10px] ml-1">@ ₹{liveRates?.silverScrapRate || 0}/g</span>
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex justify-between border-t border-white/5 pt-2">
+                    <span className="text-gray-400 font-medium">Total Gross Weight</span>
+                    <span className="text-white font-bold">{calculatedWeight ? `${calculatedWeight.toFixed(2)} g` : '0 g'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400 font-medium">Avg. Purity</span>
+                    <span className="text-white font-bold">{calculatedPurity ? `${calculatedPurity.toFixed(1)}%` : '0 %'}</span>
+                  </div>
+                  <div className="flex justify-between pt-2 border-t border-white/5">
+                    <span className="text-emerald-400 font-bold text-[10px] uppercase tracking-wider">Suggested Valuation</span>
+                    <span className="text-emerald-400 font-black">₹{Math.round(suggestedValuation).toLocaleString('en-IN')}</span>
+                  </div>
+               </div>
+
+               <div>
+                 <label className="block text-[10px] font-bold text-rose-500 uppercase tracking-widest mb-2">Final Agreed Value (₹)</label>
+                 <input 
+                   type="number" 
+                   placeholder={Math.round(suggestedValuation).toString()}
+                   value={finalValueInput}
+                   onChange={e => setFinalValueInput(e.target.value)}
+                   className="w-full bg-[#05050A] border border-rose-500/30 rounded-xl px-4 py-4 text-white text-2xl font-black focus:outline-none focus:border-rose-500 transition-colors"
+                 />
+               </div>
             </div>
 
-            {/* Verification Module */}
-            <div>
-              <div className="text-[10px] text-gray-500 tracking-widest uppercase mb-3 border-b border-gray-800 pb-2">Security Evidence Capture</div>
-              
-              <div className="aspect-video bg-black border-2 border-gray-800 rounded-lg overflow-hidden relative group">
-                <Webcam ref={webcamRef} audio={false} screenshotFormat="image/jpeg" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 backdrop-blur-sm">
-                  <button onClick={() => capturePhoto('customer')} className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded text-xs font-bold uppercase tracking-wider flex items-center gap-2">
-                    <Camera className="w-4 h-4" /> Face
-                  </button>
-                  <button onClick={() => capturePhoto('jewellery')} className="bg-yellow-600 hover:bg-yellow-500 text-white px-4 py-2 rounded text-xs font-bold uppercase tracking-wider flex items-center gap-2">
-                    <Camera className="w-4 h-4" /> Items
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                <div className="relative aspect-square bg-gray-900 border border-gray-800 rounded-lg overflow-hidden group">
-                  {customerPhoto ? (
-                    <>
-                      <img src={customerPhoto} alt="Customer" className="w-full h-full object-cover" />
-                      <div className="absolute inset-x-0 bottom-0 bg-black/80 p-2 flex justify-between items-center">
-                        <span className="text-[9px] uppercase tracking-widest text-gray-300">Face Captured</span>
-                        <button onClick={() => verifyCustomerFace(customerPhoto)} disabled={isVerifying} className="text-[10px] bg-green-600 px-2 py-1 rounded font-bold disabled:opacity-50">
-                          {isVerifying ? 'Scanning...' : 'Verify'}
-                        </button>
-                      </div>
-                    </>
-                  ) : (
-                     <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-600 font-mono tracking-widest uppercase text-center p-4">Awaiting<br/>Face Scan</div>
-                  )}
-                </div>
-                <div className="relative aspect-square bg-gray-900 border border-gray-800 rounded-lg overflow-hidden">
-                  {jewelleryPhoto ? (
-                    <>
-                      <img src={jewelleryPhoto} alt="Jewellery" className="w-full h-full object-cover" />
-                      <div className="absolute inset-x-0 bottom-0 bg-black/80 p-2 text-center">
-                        <span className="text-[9px] uppercase tracking-widest text-gray-300">Items Captured</span>
-                      </div>
-                    </>
-                  ) : (
-                     <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-600 font-mono tracking-widest uppercase text-center p-4">Awaiting<br/>Item Scan</div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Checkout Footer */}
-          <div className="bg-gray-900 border-t border-gray-800 p-6 shrink-0">
-             <button 
-               onClick={handlePurchase}
-               disabled={isProcessing}
-               className="w-full bg-green-600 hover:bg-green-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-white py-4 rounded-lg font-bold tracking-widest uppercase flex items-center justify-center gap-3 transition-colors shadow-[0_0_20px_rgba(22,163,74,0.2)]"
-             >
-               {isProcessing ? 'PROCESSING UPLOAD...' : 'CONFIRM PURCHASE'} 
-               {!isProcessing && <ArrowRight className="w-5 h-5" />}
-             </button>
-             <p className="text-[9px] text-center text-gray-500 mt-3 font-mono tracking-widest">
-               By confirming, you agree to transfer funds and assume legal possession of items.
-             </p>
+            <button 
+              onClick={handleSubmit} 
+              disabled={isSubmitting || isPdfProcessing}
+              className={`w-full font-black py-5 rounded-2xl shadow-[0_0_30px_rgba(16,185,129,0.2)] transition-all flex items-center justify-center gap-2 text-sm tracking-wide ${isSubmitting || isPdfProcessing ? 'bg-gray-800 text-gray-500 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 text-white'}`}
+            >
+              {isSubmitting || isPdfProcessing ? 'PROCESSING...' : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                  SAVE & GENERATE SLIP
+                </>
+              )}
+            </button>
+            <p className="text-[9px] text-gray-600 text-center font-medium uppercase tracking-widest leading-relaxed">
+              Generates A4 Vault Record &<br/>A5 Customer Receipt
+            </p>
           </div>
         </div>
-
       </div>
-
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      {/* Audit Records Modal */}
+      <AuditRecordsModal 
+        isOpen={isAuditModalOpen} 
+        onClose={() => setIsAuditModalOpen(false)} 
+        customers={customers} 
+        modelsLoaded={modelsLoaded} 
+        customFaceNet={customFaceNet} 
+      />
     </div>
   );
 }
