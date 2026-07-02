@@ -23,6 +23,17 @@ const CardTitle = ({ children, className = '' }) => (
 const CardContent = ({ children, className = '' }) => (
   <div className={`p-6 pt-0 ${className}`}>{children}</div>
 );
+const Badge = ({ children, variant = 'default', className = '' }) => {
+  const variants = {
+    default: 'border-transparent bg-zinc-900 text-zinc-50',
+    outline: 'text-zinc-950 border-zinc-200',
+  };
+  return (
+    <div className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${variants[variant]} ${className}`}>
+      {children}
+    </div>
+  );
+};
 const Input = ({ className = '', icon: Icon, ...props }) => (
   <div className="relative flex items-center w-full">
     {Icon && <Icon className="absolute left-3 w-4 h-4 text-zinc-500" />}
@@ -35,7 +46,7 @@ const Input = ({ className = '', icon: Icon, ...props }) => (
 
 // -- Helper Functions --
 const parseDate = (dateStr) => {
-  if (!dateStr) return null;
+  if (!dateStr || typeof dateStr !== 'string') return null;
   const parts = dateStr.split(/[-/]/);
   if (parts.length === 3) {
     const day = parseInt(parts[0], 10);
@@ -49,7 +60,7 @@ const parseDate = (dateStr) => {
 };
 
 const isWithinRange = (date, range) => {
-  if (!date) return true; // If no date, include it by default or exclude it? Let's include for global metrics if unknown.
+  if (!date) return true; 
   const now = new Date();
   const diffTime = Math.abs(now - date);
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -58,13 +69,13 @@ const isWithinRange = (date, range) => {
   if (range === '7d') return diffDays <= 7;
   if (range === '30d') return diffDays <= 30;
   if (range === '90d') return diffDays <= 90;
-  return true; // 'all'
+  return true; 
 };
 
 export default function MasterDashboard() {
   const [datasets, setDatasets] = useState({});
   const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState('30d'); // 'today', '7d', '30d', 'all'
+  const [dateRange, setDateRange] = useState('30d');
   const [searchQuery, setSearchQuery] = useState('');
 
   const TARGETS = [
@@ -82,10 +93,14 @@ export default function MasterDashboard() {
     try {
       const results = {};
       await Promise.all(TARGETS.map(async (target) => {
-        const res = await fetch(`${FIREBASE_API_URL}/read?target=${target}`);
-        const body = await res.json();
-        if (res.ok && body.success) {
-          results[target] = body.data;
+        try {
+          const res = await fetch(`${FIREBASE_API_URL}/read?target=${target}`);
+          const body = await res.json();
+          if (res.ok && body.success) {
+            results[target] = body.data;
+          }
+        } catch (e) {
+          console.error(`Failed to fetch ${target}`, e);
         }
       }));
       setDatasets(results);
@@ -98,36 +113,36 @@ export default function MasterDashboard() {
 
   // --- Business Logic & KPI Calculation ---
   const kpis = useMemo(() => {
-    if (!datasets['jewellery-sales'] || !datasets['custom-orders'] || !datasets['old-jewellery'] || !datasets['savings-transaction']) return null;
+    if (!datasets['jewellery-sales']) return null;
 
     let totalSales = 0;
     let makingCharges = 0;
     let scrapGoldBought = 0;
     let savingsDeposits = 0;
-    const salesTrendMap = {}; // For chart
+    const salesTrendMap = {}; 
 
     // 1. Process Jewellery Sales
     const salesData = datasets['jewellery-sales'];
-    if (salesData.length > 1) {
-      const headers = salesData[0];
-      const dateIdx = headers.findIndex(h => h.toLowerCase().includes('date'));
-      const totalIdx = headers.findIndex(h => h.toLowerCase() === 'total' || h.toLowerCase() === 'total paid');
-      const labourIdx = headers.findIndex(h => h.toLowerCase().includes('labour') || h.toLowerCase().includes('making'));
+    if (salesData && Array.isArray(salesData) && salesData.length > 1) {
+      const headers = salesData[0] || [];
+      const dateIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('date'));
+      const totalIdx = headers.findIndex(h => h && (String(h).toLowerCase() === 'total' || String(h).toLowerCase() === 'total paid'));
+      const labourIdx = headers.findIndex(h => h && (String(h).toLowerCase().includes('labour') || String(h).toLowerCase().includes('making')));
       
       for (let i = 1; i < salesData.length; i++) {
         const row = salesData[i];
-        const dateStr = row[dateIdx];
+        if (!Array.isArray(row)) continue;
+        const dateStr = dateIdx > -1 ? row[dateIdx] : null;
         const d = parseDate(dateStr);
         if (d && !isWithinRange(d, dateRange)) continue;
 
-        const saleAmt = parseFloat(row[totalIdx]) || 0;
-        const labourAmt = parseFloat(row[labourIdx]) || 0;
+        const saleAmt = totalIdx > -1 ? parseFloat(row[totalIdx]) : 0;
+        const labourAmt = labourIdx > -1 ? parseFloat(row[labourIdx]) : 0;
         
-        totalSales += saleAmt;
-        makingCharges += labourAmt;
+        totalSales += (isNaN(saleAmt) ? 0 : saleAmt);
+        makingCharges += (isNaN(labourAmt) ? 0 : labourAmt);
 
-        // Group for chart
-        if (d) {
+        if (d && !isNaN(saleAmt)) {
           const key = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
           salesTrendMap[key] = (salesTrendMap[key] || 0) + saleAmt;
         }
@@ -136,51 +151,57 @@ export default function MasterDashboard() {
 
     // 2. Process Custom Orders (Making Charges)
     const ordersData = datasets['custom-orders'];
-    if (ordersData.length > 1) {
-      const headers = ordersData[0];
-      const dateIdx = headers.findIndex(h => h.toLowerCase().includes('date'));
-      const labourIdx = headers.findIndex(h => h.toLowerCase().includes('labour') || h.toLowerCase().includes('making'));
+    if (ordersData && Array.isArray(ordersData) && ordersData.length > 1) {
+      const headers = ordersData[0] || [];
+      const dateIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('date'));
+      const labourIdx = headers.findIndex(h => h && (String(h).toLowerCase().includes('labour') || String(h).toLowerCase().includes('making')));
       
       for (let i = 1; i < ordersData.length; i++) {
         const row = ordersData[i];
-        const d = parseDate(row[dateIdx]);
+        if (!Array.isArray(row)) continue;
+        const d = dateIdx > -1 ? parseDate(row[dateIdx]) : null;
         if (d && !isWithinRange(d, dateRange)) continue;
-        makingCharges += parseFloat(row[labourIdx]) || 0;
+        const amt = labourIdx > -1 ? parseFloat(row[labourIdx]) : 0;
+        makingCharges += (isNaN(amt) ? 0 : amt);
       }
     }
 
     // 3. Process Old Gold Scrap
     const scrapData = datasets['old-jewellery'];
-    if (scrapData.length > 1) {
-      const headers = scrapData[0];
-      const dateIdx = headers.findIndex(h => h.toLowerCase().includes('date'));
-      const totalValueIdx = headers.findIndex(h => h.toLowerCase().includes('total value') || h.toLowerCase().includes('final value'));
+    if (scrapData && Array.isArray(scrapData) && scrapData.length > 1) {
+      const headers = scrapData[0] || [];
+      const dateIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('date'));
+      const totalValueIdx = headers.findIndex(h => h && (String(h).toLowerCase().includes('total value') || String(h).toLowerCase().includes('final value')));
       
       for (let i = 1; i < scrapData.length; i++) {
         const row = scrapData[i];
-        const d = parseDate(row[dateIdx]);
+        if (!Array.isArray(row)) continue;
+        const d = dateIdx > -1 ? parseDate(row[dateIdx]) : null;
         if (d && !isWithinRange(d, dateRange)) continue;
-        const valStr = (row[totalValueIdx] || '').replace(/[^0-9.-]+/g,"");
-        scrapGoldBought += parseFloat(valStr) || 0;
+        const valStr = totalValueIdx > -1 ? String(row[totalValueIdx] || '').replace(/[^0-9.-]+/g,"") : '';
+        const val = parseFloat(valStr);
+        scrapGoldBought += (isNaN(val) ? 0 : val);
       }
     }
 
     // 4. Process Savings Deposits
     const savingsData = datasets['savings-transaction'];
-    if (savingsData.length > 1) {
-      const headers = savingsData[0];
-      const dateIdx = headers.findIndex(h => h.toLowerCase().includes('date'));
-      const amtIdx = headers.findIndex(h => h.toLowerCase().includes('deposit') || h.toLowerCase() === 'amount');
-      const typeIdx = headers.findIndex(h => h.toLowerCase().includes('type'));
+    if (savingsData && Array.isArray(savingsData) && savingsData.length > 1) {
+      const headers = savingsData[0] || [];
+      const dateIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('date'));
+      const amtIdx = headers.findIndex(h => h && (String(h).toLowerCase().includes('deposit') || String(h).toLowerCase() === 'amount' || String(h).toLowerCase().includes('received')));
+      const typeIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('type'));
       
       for (let i = 1; i < savingsData.length; i++) {
         const row = savingsData[i];
-        const d = parseDate(row[dateIdx]);
+        if (!Array.isArray(row)) continue;
+        const d = dateIdx > -1 ? parseDate(row[dateIdx]) : null;
         if (d && !isWithinRange(d, dateRange)) continue;
         
-        const type = (row[typeIdx] || '').toLowerCase();
-        if (type.includes('deposit') || !typeIdx) {
-           savingsDeposits += parseFloat(row[amtIdx]) || 0;
+        const type = typeIdx > -1 ? String(row[typeIdx] || '').toLowerCase() : '';
+        if (type.includes('deposit') || typeIdx === -1) {
+           const amt = amtIdx > -1 ? parseFloat(row[amtIdx]) : 0;
+           savingsDeposits += (isNaN(amt) ? 0 : amt);
         }
       }
     }
@@ -195,27 +216,33 @@ export default function MasterDashboard() {
 
   // --- Global Search Logic ---
   const searchResults = useMemo(() => {
-    if (!searchQuery || searchQuery.length < 2) return null;
+    if (!searchQuery || typeof searchQuery !== 'string' || searchQuery.length < 2) return null;
     const results = [];
     const query = searchQuery.toLowerCase();
 
     Object.keys(datasets).forEach(sheetName => {
       const sheetData = datasets[sheetName];
-      if (!sheetData || sheetData.length <= 1) return;
+      if (!sheetData || !Array.isArray(sheetData) || sheetData.length <= 1) return;
       const headers = sheetData[0];
+      if (!Array.isArray(headers)) return;
 
       for (let i = 1; i < sheetData.length; i++) {
         const row = sheetData[i];
+        if (!Array.isArray(row)) continue;
+        
         const rowStr = row.join(' ').toLowerCase();
         if (rowStr.includes(query)) {
-          // Convert row to object mapped to headers
           const itemObj = {};
           let pdfLink = null;
           
           headers.forEach((h, idx) => {
-            itemObj[h] = row[idx];
-            if (h.toLowerCase().includes('pdf') || h.toLowerCase().includes('drive') || h.toLowerCase().includes('link')) {
-               if (row[idx] && row[idx].includes('http')) pdfLink = row[idx];
+            const headerStr = h ? String(h) : `Column ${idx + 1}`;
+            itemObj[headerStr] = row[idx];
+            const headerLower = headerStr.toLowerCase();
+            if (headerLower.includes('pdf') || headerLower.includes('drive') || headerLower.includes('link')) {
+               if (typeof row[idx] === 'string' && row[idx].includes('http')) {
+                 pdfLink = row[idx];
+               }
             }
           });
 
@@ -293,11 +320,13 @@ export default function MasterDashboard() {
                   </CardHeader>
                   <CardContent className="pt-4 space-y-3">
                     {Object.entries(result.data).map(([k, v]) => {
-                      if (!v || v === '-' || k.toLowerCase().includes('pdf') || k.toLowerCase().includes('link')) return null;
+                      if (!v || v === '-' || !k) return null;
+                      const kStr = String(k).toLowerCase();
+                      if (kStr.includes('pdf') || kStr.includes('link') || kStr.includes('drive')) return null;
                       return (
                         <div key={k} className="flex justify-between border-b border-zinc-100 pb-2 last:border-0 last:pb-0">
                           <span className="text-xs text-zinc-500 font-medium uppercase tracking-wider">{k}</span>
-                          <span className="text-sm font-medium text-zinc-900 text-right max-w-[60%] truncate" title={v}>{v}</span>
+                          <span className="text-sm font-medium text-zinc-900 text-right max-w-[60%] truncate" title={String(v)}>{String(v)}</span>
                         </div>
                       );
                     })}
@@ -439,22 +468,23 @@ export default function MasterDashboard() {
                 <CardContent>
                    <div className="space-y-6 mt-4">
                      {datasets['inventory'] && datasets['inventory'].slice(1, 6).map((row, i) => {
+                       if (!Array.isArray(row)) return null;
                        const category = row[0];
-                       const weight = parseFloat(row[10] || 0); // Expected Closing Weight
-                       const count = row[9]; // Expected Closing Count
+                       const weight = parseFloat(row[10] || 0);
+                       const count = row[9];
                        const status = row[11];
                        if (!category) return null;
                        
                        return (
                          <div key={i} className="flex items-center justify-between border-b border-zinc-100 pb-3 last:border-0">
                            <div>
-                             <div className="font-medium text-zinc-900">{category}</div>
-                             <div className="text-xs text-zinc-500">{count} Items in Vault</div>
+                             <div className="font-medium text-zinc-900">{String(category)}</div>
+                             <div className="text-xs text-zinc-500">{String(count)} Items in Vault</div>
                            </div>
                            <div className="text-right">
-                             <div className="font-bold text-zinc-900">{weight.toFixed(2)} g</div>
-                             {status && status.includes('DEEP') ? (
-                               <span className="text-[10px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded uppercase tracking-wider">{status}</span>
+                             <div className="font-bold text-zinc-900">{isNaN(weight) ? '0.00' : weight.toFixed(2)} g</div>
+                             {status && String(status).includes('DEEP') ? (
+                               <span className="text-[10px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded uppercase tracking-wider">{String(status)}</span>
                              ) : (
                                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded uppercase tracking-wider">Verified</span>
                              )}
