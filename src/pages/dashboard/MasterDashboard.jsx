@@ -525,28 +525,14 @@ export default function MasterDashboard() {
 
             {/* Core Financial KPIs */}
             {kpis && (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-zinc-500">Total Sales Revenue</CardTitle>
+                    <CardTitle className="text-sm font-medium text-zinc-500">Total Sales</CardTitle>
                     <DollarSign className="h-4 w-4 text-zinc-500" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold tracking-tight">₹{kpis.totalSales.toLocaleString()}</div>
-                    <p className="text-xs text-emerald-600 font-medium flex items-center mt-1">
-                      <TrendingUp className="w-3 h-3 mr-1" /> Metrics based on selected date range
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-zinc-500">Gross Profit (Est)</CardTitle>
-                    <Activity className="h-4 w-4 text-emerald-600" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold tracking-tight text-emerald-600">₹{(kpis.totalSales - kpis.totalCOGS).toLocaleString()}</div>
-                    <p className="text-xs text-zinc-500 mt-1">Revenue minus Avg Cost of Goods</p>
+                    <div className="text-2xl font-bold tracking-tight">₹{kpis.totalSales.toLocaleString()}</div>
                   </CardContent>
                 </Card>
 
@@ -556,19 +542,47 @@ export default function MasterDashboard() {
                     <RefreshCw className="h-4 w-4 text-zinc-500" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold tracking-tight">₹{kpis.totalCOGS.toLocaleString()}</div>
-                    <p className="text-xs text-zinc-500 mt-1">Value of inventory sold</p>
+                    <div className="text-2xl font-bold tracking-tight">₹{kpis.totalCOGS.toLocaleString()}</div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-emerald-50/50 border-emerald-100">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-emerald-700">Gross Profit</CardTitle>
+                    <Activity className="h-4 w-4 text-emerald-600" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold tracking-tight text-emerald-700">₹{(kpis.totalSales - kpis.totalCOGS).toLocaleString()}</div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-zinc-500">Making Charges</CardTitle>
+                    <Activity className="h-4 w-4 text-zinc-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold tracking-tight">₹{kpis.makingCharges.toLocaleString()}</div>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-zinc-500">Net Savings Position</CardTitle>
+                    <CardTitle className="text-sm font-medium text-zinc-500">Scrap Bought</CardTitle>
+                    <RefreshCw className="h-4 w-4 text-zinc-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold tracking-tight">₹{kpis.scrapGoldBought.toLocaleString()}</div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-zinc-500">Net Savings</CardTitle>
                     <Wallet className="h-4 w-4 text-zinc-500" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold tracking-tight">₹{kpis.netSavings.toLocaleString()}</div>
-                    <p className="text-xs text-zinc-500 mt-1">Total deposits minus withdrawals</p>
+                    <div className="text-2xl font-bold tracking-tight">₹{kpis.netSavings.toLocaleString()}</div>
                   </CardContent>
                 </Card>
               </div>
