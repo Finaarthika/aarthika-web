@@ -6,7 +6,7 @@ import {
 import { 
   LayoutDashboard, Search, Activity, 
   DollarSign, TrendingUp, Wallet, RefreshCw,
-  PieChart as PieChartIcon, BarChart3
+  PieChart as PieChartIcon, BarChart3, AlertTriangle, CheckCircle
 } from 'lucide-react';
 
 const FIREBASE_API_URL = 'https://us-central1-aarthika-backend.cloudfunctions.net/masterApi';
@@ -90,6 +90,7 @@ export default function MasterDashboard() {
   const [datasets, setDatasets] = useState({});
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState('30d');
+  const [customDates, setCustomDates] = useState({ start: '', end: '' });
   const [searchQuery, setSearchQuery] = useState('');
   
   const [activeChart, setActiveChart] = useState('sales');
@@ -99,6 +100,31 @@ export default function MasterDashboard() {
     'old-jewellery', 'vault-audit', 'metal-rates', 
     'customer-profiles', 'transaction-ledger', 'inventory-addition'
   ];
+
+  // Modified to use component state for custom dates
+  const isWithinRange = useCallback((date, range) => {
+    if (!date) return true; 
+    if (range === 'all') return true;
+    if (range === 'custom') {
+       if (customDates.start && date < new Date(customDates.start)) return false;
+       if (customDates.end) {
+          const endDate = new Date(customDates.end);
+          endDate.setHours(23, 59, 59, 999);
+          if (date > endDate) return false;
+       }
+       return true;
+    }
+    
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (range === 'today') return diffDays <= 1;
+    if (range === '7d') return diffDays <= 7;
+    if (range === '30d') return diffDays <= 30;
+    if (range === '90d') return diffDays <= 90;
+    return true; 
+  }, [customDates]);
 
   useEffect(() => {
     fetchAllData();
@@ -362,25 +388,39 @@ export default function MasterDashboard() {
 
     // 6. Inventory Chart Data
     const inventoryData = [];
+    const lowStockAlerts = [];
     if (datasets['inventory'] && Array.isArray(datasets['inventory']) && datasets['inventory'].length > 1) {
+      const invHeaders = datasets['inventory'][0] || [];
+      const countIdx = invHeaders.findIndex(h => h && String(h).toLowerCase().includes('count'));
+      const actualCountIdx = countIdx > -1 ? countIdx : 9;
+
       datasets['inventory'].slice(1).forEach(row => {
         if (!Array.isArray(row)) return;
         const category = row[0];
         const weight = parseFloat(row[10] || 0);
+        
+        // Low stock alert check
+        const countStr = String(row[actualCountIdx] || '').replace(/[^0-9.-]+/g,"");
+        const count = parseFloat(countStr);
+        if (category && !isNaN(count) && count < 5) {
+           lowStockAlerts.push({ name: String(category), count });
+        }
+
         if (category && !isNaN(weight) && weight > 0) {
           const avgCost = getAvgCost(category);
           const capitalLocked = weight * avgCost;
           inventoryData.push({ name: String(category), weight, capitalLocked });
         }
       });
+      lowStockAlerts.sort((a,b) => a.count - b.count);
     }
 
     return { 
       totalSales, totalCOGS, makingCharges, scrapGoldBought, netSavings, 
       trendData, salesCategoryData, inventoryData,
-      auditPassRate, auditAlerts, lastAuditDate
+      auditPassRate, auditAlerts, lastAuditDate, lowStockAlerts
     };
-  }, [datasets, dateRange]);
+  }, [datasets, dateRange, isWithinRange]);
 
   // --- Global Search Logic ---
   const searchResults = useMemo(() => {
@@ -503,12 +543,13 @@ export default function MasterDashboard() {
               </div>
               
               {/* Date Filter Dropdown */}
-              <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-lg p-1 shadow-sm">
+              <div className="flex flex-wrap items-center gap-2 bg-white border border-zinc-200 rounded-lg p-1 shadow-sm">
                 {[
                   { id: 'today', label: 'Today' },
                   { id: '7d', label: '7 Days' },
                   { id: '30d', label: '30 Days' },
-                  { id: 'all', label: 'All Time' }
+                  { id: 'all', label: 'All Time' },
+                  { id: 'custom', label: 'Custom' }
                 ].map(opt => (
                   <button
                     key={opt.id}
@@ -520,6 +561,24 @@ export default function MasterDashboard() {
                     {opt.label}
                   </button>
                 ))}
+                
+                {dateRange === 'custom' && (
+                   <div className="flex items-center gap-2 px-2 border-l border-zinc-200 ml-1">
+                      <input 
+                         type="date" 
+                         className="text-xs border border-zinc-200 rounded px-2 py-1 text-zinc-700 bg-white" 
+                         value={customDates.start}
+                         onChange={(e) => setCustomDates({...customDates, start: e.target.value})}
+                      />
+                      <span className="text-zinc-400 text-xs">to</span>
+                      <input 
+                         type="date" 
+                         className="text-xs border border-zinc-200 rounded px-2 py-1 text-zinc-700 bg-white" 
+                         value={customDates.end}
+                         onChange={(e) => setCustomDates({...customDates, end: e.target.value})}
+                      />
+                   </div>
+                )}
               </div>
             </div>
 
@@ -683,7 +742,7 @@ export default function MasterDashboard() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
               
               {/* Inventory Weight Distribution Bar Chart */}
-              <Card className="col-span-12 lg:col-span-8 flex flex-col">
+              <Card className="col-span-12 lg:col-span-6 flex flex-col">
                 <CardHeader className="pb-0 mb-4">
                   <div className="flex items-center gap-2">
                     <div className="p-2 bg-zinc-100 rounded-md">
@@ -719,7 +778,7 @@ export default function MasterDashboard() {
               </Card>
 
               {/* Payment Methods Pie Chart */}
-              <Card className="col-span-12 lg:col-span-4 flex flex-col">
+              <Card className="col-span-12 lg:col-span-3 flex flex-col">
                 <CardHeader className="pb-0 mb-4">
                   <div className="flex items-center gap-2">
                     <div className="p-2 bg-zinc-100 rounded-md">
@@ -763,6 +822,37 @@ export default function MasterDashboard() {
                 </CardContent>
               </Card>
               
+              <Card className="col-span-12 lg:col-span-3 flex flex-col">
+                <CardHeader className="pb-0 mb-4 border-b border-zinc-100">
+                  <div className="flex items-center gap-2 pb-4">
+                    <div className="p-2 bg-red-50 rounded-md">
+                      <AlertTriangle className="w-4 h-4 text-red-600" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-red-600">Low Stock Alerts</CardTitle>
+                      <p className="text-sm text-zinc-500">Items below threshold (5 count).</p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="flex-1 overflow-y-auto">
+                   <div className="space-y-3">
+                     {kpis && kpis.lowStockAlerts && kpis.lowStockAlerts.length > 0 ? (
+                       kpis.lowStockAlerts.map((alert, idx) => (
+                         <div key={idx} className="flex justify-between items-center p-3 bg-red-50/50 border border-red-100 rounded-lg">
+                           <span className="text-sm font-medium text-red-900">{alert.name}</span>
+                           <span className="text-xs font-bold text-red-700 bg-red-100 px-2 py-1 rounded-full">{alert.count} left</span>
+                         </div>
+                       ))
+                     ) : (
+                       <div className="flex flex-col items-center justify-center h-full text-zinc-400 p-6 text-center space-y-2">
+                          <CheckCircle className="w-8 h-8 text-emerald-500 opacity-50" />
+                          <div className="text-sm">Stock levels are healthy.</div>
+                       </div>
+                     )}
+                   </div>
+                </CardContent>
+              </Card>
+
             </div>
           </>
         )}
