@@ -97,7 +97,7 @@ export default function MasterDashboard() {
   const TARGETS = [
     'inventory', 'custom-orders', 'jewellery-sales', 
     'old-jewellery', 'vault-audit', 'metal-rates', 
-    'customer-profiles', 'transaction-ledger'
+    'customer-profiles', 'transaction-ledger', 'inventory-addition'
   ];
 
   useEffect(() => {
@@ -130,17 +130,51 @@ export default function MasterDashboard() {
   // --- Business Logic & KPI Calculation ---
   const kpis = useMemo(() => {
     let totalSales = 0;
+    let totalCOGS = 0;
     let makingCharges = 0;
     let scrapGoldBought = 0;
-    let savingsDeposits = 0;
+    let netSavings = 0;
     
     // Maps for the unified chart
     const trendMap = {}; 
     const ensureDate = (dateObj) => {
       const key = dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-      if (!trendMap[key]) trendMap[key] = { date: key, sales: 0, makingCharges: 0, scrap: 0, savings: 0, timestamp: dateObj.getTime() };
+      if (!trendMap[key]) trendMap[key] = { date: key, sales: 0, makingCharges: 0, scrap: 0, savings: 0, cogs: 0, timestamp: dateObj.getTime() };
       return key;
     };
+
+    // 0. Process Inventory Additions for COGS
+    const categoryCosts = {};
+    const additionData = datasets['inventory-addition'];
+    if (additionData && Array.isArray(additionData) && additionData.length > 1) {
+      const headers = additionData[0] || [];
+      const catIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('category'));
+      const weightIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('weight'));
+      const priceIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('price'));
+      const makingIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('making'));
+      
+      for (let i = 1; i < additionData.length; i++) {
+        const row = additionData[i];
+        if (!Array.isArray(row)) continue;
+        const category = catIdx > -1 ? String(row[catIdx]) : '';
+        const weight = weightIdx > -1 ? parseFloat(row[weightIdx]) : 0;
+        const price = priceIdx > -1 ? parseFloat(String(row[priceIdx]).replace(/[^0-9.-]+/g,"")) : 0;
+        const making = makingIdx > -1 ? parseFloat(String(row[makingIdx]).replace(/[^0-9.-]+/g,"")) : 0;
+        
+        if (category) {
+          if (!categoryCosts[category]) categoryCosts[category] = { cost: 0, weight: 0 };
+          categoryCosts[category].cost += (isNaN(price) ? 0 : price) + (isNaN(making) ? 0 : making);
+          categoryCosts[category].weight += (isNaN(weight) ? 0 : weight);
+        }
+      }
+    }
+    const getAvgCost = (category) => {
+      const cat = categoryCosts[category];
+      if (!cat || cat.weight <= 0) return 0;
+      return cat.cost / cat.weight;
+    };
+
+    const salesByCategory = {};
 
     // 1. Process Jewellery Sales
     const salesData = datasets['jewellery-sales'];
@@ -149,6 +183,8 @@ export default function MasterDashboard() {
       const dateIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('date'));
       const totalIdx = headers.findIndex(h => h && (String(h).toLowerCase() === 'total' || String(h).toLowerCase() === 'total paid'));
       const labourIdx = headers.findIndex(h => h && (String(h).toLowerCase().includes('labour') || String(h).toLowerCase().includes('making')));
+      const catIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('category'));
+      const weightIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('weight'));
       
       for (let i = 1; i < salesData.length; i++) {
         const row = salesData[i];
@@ -158,17 +194,28 @@ export default function MasterDashboard() {
 
         const saleAmt = totalIdx > -1 ? parseFloat(row[totalIdx]) : 0;
         const labourAmt = labourIdx > -1 ? parseFloat(row[labourIdx]) : 0;
+        const weightAmt = weightIdx > -1 ? parseFloat(row[weightIdx]) : 0;
+        const category = catIdx > -1 ? String(row[catIdx]) : '';
         
         const validSale = isNaN(saleAmt) ? 0 : saleAmt;
         const validLabour = isNaN(labourAmt) ? 0 : labourAmt;
+        const validWeight = isNaN(weightAmt) ? 0 : weightAmt;
 
         totalSales += validSale;
         makingCharges += validLabour;
+        
+        const cogs = validWeight * getAvgCost(category);
+        totalCOGS += cogs;
+
+        if (category) {
+           salesByCategory[category] = (salesByCategory[category] || 0) + validSale;
+        }
 
         if (d) {
           const key = ensureDate(d);
           trendMap[key].sales += validSale;
           trendMap[key].makingCharges += validLabour;
+          trendMap[key].cogs += cogs;
         }
       }
     }
@@ -222,9 +269,7 @@ export default function MasterDashboard() {
       }
     }
 
-    // 4. Process Savings Deposits & Payment Methods
-    let cashCount = 0;
-    let upiCount = 0;
+    // 4. Process Savings Deposits & Withdrawals
     const ledgerData = datasets['transaction-ledger'];
     let recentLedger = [];
     if (ledgerData && Array.isArray(ledgerData) && ledgerData.length > 1) {
@@ -232,14 +277,6 @@ export default function MasterDashboard() {
       const dateIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('timestamp'));
       const typeIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('transaction type'));
       const amtIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('amount'));
-      const paymentIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('cash / upi'));
-      
-      recentLedger = ledgerData.slice(1).reverse().filter(r => Array.isArray(r) && r[0]).slice(0, 5).map(r => ({
-        date: r[dateIdx],
-        acc: r[1],
-        type: r[typeIdx],
-        amt: r[amtIdx]
-      }));
       
       for (let i = 1; i < ledgerData.length; i++) {
         const row = ledgerData[i];
@@ -248,30 +285,29 @@ export default function MasterDashboard() {
         if (d && !isWithinRange(d, dateRange)) continue;
         
         const type = typeIdx > -1 ? String(row[typeIdx] || '').toUpperCase() : '';
-        const paymentMethod = paymentIdx > -1 ? String(row[paymentIdx] || '').toUpperCase() : '';
-        
-        if (paymentMethod.includes('CASH')) cashCount++;
-        else if (paymentMethod.includes('UPI')) upiCount++;
+        const amtStr = amtIdx > -1 ? String(row[amtIdx] || '').replace(/[^0-9.-]+/g,"") : '';
+        const amt = parseFloat(amtStr);
+        const validAmt = isNaN(amt) ? 0 : amt;
 
         if (type.includes('DEPOSIT')) {
-           const amtStr = amtIdx > -1 ? String(row[amtIdx] || '').replace(/[^0-9.-]+/g,"") : '';
-           const amt = parseFloat(amtStr);
-           const validAmt = isNaN(amt) ? 0 : amt;
-           savingsDeposits += validAmt;
-
-           if (d) {
-             const key = ensureDate(d);
-             trendMap[key].savings += validAmt;
-           }
+           netSavings += validAmt;
+           if (d) trendMap[ensureDate(d)].savings += validAmt;
+        } else if (type.includes('WITHDRAWAL')) {
+           netSavings -= validAmt;
+           if (d) trendMap[ensureDate(d)].savings -= validAmt;
         }
       }
     }
 
     const trendData = Object.values(trendMap).sort((a, b) => a.timestamp - b.timestamp);
-    const paymentData = [
-      { name: 'CASH', value: cashCount, color: '#18181b' },
-      { name: 'UPI', value: upiCount, color: '#71717a' }
-    ];
+    
+    // Convert salesByCategory to array for PieChart
+    const COLORS = ['#18181b', '#3f3f46', '#71717a', '#a1a1aa', '#d4d4d8'];
+    const salesCategoryData = Object.keys(salesByCategory).map((key, index) => ({
+      name: key,
+      value: salesByCategory[key],
+      color: COLORS[index % COLORS.length]
+    })).sort((a, b) => b.value - a.value);
 
     // 5. Inventory Chart Data
     const inventoryData = [];
@@ -286,7 +322,7 @@ export default function MasterDashboard() {
       });
     }
 
-    return { totalSales, makingCharges, scrapGoldBought, savingsDeposits, trendData, recentLedger, paymentData, inventoryData };
+    return { totalSales, totalCOGS, makingCharges, scrapGoldBought, netSavings, trendData, salesCategoryData, inventoryData };
   }, [datasets, dateRange]);
 
   // --- Global Search Logic ---
@@ -448,34 +484,34 @@ export default function MasterDashboard() {
 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-zinc-500">Making Charges Earned</CardTitle>
-                    <Activity className="h-4 w-4 text-zinc-500" />
+                    <CardTitle className="text-sm font-medium text-zinc-500">Gross Profit (Est)</CardTitle>
+                    <Activity className="h-4 w-4 text-emerald-600" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold tracking-tight">₹{kpis.makingCharges.toLocaleString()}</div>
-                    <p className="text-xs text-zinc-500 mt-1">Pure profit from labor & craft</p>
+                    <div className="text-3xl font-bold tracking-tight text-emerald-600">₹{(kpis.totalSales - kpis.totalCOGS).toLocaleString()}</div>
+                    <p className="text-xs text-zinc-500 mt-1">Revenue minus Avg Cost of Goods</p>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-zinc-500">Old Scrap Gold Bought</CardTitle>
+                    <CardTitle className="text-sm font-medium text-zinc-500">Total COGS</CardTitle>
                     <RefreshCw className="h-4 w-4 text-zinc-500" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold tracking-tight">₹{kpis.scrapGoldBought.toLocaleString()}</div>
-                    <p className="text-xs text-zinc-500 mt-1">Value of old jewellery purchased</p>
+                    <div className="text-3xl font-bold tracking-tight">₹{kpis.totalCOGS.toLocaleString()}</div>
+                    <p className="text-xs text-zinc-500 mt-1">Value of inventory sold</p>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-zinc-500">Savings Deposits</CardTitle>
+                    <CardTitle className="text-sm font-medium text-zinc-500">Net Savings Position</CardTitle>
                     <Wallet className="h-4 w-4 text-zinc-500" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold tracking-tight">₹{kpis.savingsDeposits.toLocaleString()}</div>
-                    <p className="text-xs text-zinc-500 mt-1">Total customer deposits collected</p>
+                    <div className="text-3xl font-bold tracking-tight">₹{kpis.netSavings.toLocaleString()}</div>
+                    <p className="text-xs text-zinc-500 mt-1">Total deposits minus withdrawals</p>
                   </CardContent>
                 </Card>
               </div>
@@ -495,9 +531,9 @@ export default function MasterDashboard() {
                     <div className="flex items-center gap-1 bg-zinc-50 rounded-lg p-1 border border-zinc-200">
                        {[
                          { id: 'sales', label: 'Sales' },
+                         { id: 'cogs', label: 'COGS' },
                          { id: 'makingCharges', label: 'Making Chg' },
-                         { id: 'scrap', label: 'Scrap' },
-                         { id: 'savings', label: 'Savings' }
+                         { id: 'savings', label: 'Net Savings' }
                        ].map(metric => (
                          <button 
                            key={metric.id}
@@ -540,39 +576,7 @@ export default function MasterDashboard() {
                 </CardContent>
               </Card>
 
-              {/* Passbook / Ledger Activity Widget */}
-              <Card className="col-span-12 lg:col-span-4 flex flex-col">
-                <CardHeader>
-                  <CardTitle>Recent Passbook Activity</CardTitle>
-                  <p className="text-sm text-zinc-500">Latest savings ledger transactions.</p>
-                </CardHeader>
-                <CardContent className="flex-1 flex flex-col justify-between">
-                   <div className="space-y-4">
-                     {kpis && kpis.recentLedger.map((txn, i) => {
-                       const isDeposit = String(txn.type).toUpperCase().includes('DEPOSIT');
-                       return (
-                         <div key={i} className="flex items-center justify-between border-b border-zinc-100 pb-3 last:border-0 last:pb-0">
-                           <div>
-                             <div className="font-medium text-zinc-900">{String(txn.acc)}</div>
-                             <div className="text-[10px] text-zinc-500 uppercase tracking-wider">{parseDate(txn.date)?.toLocaleDateString('en-GB') || txn.date}</div>
-                           </div>
-                           <div className="text-right">
-                             <div className={`font-bold text-sm ${isDeposit ? 'text-emerald-600' : 'text-zinc-900'}`}>
-                               {isDeposit ? '+' : ''}{String(txn.amt)}
-                             </div>
-                             <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${isDeposit ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
-                               {String(txn.type)}
-                             </span>
-                           </div>
-                         </div>
-                       )
-                     })}
-                     {(!kpis || kpis.recentLedger.length === 0) && (
-                       <div className="text-sm text-zinc-500 text-center py-4">No recent activity.</div>
-                     )}
-                   </div>
-                </CardContent>
-              </Card>
+
             </div>
 
             {/* Bottom Charts Row */}
@@ -622,18 +626,18 @@ export default function MasterDashboard() {
                       <PieChartIcon className="w-4 h-4 text-zinc-900" />
                     </div>
                     <div>
-                      <CardTitle>Payment Methods</CardTitle>
-                      <p className="text-sm text-zinc-500">Cash vs UPI distribution.</p>
+                      <CardTitle>Sales by Category</CardTitle>
+                      <p className="text-sm text-zinc-500">Revenue distribution.</p>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="flex-1">
                    <div className="h-[280px] w-full">
-                     {kpis && kpis.paymentData.some(d => d.value > 0) ? (
+                     {kpis && kpis.salesCategoryData.length > 0 ? (
                        <ResponsiveContainer width="100%" height="100%">
                          <PieChart>
                            <Pie
-                             data={kpis.paymentData}
+                             data={kpis.salesCategoryData}
                              cx="50%"
                              cy="50%"
                              innerRadius={60}
@@ -641,19 +645,19 @@ export default function MasterDashboard() {
                              paddingAngle={5}
                              dataKey="value"
                            >
-                             {kpis.paymentData.map((entry, index) => (
+                             {kpis.salesCategoryData.map((entry, index) => (
                                <Cell key={`cell-${index}`} fill={entry.color} />
                              ))}
                            </Pie>
                            <Tooltip 
                              contentStyle={{ borderRadius: '8px', border: '1px solid #e4e4e7', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                             formatter={(value) => [value, 'Transactions']}
+                             formatter={(value) => [`₹${value.toLocaleString()}`, 'Revenue']}
                            />
                            <Legend verticalAlign="bottom" height={36} iconType="circle" />
                          </PieChart>
                        </ResponsiveContainer>
                      ) : (
-                       <div className="flex h-full items-center justify-center text-zinc-400 text-sm">No payment data in this range.</div>
+                       <div className="flex h-full items-center justify-center text-zinc-400 text-sm">No sales data in this range.</div>
                      )}
                    </div>
                 </CardContent>
