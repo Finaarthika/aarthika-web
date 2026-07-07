@@ -183,8 +183,16 @@ export default function MasterDashboard() {
       const dateIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('date'));
       const totalIdx = headers.findIndex(h => h && (String(h).toLowerCase() === 'total' || String(h).toLowerCase() === 'total paid'));
       const labourIdx = headers.findIndex(h => h && (String(h).toLowerCase().includes('labour') || String(h).toLowerCase().includes('making')));
-      const catIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('category'));
-      const weightIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('weight'));
+      
+      // Find all ITEM type and weight indices (up to 6 items based on spreadsheet structure)
+      const itemIndices = [];
+      for (let j = 1; j <= 6; j++) {
+        const tIdx = headers.findIndex(h => h && String(h).toLowerCase().includes(`item ${j}`) && String(h).toLowerCase().includes('type'));
+        const wIdx = headers.findIndex(h => h && String(h).toLowerCase().includes(`item ${j}`) && (String(h).toLowerCase().includes('wt') || String(h).toLowerCase().includes('weight')));
+        if (tIdx > -1 && wIdx > -1) {
+           itemIndices.push({ tIdx, wIdx });
+        }
+      }
       
       for (let i = 1; i < salesData.length; i++) {
         const row = salesData[i];
@@ -194,21 +202,37 @@ export default function MasterDashboard() {
 
         const saleAmt = totalIdx > -1 ? parseFloat(row[totalIdx]) : 0;
         const labourAmt = labourIdx > -1 ? parseFloat(row[labourIdx]) : 0;
-        const weightAmt = weightIdx > -1 ? parseFloat(row[weightIdx]) : 0;
-        const category = catIdx > -1 ? String(row[catIdx]) : '';
         
         const validSale = isNaN(saleAmt) ? 0 : saleAmt;
         const validLabour = isNaN(labourAmt) ? 0 : labourAmt;
-        const validWeight = isNaN(weightAmt) ? 0 : weightAmt;
 
         totalSales += validSale;
         makingCharges += validLabour;
         
-        const cogs = validWeight * getAvgCost(category);
+        let cogs = 0;
+        let validItemsFound = 0;
+
+        for (const { tIdx, wIdx } of itemIndices) {
+           const category = String(row[tIdx] || '').trim();
+           const wStr = String(row[wIdx] || '').replace(/[^0-9.-]+/g,"");
+           const weight = parseFloat(wStr);
+           if (category && !isNaN(weight) && weight > 0) {
+              cogs += weight * getAvgCost(category);
+              validItemsFound++;
+           }
+        }
+        
         totalCOGS += cogs;
 
-        if (category) {
-           salesByCategory[category] = (salesByCategory[category] || 0) + validSale;
+        // Roughly split revenue across items for the pie chart
+        if (validItemsFound > 0) {
+           for (const { tIdx, wIdx } of itemIndices) {
+               const category = String(row[tIdx] || '').trim();
+               const weight = parseFloat(String(row[wIdx] || '').replace(/[^0-9.-]+/g,""));
+               if (category && !isNaN(weight) && weight > 0) {
+                  salesByCategory[category] = (salesByCategory[category] || 0) + (validSale / validItemsFound);
+               }
+           }
         }
 
         if (d) {
@@ -309,7 +333,34 @@ export default function MasterDashboard() {
       color: COLORS[index % COLORS.length]
     })).sort((a, b) => b.value - a.value);
 
-    // 5. Inventory Chart Data
+    // 5. Process Audit Logs
+    let auditMatches = 0;
+    let auditAlerts = 0;
+    let lastAuditDate = null;
+    const auditData = datasets['vault-audit'];
+    if (auditData && Array.isArray(auditData) && auditData.length > 1) {
+       const headers = auditData[0] || [];
+       const statusIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('status'));
+       const dateIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('date'));
+       
+       for (let i = 1; i < auditData.length; i++) {
+         const row = auditData[i];
+         if (!Array.isArray(row)) continue;
+         const d = parseDate(dateIdx > -1 ? row[dateIdx] : null);
+         if (d && !isWithinRange(d, dateRange)) continue;
+
+         const status = statusIdx > -1 ? String(row[statusIdx]).toLowerCase() : '';
+         if (status.includes('match') || status.includes('pass')) auditMatches++;
+         else if (status.includes('alert') || status.includes('mismatch') || status.includes('fail')) auditAlerts++;
+         
+         if (d && (!lastAuditDate || d > lastAuditDate)) {
+            lastAuditDate = d;
+         }
+       }
+    }
+    const auditPassRate = (auditMatches + auditAlerts > 0) ? Math.round((auditMatches / (auditMatches + auditAlerts)) * 100) : 0;
+
+    // 6. Inventory Chart Data
     const inventoryData = [];
     if (datasets['inventory'] && Array.isArray(datasets['inventory']) && datasets['inventory'].length > 1) {
       datasets['inventory'].slice(1).forEach(row => {
@@ -317,12 +368,18 @@ export default function MasterDashboard() {
         const category = row[0];
         const weight = parseFloat(row[10] || 0);
         if (category && !isNaN(weight) && weight > 0) {
-          inventoryData.push({ name: String(category), weight });
+          const avgCost = getAvgCost(category);
+          const capitalLocked = weight * avgCost;
+          inventoryData.push({ name: String(category), weight, capitalLocked });
         }
       });
     }
 
-    return { totalSales, totalCOGS, makingCharges, scrapGoldBought, netSavings, trendData, salesCategoryData, inventoryData };
+    return { 
+      totalSales, totalCOGS, makingCharges, scrapGoldBought, netSavings, 
+      trendData, salesCategoryData, inventoryData,
+      auditPassRate, auditAlerts, lastAuditDate
+    };
   }, [datasets, dateRange]);
 
   // --- Global Search Logic ---
@@ -576,6 +633,35 @@ export default function MasterDashboard() {
                 </CardContent>
               </Card>
 
+              {/* Audit Compliance Widget */}
+              <Card className="col-span-12 lg:col-span-4 flex flex-col">
+                <CardHeader>
+                  <CardTitle>Vault Audit Compliance</CardTitle>
+                  <p className="text-sm text-zinc-500">Security & reconciliation status.</p>
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col justify-center">
+                   <div className="space-y-6">
+                     <div className="text-center">
+                        <div className="text-4xl font-bold tracking-tight text-zinc-900">{kpis?.auditPassRate || 0}%</div>
+                        <div className="text-xs text-zinc-500 uppercase tracking-wider mt-1">Match Rate</div>
+                     </div>
+                     <div className="flex items-center justify-between border-t border-zinc-100 pt-4">
+                        <div>
+                           <div className="text-xs text-zinc-500 uppercase tracking-wider">Active Alerts</div>
+                           <div className={`text-lg font-bold ${kpis?.auditAlerts > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                             {kpis?.auditAlerts || 0}
+                           </div>
+                        </div>
+                        <div className="text-right">
+                           <div className="text-xs text-zinc-500 uppercase tracking-wider">Last Audit</div>
+                           <div className="text-sm font-medium text-zinc-900">
+                             {kpis?.lastAuditDate ? kpis.lastAuditDate.toLocaleDateString('en-GB') : 'Never'}
+                           </div>
+                        </div>
+                     </div>
+                   </div>
+                </CardContent>
+              </Card>
 
             </div>
 
@@ -590,8 +676,8 @@ export default function MasterDashboard() {
                       <BarChart3 className="w-4 h-4 text-zinc-900" />
                     </div>
                     <div>
-                      <CardTitle>Inventory Weight Distribution</CardTitle>
-                      <p className="text-sm text-zinc-500">Total weight (g) mapped across all categories.</p>
+                      <CardTitle>Capital Locked in Inventory</CardTitle>
+                      <p className="text-sm text-zinc-500">Estimated value of current stock (Cost Basis).</p>
                     </div>
                   </div>
                 </CardHeader>
@@ -602,13 +688,13 @@ export default function MasterDashboard() {
                          <BarChart data={kpis.inventoryData} margin={{ top: 20, right: 20, left: -20, bottom: 20 }}>
                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e4e7" />
                            <XAxis dataKey="name" stroke="#71717a" fontSize={12} tickLine={false} axisLine={false} />
-                           <YAxis stroke="#71717a" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `${val}g`} />
+                           <YAxis stroke="#71717a" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `₹${(val/1000).toFixed(0)}k`} />
                            <Tooltip 
                              cursor={{ fill: '#f4f4f5' }}
                              contentStyle={{ borderRadius: '8px', border: '1px solid #e4e4e7', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                             formatter={(value) => [`${value} g`, 'Weight']}
+                             formatter={(value, name) => [name === 'capitalLocked' ? `₹${value.toLocaleString(undefined, {maximumFractionDigits: 0})}` : `${value} g`, name === 'capitalLocked' ? 'Value' : 'Weight']}
                            />
-                           <Bar dataKey="weight" fill="#18181b" radius={[4, 4, 0, 0]} barSize={40} />
+                           <Bar dataKey="capitalLocked" fill="#18181b" radius={[4, 4, 0, 0]} barSize={40} />
                          </BarChart>
                        </ResponsiveContainer>
                      ) : (
