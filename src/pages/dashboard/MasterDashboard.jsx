@@ -182,7 +182,7 @@ export default function MasterDashboard() {
       for (let i = 1; i < additionData.length; i++) {
         const row = additionData[i];
         if (!Array.isArray(row)) continue;
-        const category = catIdx > -1 ? String(row[catIdx]) : '';
+        const category = catIdx > -1 ? String(row[catIdx]).trim().toUpperCase() : '';
         const weight = weightIdx > -1 ? parseFloat(row[weightIdx]) : 0;
         const price = priceIdx > -1 ? parseFloat(String(row[priceIdx]).replace(/[^0-9.-]+/g,"")) : 0;
         const making = makingIdx > -1 ? parseFloat(String(row[makingIdx]).replace(/[^0-9.-]+/g,"")) : 0;
@@ -195,7 +195,7 @@ export default function MasterDashboard() {
       }
     }
     const getAvgCost = (category) => {
-      const cat = categoryCosts[category];
+      const cat = categoryCosts[String(category || '').trim().toUpperCase()];
       if (!cat || cat.weight <= 0) return 0;
       return cat.cost / cat.weight;
     };
@@ -253,9 +253,10 @@ export default function MasterDashboard() {
         // Roughly split revenue across items for the pie chart
         if (validItemsFound > 0) {
            for (const { tIdx, wIdx } of itemIndices) {
-               const category = String(row[tIdx] || '').trim();
+               const categoryRaw = String(row[tIdx] || '').trim();
                const weight = parseFloat(String(row[wIdx] || '').replace(/[^0-9.-]+/g,""));
-               if (category && !isNaN(weight) && weight > 0) {
+               if (categoryRaw && !isNaN(weight) && weight > 0) {
+                  const category = categoryRaw.toUpperCase();
                   salesByCategory[category] = (salesByCategory[category] || 0) + (validSale / validItemsFound);
                }
            }
@@ -351,13 +352,24 @@ export default function MasterDashboard() {
 
     const trendData = Object.values(trendMap).sort((a, b) => a.timestamp - b.timestamp);
     
-    // Convert salesByCategory to array for PieChart
+    // --- Post-process Maps to Arrays ---
     const COLORS = ['#18181b', '#3f3f46', '#71717a', '#a1a1aa', '#d4d4d8'];
-    const salesCategoryData = Object.keys(salesByCategory).map((key, index) => ({
-      name: key,
-      value: salesByCategory[key],
+    
+    let salesCategoryData = Object.entries(salesByCategory).map(([name, value]) => {
+      const formatName = name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+      return { name: formatName, value };
+    }).sort((a, b) => b.value - a.value);
+
+    // Limit Pie Chart to Top 5 + Others
+    if (salesCategoryData.length > 5) {
+       const top5 = salesCategoryData.slice(0, 5);
+       const othersValue = salesCategoryData.slice(5).reduce((acc, curr) => acc + curr.value, 0);
+       salesCategoryData = [...top5, { name: 'Others', value: othersValue }];
+    }
+    salesCategoryData = salesCategoryData.map((item, index) => ({
+      ...item,
       color: COLORS[index % COLORS.length]
-    })).sort((a, b) => b.value - a.value);
+    }));
 
     // 5. Process Audit Logs
     let auditMatches = 0;
@@ -409,7 +421,8 @@ export default function MasterDashboard() {
         if (category && !isNaN(weight) && weight > 0) {
           const avgCost = getAvgCost(category);
           const capitalLocked = weight * avgCost;
-          inventoryData.push({ name: String(category), weight, capitalLocked });
+          const formatName = category.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+          inventoryData.push({ name: formatName, weight, capitalLocked });
         }
       });
       lowStockAlerts.sort((a,b) => a.count - b.count);
@@ -812,7 +825,11 @@ export default function MasterDashboard() {
                              contentStyle={{ borderRadius: '8px', border: '1px solid #e4e4e7', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                              formatter={(value) => [`₹${value.toLocaleString()}`, 'Revenue']}
                            />
-                           <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                           <Legend 
+                             verticalAlign="bottom" 
+                             iconType="circle" 
+                             wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} 
+                           />
                          </PieChart>
                        </ResponsiveContainer>
                      ) : (
