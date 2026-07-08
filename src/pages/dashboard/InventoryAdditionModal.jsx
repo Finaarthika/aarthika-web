@@ -84,8 +84,10 @@ const InventoryAdditionModal = ({ isOpen, onClose, inventoryData, onSuccess }) =
       const payload = {
         ...formData,
         dateAdded: getTodayDate(),
-        pricePaid: `₹${Number(formData.pricePaid).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-        makingCharge: formData.makingCharge ? `₹${Number(formData.makingCharge).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '₹0.00'
+        addedCount: Number(formData.addedCount),
+        addedWeight: Number(formData.addedWeight),
+        pricePaid: Number(formData.pricePaid),
+        makingCharge: formData.makingCharge ? Number(formData.makingCharge) : 0
       };
 
       const response = await fetch(`${FIREBASE_API_URL}/add-inventory`, {
