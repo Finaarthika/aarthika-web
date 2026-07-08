@@ -6,7 +6,7 @@ import {
 import { 
   LayoutDashboard, Search, Activity, 
   DollarSign, TrendingUp, Wallet, RefreshCw,
-  PieChart as PieChartIcon, BarChart3, AlertTriangle, CheckCircle, PackagePlus
+  PieChart as PieChartIcon, BarChart3, AlertTriangle, CheckCircle, PackagePlus, LogOut
 } from 'lucide-react';
 import InventoryAdditionModal from './InventoryAdditionModal';
 
@@ -82,6 +82,12 @@ export default function MasterDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAdditionModalOpen, setIsAdditionModalOpen] = useState(false);
   
+  // Auth State
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState('');
+  const [loginForm, setLoginForm] = useState({ userId: '', password: '' });
+
   const [activeChart, setActiveChart] = useState('sales');
 
   const TARGETS = [
@@ -116,8 +122,64 @@ export default function MasterDashboard() {
   }, [customDates]);
 
   useEffect(() => {
+    const saved = localStorage.getItem('aarthika_staff_auth');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.loggedIn && parsed.adminDashboardAccess?.toLowerCase() === 'access') {
+          setIsAuthenticated(true);
+        }
+      } catch (e) {}
+    }
     fetchData();
   }, []);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError('');
+    try {
+      let deviceId = localStorage.getItem('aarthika_device_id');
+      if (!deviceId) {
+        deviceId = 'dev_' + Math.random().toString(36).substring(2, 15);
+        localStorage.setItem('aarthika_device_id', deviceId);
+      }
+
+      const res = await fetch('/api/passbook-auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: loginForm.userId, password: loginForm.password, action: 'login', deviceId })
+      });
+      const data = await res.json();
+      if (res.ok && data.authorized) {
+        if (data.adminDashboardAccess && data.adminDashboardAccess.toLowerCase() !== 'access') {
+           setAuthError('Access Denied: Admin Dashboard Access is Revoked for this Staff ID.');
+           return;
+        }
+
+        const newAuth = {
+          loggedIn: true,
+          userId: loginForm.userId,
+          password: loginForm.password,
+          staffName: data.staffName,
+          adminDashboardAccess: data.adminDashboardAccess
+        };
+        localStorage.setItem('aarthika_staff_auth', JSON.stringify(newAuth));
+        setIsAuthenticated(true);
+      } else {
+        setAuthError(data.error || data.reason || 'Invalid credentials or unauthorized device.');
+      }
+    } catch (err) {
+      setAuthError('Network error connecting to Auth Server.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('aarthika_staff_auth');
+    setIsAuthenticated(false);
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -468,6 +530,40 @@ export default function MasterDashboard() {
 
 
   // --- Render ---
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#05050A] flex flex-col items-center justify-center font-inter relative overflow-hidden p-4">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[150px] pointer-events-none" />
+        
+        <div className="relative z-10 bg-white/5 backdrop-blur-xl border border-white/10 p-8 sm:p-12 rounded-[2rem] shadow-2xl w-full max-w-md group overflow-hidden">
+          <div className="absolute -right-4 -top-4 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all duration-500"></div>
+          <div className="flex flex-col items-center mb-10 relative z-10">
+            <div className="w-16 h-16 bg-gradient-to-br from-emerald-500/20 to-teal-600/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.15)] mb-6">
+              <LayoutDashboard className="w-8 h-8 text-emerald-400" />
+            </div>
+            <h1 className="text-2xl font-black text-white tracking-tight mb-2 text-center">Master Dashboard</h1>
+            <div className="text-emerald-500/80 tracking-[0.2em] text-[10px] font-bold uppercase text-center">Admin Access Required</div>
+          </div>
+          <form onSubmit={handleLogin} className="space-y-6 relative z-10">
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Officer ID</label>
+              <input type="text" className="w-full bg-white/5 border border-white/10 text-white placeholder-gray-500 px-5 py-3.5 rounded-xl focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-medium text-sm" value={loginForm.userId} onChange={e => setLoginForm({...loginForm, userId: e.target.value})} placeholder="Enter ID" required />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Vault Key</label>
+              <input type="password" className="w-full bg-white/5 border border-white/10 text-white placeholder-gray-500 px-5 py-3.5 rounded-xl focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-medium text-sm" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} placeholder="••••••••" required />
+            </div>
+            {authError && <div className="text-red-400 text-xs font-semibold bg-red-400/10 p-3 rounded-lg border border-red-400/20 text-center">{authError}</div>}
+            <button type="submit" disabled={authLoading} className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black py-3.5 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all uppercase tracking-wider text-[11px] mt-4">
+              {authLoading ? 'VERIFYING...' : 'AUTHORIZE ACCESS'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   if (loading && Object.keys(datasets).length === 0) {
     return (
       <div className="min-h-screen bg-[#f4f4f5] flex items-center justify-center">
@@ -484,21 +580,31 @@ export default function MasterDashboard() {
       
       {/* Top Header */}
       <div className="bg-white border-b border-zinc-200 sticky top-0 z-30 shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 px-6 max-w-[1600px] mx-auto gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-zinc-900 rounded-lg flex items-center justify-center shadow-sm">
-              <LayoutDashboard className="w-4 h-4 text-white" />
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 p-4 px-6 max-w-[1600px] mx-auto">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-zinc-900 rounded-xl shadow-sm">
+              <LayoutDashboard className="w-6 h-6 text-white" />
             </div>
             <h1 className="text-xl font-bold tracking-tight text-zinc-900">Aarthika Command Center</h1>
           </div>
 
-          <button 
-            onClick={() => setIsAdditionModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-all shadow-sm"
-          >
-            <PackagePlus className="w-4 h-4" />
-            Add Stock
-          </button>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setIsAdditionModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-all shadow-sm"
+            >
+              <PackagePlus className="w-4 h-4" />
+              Add Stock
+            </button>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-sm font-medium rounded-lg transition-all shadow-sm"
+              title="Secure Logout"
+            >
+              <LogOut className="w-4 h-4" />
+              Logout
+            </button>
+          </div>
           
           {/* Global Search Bar */}
           <div className="w-full sm:w-[400px]">

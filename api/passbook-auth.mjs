@@ -47,7 +47,7 @@ export default async (req, res) => {
     const accessToken = tokenData.access_token;
 
     const sheetId = '1Vu4mOrQhee8mw-kmhrTsSrjS3IeJuY2Zjb04DpwDKt8';
-    const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/StaffAccess!B3:I100`;
+    const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/StaffAccess!B3:K100`;
 
     const sheetResponse = await fetch(sheetsUrl, {
       headers: {
@@ -81,7 +81,7 @@ export default async (req, res) => {
     }
 
     // Find user in the sheet
-    // B=0 (ID), C=1 (Name), D=2 (Password), E=3, F=4, G=5, H=6 (Access), I=7 (Device ID)
+    // B=0 (ID), C=1 (Name), D=2 (Password), E=3 (OverallAccess), F=4, G=5, H=6 (Passbook), I=7 (DeviceID), J=8 (JewelleryPOS), K=9 (AdminDashboard)
     let foundUser = null;
     let rowIndex = -1;
 
@@ -97,7 +97,10 @@ export default async (req, res) => {
             foundUser = {
                 userId: id,
                 staffName: row[1] ? String(row[1]).trim() : '',
-                accessStatus: row[6] ? String(row[6]).trim() : '',
+                overallAccess: row[3] ? String(row[3]).trim() : '',
+                passbookAccess: row[6] ? String(row[6]).trim() : '',
+                jewelleryPosAccess: row[8] ? String(row[8]).trim() : '',
+                adminDashboardAccess: row[9] ? String(row[9]).trim() : '',
                 boundDeviceId: row[7] ? String(row[7]).trim() : ''
             };
             rowIndex = i + 3; // +3 because range starts at B3
@@ -109,8 +112,8 @@ export default async (req, res) => {
         return res.status(401).json({ authorized: false, reason: 'Invalid credentials' });
     }
 
-    if (foundUser.accessStatus.toLowerCase() !== 'access') {
-        return res.status(403).json({ authorized: false, reason: 'Access Revoked' });
+    if (foundUser.overallAccess.toLowerCase() !== 'access') {
+        return res.status(403).json({ authorized: false, reason: 'System Access Completely Revoked' });
     }
 
     // Hardware Binding Check
@@ -150,7 +153,10 @@ export default async (req, res) => {
     return res.status(200).json({ 
         authorized: true, 
         staffName: foundUser.staffName,
-        userId: foundUser.userId
+        userId: foundUser.userId,
+        passbookAccess: foundUser.passbookAccess,
+        jewelleryPosAccess: foundUser.jewelleryPosAccess,
+        adminDashboardAccess: foundUser.adminDashboardAccess
     });
 
   } catch (err) {

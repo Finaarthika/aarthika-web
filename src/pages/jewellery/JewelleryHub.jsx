@@ -66,6 +66,11 @@ export default function JewelleryHub() {
         setOfficerAuth({ loggedIn: false, userId: '', password: '', staffName: '' });
         return false;
       }
+      if (data.jewelleryPosAccess && data.jewelleryPosAccess.toLowerCase() !== 'access') {
+        localStorage.removeItem('aarthika_staff_auth');
+        setOfficerAuth({ loggedIn: false, userId: '', password: '', staffName: '' });
+        return false;
+      }
       return true;
     } catch (err) {
       return true;
@@ -91,6 +96,11 @@ export default function JewelleryHub() {
       });
       const data = await res.json();
       if (res.ok && data.authorized) {
+        if (data.jewelleryPosAccess && data.jewelleryPosAccess.toLowerCase() !== 'access') {
+           setAuthError('Access Denied: Jewellery POS Access is Revoked for this Staff ID.');
+           return;
+        }
+
         const newAuth = {
           loggedIn: true,
           userId: loginForm.userId,
