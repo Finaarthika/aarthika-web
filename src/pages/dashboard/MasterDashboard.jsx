@@ -172,13 +172,21 @@ export default function MasterDashboard() {
     // 0. Process Inventory Additions for COGS
     const categoryCosts = {};
     const additionData = datasets['inventory-addition'];
-    if (additionData && Array.isArray(additionData) && additionData.length > 1) {
+    let additionStatus = { found: false, missingColumns: [] };
+    
+    if (additionData && Array.isArray(additionData) && additionData.length > 0) {
+      additionStatus.found = true;
       const headers = additionData[0] || [];
       const catIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('category'));
       const weightIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('weight'));
-      const priceIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('price'));
-      const makingIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('making'));
+      const priceIdx = headers.findIndex(h => h && (String(h).toLowerCase().includes('price') || String(h).toLowerCase().includes('cost')));
+      const makingIdx = headers.findIndex(h => h && (String(h).toLowerCase().includes('making') || String(h).toLowerCase().includes('labour')));
       
+      if (catIdx === -1) additionStatus.missingColumns.push('Category');
+      if (weightIdx === -1) additionStatus.missingColumns.push('Weight');
+      if (priceIdx === -1) additionStatus.missingColumns.push('Price');
+      if (makingIdx === -1) additionStatus.missingColumns.push('Making');
+
       for (let i = 1; i < additionData.length; i++) {
         const row = additionData[i];
         if (!Array.isArray(row)) continue;
@@ -431,7 +439,7 @@ export default function MasterDashboard() {
     return { 
       totalSales, totalCOGS, makingCharges, scrapGoldBought, netSavings, 
       trendData, salesCategoryData, inventoryData,
-      auditPassRate, auditAlerts, lastAuditDate, lowStockAlerts
+      auditPassRate, auditAlerts, lastAuditDate, lowStockAlerts, additionStatus
     };
   }, [datasets, dateRange, isWithinRange]);
 
@@ -496,6 +504,26 @@ export default function MasterDashboard() {
             <h1 className="text-xl font-bold tracking-tight text-zinc-900">Aarthika Command Center</h1>
           </div>
           
+          {kpis && !kpis.additionStatus.found && (
+           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-start gap-3">
+             <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+             <div>
+               <h4 className="font-semibold text-sm">Missing 'INVENTORY_ADDITION' Tab</h4>
+               <p className="text-sm mt-1">The dashboard cannot calculate COGS or Capital Locked because the <b>INVENTORY_ADDITION</b> tab was not found. Please create it in your database spreadsheet exactly as named.</p>
+             </div>
+           </div>
+        )}
+        
+        {kpis && kpis.additionStatus.found && kpis.additionStatus.missingColumns.length > 0 && (
+           <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-lg flex items-start gap-3">
+             <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+             <div>
+               <h4 className="font-semibold text-sm">Missing Columns in Inventory Addition</h4>
+               <p className="text-sm mt-1">COGS and Capital Locked may be ₹0 because the following required columns are missing in row 1: <b>{kpis.additionStatus.missingColumns.join(', ')}</b>. (Make sure you have columns like 'Price Paid' and 'Making Charge Paid').</p>
+             </div>
+           </div>
+        )}
+
           {/* Global Search Bar */}
           <div className="w-full sm:w-[400px]">
              <Input 
