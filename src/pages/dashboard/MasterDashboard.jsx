@@ -6,8 +6,9 @@ import {
 import { 
   LayoutDashboard, Search, Activity, 
   DollarSign, TrendingUp, Wallet, RefreshCw,
-  PieChart as PieChartIcon, BarChart3, AlertTriangle, CheckCircle
+  PieChart as PieChartIcon, BarChart3, AlertTriangle, CheckCircle, PackagePlus
 } from 'lucide-react';
+import InventoryAdditionModal from './InventoryAdditionModal';
 
 const FIREBASE_API_URL = 'https://us-central1-aarthika-backend.cloudfunctions.net/masterApi';
 
@@ -73,25 +74,13 @@ const parseDate = (dateStr) => {
   return isNaN(fallback.getTime()) ? null : fallback;
 };
 
-const isWithinRange = (date, range) => {
-  if (!date) return true; 
-  const now = new Date();
-  const diffTime = Math.abs(now - date);
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-  if (range === 'today') return diffDays <= 1;
-  if (range === '7d') return diffDays <= 7;
-  if (range === '30d') return diffDays <= 30;
-  if (range === '90d') return diffDays <= 90;
-  return true; 
-};
-
 export default function MasterDashboard() {
   const [datasets, setDatasets] = useState({});
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState('30d');
   const [customDates, setCustomDates] = useState({ start: '', end: '' });
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAdditionModalOpen, setIsAdditionModalOpen] = useState(false);
   
   const [activeChart, setActiveChart] = useState('sales');
 
@@ -127,10 +116,10 @@ export default function MasterDashboard() {
   }, [customDates]);
 
   useEffect(() => {
-    fetchAllData();
+    fetchData();
   }, []);
 
-  const fetchAllData = async () => {
+  const fetchData = async () => {
     setLoading(true);
     try {
       const results = {};
@@ -330,7 +319,6 @@ export default function MasterDashboard() {
 
     // 4. Process Savings Deposits & Withdrawals
     const ledgerData = datasets['transaction-ledger'];
-    let recentLedger = [];
     if (ledgerData && Array.isArray(ledgerData) && ledgerData.length > 1) {
       const headers = ledgerData[0] || [];
       const dateIdx = headers.findIndex(h => h && String(h).toLowerCase().includes('timestamp'));
@@ -480,7 +468,7 @@ export default function MasterDashboard() {
 
 
   // --- Render ---
-  if (loading) {
+  if (loading && Object.keys(datasets).length === 0) {
     return (
       <div className="min-h-screen bg-[#f4f4f5] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4 text-zinc-500">
@@ -503,27 +491,15 @@ export default function MasterDashboard() {
             </div>
             <h1 className="text-xl font-bold tracking-tight text-zinc-900">Aarthika Command Center</h1>
           </div>
-          
-          {kpis && !kpis.additionStatus.found && (
-           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-start gap-3">
-             <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0" />
-             <div>
-               <h4 className="font-semibold text-sm">Missing 'INVENTORY_ADDITION' Tab</h4>
-               <p className="text-sm mt-1">The dashboard cannot calculate COGS or Capital Locked because the <b>INVENTORY_ADDITION</b> tab was not found. Please create it in your database spreadsheet exactly as named.</p>
-             </div>
-           </div>
-        )}
-        
-        {kpis && kpis.additionStatus.found && kpis.additionStatus.missingColumns.length > 0 && (
-           <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-lg flex items-start gap-3">
-             <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0" />
-             <div>
-               <h4 className="font-semibold text-sm">Missing Columns in Inventory Addition</h4>
-               <p className="text-sm mt-1">COGS and Capital Locked may be ₹0 because the following required columns are missing in row 1: <b>{kpis.additionStatus.missingColumns.join(', ')}</b>. (Make sure you have columns like 'Price Paid' and 'Making Charge Paid').</p>
-             </div>
-           </div>
-        )}
 
+          <button 
+            onClick={() => setIsAdditionModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-all shadow-sm"
+          >
+            <PackagePlus className="w-4 h-4" />
+            Add Stock
+          </button>
+          
           {/* Global Search Bar */}
           <div className="w-full sm:w-[400px]">
              <Input 
@@ -577,6 +553,16 @@ export default function MasterDashboard() {
         ) : (
           /* Normal Dashboard View */
           <>
+            {kpis && !kpis.additionStatus.found && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h4 className="font-semibold text-sm">Missing 'INVENTORY_ADDITION' Tab</h4>
+                  <p className="text-sm mt-1">The dashboard cannot calculate COGS or Capital Locked because the <b>INVENTORY_ADDITION</b> tab was not found. Please create it in your database spreadsheet exactly as named.</p>
+                </div>
+              </div>
+            )}
+            
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
               <div>
                 <h2 className="text-3xl font-bold tracking-tight">Business Overview</h2>
@@ -902,6 +888,14 @@ export default function MasterDashboard() {
           </>
         )}
       </main>
+
+      {/* Inventory Addition Modal */}
+      <InventoryAdditionModal 
+        isOpen={isAdditionModalOpen} 
+        onClose={() => setIsAdditionModalOpen(false)} 
+        inventoryData={kpis?.inventoryData}
+        onSuccess={fetchData}
+      />
 
     </div>
   );

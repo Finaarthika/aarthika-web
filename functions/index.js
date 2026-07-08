@@ -105,7 +105,10 @@ app.get('/read', async (req, res) => {
 // 2. Add/Update Inventory Endpoint
 app.post('/add-inventory', async (req, res) => {
     try {
-        const { category, addedCount, addedWeight } = req.body;
+        const { 
+            category, metalType, purity, dateAdded, addedCount, addedWeight, 
+            pricePaid, makingCharge, addedBy, verifiedBy, sourcedFrom 
+        } = req.body;
         const accessToken = await getAccessToken();
 
         // 1. Fetch current inventory to find the row
@@ -156,6 +159,24 @@ app.post('/add-inventory', async (req, res) => {
         });
 
         if (!updateRes.ok) throw new Error(await updateRes.text());
+
+        // 3. Append to INVENTORY_ADDITION
+        const appendUrl = `https://sheets.googleapis.com/v4/spreadsheets/${DB_SHEET_ID}/values/INVENTORY_ADDITION!A:K:append?valueInputOption=USER_ENTERED`;
+        const appendRes = await fetch(appendUrl, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                values: [[
+                    category, metalType, purity, dateAdded, addedCount, addedWeight, 
+                    pricePaid, makingCharge, addedBy, verifiedBy, sourcedFrom
+                ]]
+            })
+        });
+
+        if (!appendRes.ok) throw new Error("Failed to append to INVENTORY_ADDITION: " + await appendRes.text());
         
         return res.status(200).json({ success: true, message: 'Inventory updated successfully!' });
     } catch (error) {
