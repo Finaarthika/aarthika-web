@@ -72,17 +72,17 @@ export default function OldJewelleryPrint({ dataProp, silentMode = false }) {
         @import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700;800&display=swap');
         
         @media print {
-          @page { size: A4 landscape; margin: 0; }
-          html, body { margin: 0 !important; padding: 0 !important; }
+          @page { size: A4 landscape; margin: 10mm; }
+          html, body { margin: 0 !important; padding: 0 !important; width: 100%; }
           ::-webkit-scrollbar { display: none !important; }
           body * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
           .no-print { display: none !important; }
           body, html { background: white !important; }
           .print-container {
-            margin: 0 !important; padding: 0 !important;
+            margin: 0 auto !important; 
+            padding: 0 !important;
             box-shadow: none !important; 
-            transform: scale(1.05);
-            transform-origin: top left;
+            transform: none !important;
             page-break-after: always !important; 
           }
         }
