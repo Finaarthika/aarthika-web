@@ -116,9 +116,9 @@ export default function InvoicePrint() {
               padding: 0 !important;
               box-shadow: none !important;
               width: 100% !important;
-              height: 200mm !important;
-              page-break-after: always !important;
-              overflow: visible !important;
+              height: 195mm !important;
+              overflow: hidden !important;
+              page-break-inside: avoid !important;
             }
             
             @media (max-width: 768px) {
@@ -374,7 +374,7 @@ export default function InvoicePrint() {
 
       {/* PAGE 2: CREDIT AGREEMENT (Only shown if credit is enabled) */}
       {data.creditAmount > 0 && (
-        <div className={`print-container w-[520px] h-[720px] bg-white pt-6 px-8 relative flex flex-col shadow-2xl print:shadow-none mx-auto print:mx-0 overflow-hidden box-border ${isMobileEngine ? 'mobile-print-override' : ''}`}>
+        <div className={`print-container w-[520px] h-[720px] bg-white pt-6 px-8 relative flex flex-col shadow-2xl print:shadow-none mx-auto print:mx-0 overflow-hidden box-border ${isMobileEngine ? 'mobile-print-override' : ''}`} style={{ pageBreakBefore: 'always' }}>
           
           <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none z-0 print:hidden">
             <img src={watermarkImg} alt="Watermark" className="w-[80%] object-contain grayscale" />
