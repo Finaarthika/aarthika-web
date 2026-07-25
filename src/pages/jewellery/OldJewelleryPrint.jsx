@@ -72,19 +72,31 @@ export default function OldJewelleryPrint({ dataProp, silentMode = false }) {
         @import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700;800&display=swap');
         
         @media print {
-          @page { size: A4 landscape; margin: 10mm; }
-          html, body { margin: 0 !important; padding: 0 !important; width: 100%; }
+          @page { size: A4 landscape; margin: 0 !important; }
+          html, body { 
+            margin: 0 !important; 
+            padding: 0 !important; 
+            width: 100vw !important; 
+            height: 100vh !important; 
+            overflow: hidden !important; 
+          }
           ::-webkit-scrollbar { display: none !important; }
           body * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
           .no-print { display: none !important; }
           body, html { background: white !important; }
           .print-container {
-            margin: 0 auto !important; 
+            margin: 0 !important; 
             padding: 0 !important;
             box-shadow: none !important; 
-            transform: scale(0.96) !important;
-            transform-origin: top center !important;
-            page-break-after: always !important; 
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            /* Scale down to 92% to guarantee it fits on 1 page and push it into safe area */
+            transform: scale(0.92) translate(40px, 30px) !important;
+            transform-origin: top left !important;
+            page-break-after: avoid !important; 
+            page-break-before: avoid !important;
+            page-break-inside: avoid !important;
           }
         }
         .font-nirand { font-family: "Red Hat Display", sans-serif; }
