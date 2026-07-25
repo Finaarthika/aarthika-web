@@ -72,8 +72,11 @@ export default function OldJewelleryPrint({ dataProp, silentMode = false }) {
         @import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700;800&display=swap');
         
         @media print {
-          @page { size: A5 landscape; margin: 12mm; }
-          html, body { margin: 0 !important; padding: 0 !important; }
+          @page { size: A5 landscape; margin: 0 !important; }
+          html, body { 
+            margin: 0 !important; 
+            padding: 0 !important; 
+          }
           ::-webkit-scrollbar { display: none !important; }
           body * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
           .no-print { display: none !important; }
@@ -82,8 +85,10 @@ export default function OldJewelleryPrint({ dataProp, silentMode = false }) {
             margin: 0 auto !important; 
             padding: 0 !important;
             box-shadow: none !important; 
-            transform: scale(0.92) !important;
-            transform-origin: top center !important;
+            /* zoom physically shrinks the layout, preventing ghost pagination */
+            zoom: 0.65 !important;
+            /* adding some padding to act as our safe margin */
+            margin-top: 15mm !important;
             page-break-after: avoid !important; 
             page-break-before: avoid !important;
             page-break-inside: avoid !important;
