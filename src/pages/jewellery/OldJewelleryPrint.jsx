@@ -72,28 +72,18 @@ export default function OldJewelleryPrint({ dataProp, silentMode = false }) {
         @import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700;800&display=swap');
         
         @media print {
-          @page { size: A4 landscape; margin: 0 !important; }
-          html, body { 
-            margin: 0 !important; 
-            padding: 0 !important; 
-            width: 100vw !important; 
-            height: 100vh !important; 
-            overflow: hidden !important; 
-          }
+          @page { size: A5 landscape; margin: 12mm; }
+          html, body { margin: 0 !important; padding: 0 !important; }
           ::-webkit-scrollbar { display: none !important; }
           body * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
           .no-print { display: none !important; }
           body, html { background: white !important; }
           .print-container {
-            margin: 0 !important; 
+            margin: 0 auto !important; 
             padding: 0 !important;
             box-shadow: none !important; 
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            /* Scale down to 92% to guarantee it fits on 1 page and push it into safe area */
-            transform: scale(0.92) translate(40px, 30px) !important;
-            transform-origin: top left !important;
+            transform: scale(0.92) !important;
+            transform-origin: top center !important;
             page-break-after: avoid !important; 
             page-break-before: avoid !important;
             page-break-inside: avoid !important;
@@ -106,7 +96,7 @@ export default function OldJewelleryPrint({ dataProp, silentMode = false }) {
       {/* Screen Controls */}
       {!silentMode && (
         <div className="no-print bg-gray-900 text-white p-4 flex justify-between items-center fixed top-0 w-full z-50 shadow-md">
-          <div className="text-sm font-semibold tracking-wide">Old Purchase Agreement (A4 Landscape)</div>
+          <div className="text-sm font-semibold tracking-wide">Old Purchase Agreement (A5 Landscape)</div>
           <div className="flex gap-3">
             <button onClick={handlePrint} className="bg-rose-700 hover:bg-rose-600 text-white px-8 py-2.5 rounded text-sm font-bold tracking-widest uppercase shadow-lg transition-all">
               {isMobileEngine ? 'DOWNLOAD PDF' : 'PRINT / SAVE AS PDF'}
@@ -118,7 +108,7 @@ export default function OldJewelleryPrint({ dataProp, silentMode = false }) {
         </div>
       )}
 
-      {/* A4 Landscape Receipt Canvas */}
+      {/* A5 Landscape Receipt Canvas */}
       <div id="actual-receipt-content" className={`print-container w-[1050px] h-[742px] bg-white pt-1 relative flex flex-col overflow-hidden box-border ${silentMode ? '' : 'shadow-2xl print:shadow-none my-20 print:my-0 mx-auto'}`}>
 
         {/* Watermark */}
