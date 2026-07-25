@@ -82,7 +82,8 @@ export default function OldJewelleryPrint({ dataProp, silentMode = false }) {
             margin: 0 auto !important; 
             padding: 0 !important;
             box-shadow: none !important; 
-            transform: none !important;
+            transform: scale(0.96) !important;
+            transform-origin: top center !important;
             page-break-after: always !important; 
           }
         }
