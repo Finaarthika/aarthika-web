@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { TaxationProvider } from './TaxationContext';
+import { TaxationProvider, useTaxation } from './TaxationContext';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import Onboarding from './Onboarding';
 
-// Placeholder components for Phase 1 routing
-const Onboarding = () => <div className="p-8 text-white"><h2 className="text-2xl font-bold mb-4">Client Details & Incomes</h2><p className="text-gray-400">Select which incomes are applicable to this client.</p></div>;
+// Placeholder components for routing
 const BusinessIncome = () => <div className="p-8 text-white"><h2 className="text-2xl font-bold mb-4">Business & Profession (44AD)</h2><p className="text-gray-400">Enter turnover and balance sheet details.</p></div>;
 const CapitalGains = () => <div className="p-8 text-white"><h2 className="text-2xl font-bold mb-4">Capital Gains</h2><p className="text-gray-400">Enter STCG and LTCG.</p></div>;
 const OtherSources = () => <div className="p-8 text-white"><h2 className="text-2xl font-bold mb-4">Other Sources</h2><p className="text-gray-400">Enter interest and dividend income.</p></div>;
@@ -25,18 +25,20 @@ const SidebarItem = ({ icon, label, path, isActive, onClick }) => (
 );
 
 const TaxationLayout = () => {
+  const { taxData } = useTaxation();
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname;
 
+  // Dynamically build nav items based on selected incomes
   const navItems = [
-    { label: 'Client Profile', path: '/taxation' },
-    { label: 'Business & Profession', path: '/taxation/business' },
-    { label: 'Capital Gains', path: '/taxation/capital-gains' },
-    { label: 'Other Sources', path: '/taxation/other-sources' },
-    { label: 'Loss Adjustments', path: '/taxation/adjustments' },
-    { label: 'Computation & Docs', path: '/taxation/computation' },
-  ];
+    { label: 'Client Profile', path: '/taxation', show: true },
+    { label: 'Business & Profession', path: '/taxation/business', show: taxData.incomes.hasBusiness },
+    { label: 'Capital Gains', path: '/taxation/capital-gains', show: taxData.incomes.hasCapitalGains },
+    { label: 'Other Sources', path: '/taxation/other-sources', show: taxData.incomes.hasOtherSources },
+    { label: 'Loss Adjustments', path: '/taxation/adjustments', show: true }, // Always show for BFLA
+    { label: 'Computation & Docs', path: '/taxation/computation', show: true },
+  ].filter(item => item.show);
 
   return (
     <div className="flex h-screen bg-[#0a0a0a] overflow-hidden font-sans">
