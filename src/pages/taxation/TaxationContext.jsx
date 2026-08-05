@@ -16,6 +16,7 @@ export const TaxationProvider = ({ children }) => {
       hasBusiness: false,
       hasCapitalGains: false,
       hasOtherSources: false,
+      hasExemptIncome: false,
     },
     business: {
       isRegisteredGST: false,
@@ -44,7 +45,6 @@ export const TaxationProvider = ({ children }) => {
       fdInterest: 0,
       taxRefundInterest: 0,
       anyOtherIncome: 0,
-      exemptIncome: 0,
       dividend: {
         q1: 0, // Up to 15 Jun
         q2: 0, // 16 Jun - 15 Sep
@@ -52,6 +52,11 @@ export const TaxationProvider = ({ children }) => {
         q4: 0, // 16 Dec - 15 Mar
         q5: 0, // 16 Mar - 31 Mar
       }
+    },
+    exemptIncome: {
+      agriculture: 0,
+      ppfInterest: 0,
+      otherExempt: 0,
     },
     bfla: {
       businessLoss: 0,

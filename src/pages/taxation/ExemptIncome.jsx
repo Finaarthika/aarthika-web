@@ -26,59 +26,66 @@ const InputField = ({ label, value, onChange, name, type = "number", prefix = "â
   </div>
 );
 
-export default function CapitalGains() {
+export default function ExemptIncome() {
   const { taxData, updateTaxData } = useTaxation();
   const navigate = useNavigate();
-  const { capitalGains } = taxData;
+  const { exemptIncome } = taxData;
 
   const handleChange = (e) => {
-    updateTaxData('capitalGains', e.target.name, Number(e.target.value));
+    updateTaxData('exemptIncome', e.target.name, Number(e.target.value));
   };
 
   return (
     <div className="max-w-4xl mx-auto py-8">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-white mb-2">Capital Gains</h2>
-        <p className="text-gray-400">Enter your aggregate Short-Term and Long-Term Capital Gains.</p>
+        <h2 className="text-3xl font-bold text-white mb-2">Exempt Income</h2>
+        <p className="text-gray-400">Enter details of income that is completely exempt from tax.</p>
+        <p className="text-blue-400 text-sm mt-2">Note: This income will be reported in the document but will NOT increase your taxable income.</p>
       </div>
 
       <div className="space-y-8">
         <div className="bg-[#1a1a1a] p-6 rounded-xl border border-gray-800">
           <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
             <span className="w-8 h-8 rounded-full bg-blue-600/20 text-blue-500 flex items-center justify-center text-sm">1</span>
-            Equity & Mutual Funds
+            Exempt Sources
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <InputField 
-              label="Short-Term Capital Gains (STCG u/s 111A)" 
-              name="stcg"
-              value={capitalGains.stcg} 
+              label="Agricultural Income" 
+              name="agriculture"
+              value={exemptIncome.agriculture} 
               onChange={handleChange}
-              note="Taxed at 20% under New Tax Regime"
             />
             <InputField 
-              label="Long-Term Capital Gains (LTCG u/s 112A)" 
-              name="ltcg"
-              value={capitalGains.ltcg} 
+              label="PPF / EPF Interest" 
+              name="ppfInterest"
+              value={exemptIncome.ppfInterest} 
               onChange={handleChange}
-              note="Exemption up to â‚¹1.25 Lakhs available"
+            />
+            <InputField 
+              label="Any Other Exempt Income" 
+              name="otherExempt"
+              value={exemptIncome.otherExempt} 
+              onChange={handleChange}
             />
           </div>
         </div>
 
         <div className="flex justify-between">
           <button 
-            onClick={() => navigate('/taxation/business')}
+            onClick={() => {
+              if (taxData.incomes.hasOtherSources) navigate('/taxation/other-sources');
+              else if (taxData.incomes.hasCapitalGains) navigate('/taxation/capital-gains');
+              else if (taxData.incomes.hasBusiness) navigate('/taxation/business');
+              else navigate('/taxation');
+            }}
             className="text-gray-400 hover:text-white font-medium py-3 px-6 transition-colors"
           >
             &larr; Back
           </button>
           <button 
-            onClick={() => {
-              if (taxData.incomes.hasOtherSources) navigate('/taxation/other-sources');
-              else navigate('/taxation/adjustments');
-            }}
+            onClick={() => navigate('/taxation/adjustments')}
             className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition-colors flex items-center gap-2"
           >
             Save & Continue

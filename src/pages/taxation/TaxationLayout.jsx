@@ -5,6 +5,7 @@ import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import BusinessIncome from './BusinessIncome';
 import CapitalGains from './CapitalGains';
 import OtherSources from './OtherSources';
+import ExemptIncome from './ExemptIncome';
 import LossAdjustments from './LossAdjustments';
 import Computation from './Computation';
 
@@ -37,6 +38,7 @@ const TaxationLayout = () => {
     { label: 'Business & Profession', path: '/taxation/business', show: taxData.incomes.hasBusiness },
     { label: 'Capital Gains', path: '/taxation/capital-gains', show: taxData.incomes.hasCapitalGains },
     { label: 'Other Sources', path: '/taxation/other-sources', show: taxData.incomes.hasOtherSources },
+    { label: 'Exempt Income', path: '/taxation/exempt-income', show: taxData.incomes.hasExemptIncome },
     { label: 'Loss Adjustments', path: '/taxation/adjustments', show: true }, // Always show for BFLA
     { label: 'Computation & Docs', path: '/taxation/computation', show: true },
   ].filter(item => item.show);
@@ -97,6 +99,7 @@ const TaxationLayout = () => {
               <Route path="/business" element={<BusinessIncome />} />
               <Route path="/capital-gains" element={<CapitalGains />} />
               <Route path="/other-sources" element={<OtherSources />} />
+              <Route path="/exempt-income" element={<ExemptIncome />} />
               <Route path="/adjustments" element={<LossAdjustments />} />
               <Route path="/computation" element={<Computation />} />
             </Routes>

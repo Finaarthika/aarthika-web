@@ -126,17 +126,11 @@ export default function OtherSources() {
             Miscellaneous Incomes
           </h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6">
             <InputField 
               label="Any Other Income (Gifts, etc.)" 
               name="anyOtherIncome"
               value={otherSources.anyOtherIncome} 
-              onChange={handleChange}
-            />
-            <InputField 
-              label="Exempt Income (Agriculture, etc.)" 
-              name="exemptIncome"
-              value={otherSources.exemptIncome} 
               onChange={handleChange}
             />
           </div>
@@ -154,7 +148,10 @@ export default function OtherSources() {
             &larr; Back
           </button>
           <button 
-            onClick={() => navigate('/taxation/adjustments')}
+            onClick={() => {
+              if (taxData.incomes.hasExemptIncome) navigate('/taxation/exempt-income');
+              else navigate('/taxation/adjustments');
+            }}
             className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition-colors flex items-center gap-2"
           >
             Save & Continue

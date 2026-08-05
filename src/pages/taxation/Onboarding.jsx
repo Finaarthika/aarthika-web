@@ -128,6 +128,11 @@ export default function Onboarding() {
               value={taxData.incomes.hasOtherSources} 
               onChange={(val) => handleIncomeChange('hasOtherSources', val)} 
             />
+            <Toggle 
+              label="Exempt Income (Agriculture, PPF, etc.)" 
+              value={taxData.incomes.hasExemptIncome} 
+              onChange={(val) => handleIncomeChange('hasExemptIncome', val)} 
+            />
           </div>
         </div>
 

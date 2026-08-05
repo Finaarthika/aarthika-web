@@ -136,6 +136,15 @@ const DocumentPreview = ({ data, computation }) => {
             <tr><td colSpan="3" className="py-2 font-semibold pt-4">3. Income from Other Sources</td></tr>
             <tr><td className="pl-6 py-1 text-gray-600">Interest / Dividend / Other</td><td className="text-right border-b border-gray-200">{formatCur(computation.breakdown[3].gross)}</td><td className="text-right font-medium">{formatCur(computation.breakdown[3].taxable)}</td></tr>
 
+            {(data.exemptIncome.agriculture > 0 || data.exemptIncome.ppfInterest > 0 || data.exemptIncome.otherExempt > 0) && (
+              <>
+                <tr><td colSpan="3" className="py-2 font-semibold pt-4 text-green-700">4. Exempt Income (Not Taxable)</td></tr>
+                {data.exemptIncome.agriculture > 0 && <tr><td className="pl-6 py-1 text-gray-600">Agricultural Income</td><td className="text-right">{formatCur(data.exemptIncome.agriculture)}</td><td></td></tr>}
+                {data.exemptIncome.ppfInterest > 0 && <tr><td className="pl-6 py-1 text-gray-600">PPF / EPF Interest</td><td className="text-right">{formatCur(data.exemptIncome.ppfInterest)}</td><td></td></tr>}
+                {data.exemptIncome.otherExempt > 0 && <tr><td className="pl-6 py-1 text-gray-600">Other Exempt Income</td><td className="text-right">{formatCur(data.exemptIncome.otherExempt)}</td><td></td></tr>}
+              </>
+            )}
+
             <tr className="bg-gray-50 border-y-2 border-gray-800 font-bold text-base mt-4">
               <td className="py-3 pl-2">Gross Total Taxable Income</td>
               <td></td>
