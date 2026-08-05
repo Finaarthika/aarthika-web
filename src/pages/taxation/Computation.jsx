@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTaxation } from './TaxationContext';
 import { useNavigate } from 'react-router-dom';
+import TaxDocumentGenerator from './TaxDocumentGenerator';
 
 // New Regime Tax Slabs (FY 2024-25 / AY 2025-26 onwards based on July 2024 Budget)
 const calculateSlabTax = (income) => {
@@ -31,6 +32,7 @@ export default function Computation() {
   const { taxData } = useTaxation();
   const navigate = useNavigate();
   const { business, capitalGains, otherSources, bfla } = taxData;
+  const [showGenerator, setShowGenerator] = useState(false);
 
   const computation = useMemo(() => {
     // 1. Calculate Gross Incomes
@@ -213,7 +215,7 @@ export default function Computation() {
             <h3 className="text-white font-medium mb-2">Documents</h3>
             <p className="text-xs text-gray-500 mb-4">Generate professional PDFs of the P&L, Balance Sheet, and Tax Computation.</p>
             <button 
-              onClick={() => alert("PDF Generation will be implemented in Phase 7!")}
+              onClick={() => setShowGenerator(true)}
               className="w-full bg-white text-black hover:bg-gray-200 font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
@@ -222,6 +224,8 @@ export default function Computation() {
           </div>
         </div>
       </div>
+      
+      {showGenerator && <TaxDocumentGenerator onClose={() => setShowGenerator(false)} />}
     </div>
   );
 }
