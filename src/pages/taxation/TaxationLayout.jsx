@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { TaxationProvider, useTaxation } from './TaxationContext';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import Onboarding from './Onboarding';
+import BusinessIncome from './BusinessIncome';
 
 // Placeholder components for routing
-const BusinessIncome = () => <div className="p-8 text-white"><h2 className="text-2xl font-bold mb-4">Business & Profession (44AD)</h2><p className="text-gray-400">Enter turnover and balance sheet details.</p></div>;
 const CapitalGains = () => <div className="p-8 text-white"><h2 className="text-2xl font-bold mb-4">Capital Gains</h2><p className="text-gray-400">Enter STCG and LTCG.</p></div>;
 const OtherSources = () => <div className="p-8 text-white"><h2 className="text-2xl font-bold mb-4">Other Sources</h2><p className="text-gray-400">Enter interest and dividend income.</p></div>;
 const Adjustments = () => <div className="p-8 text-white"><h2 className="text-2xl font-bold mb-4">Loss Adjustments</h2><p className="text-gray-400">Enter brought forward losses.</p></div>;
