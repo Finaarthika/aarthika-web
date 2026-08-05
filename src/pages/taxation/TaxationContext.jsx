@@ -17,6 +17,8 @@ export const TaxationProvider = ({ children }) => {
       hasCapitalGains: false,
       hasOtherSources: false,
       hasExemptIncome: false,
+      hasDeductions: false,
+      hasPrepaidTaxes: false,
     },
     business: {
       isRegisteredGST: false,
@@ -27,41 +29,72 @@ export const TaxationProvider = ({ children }) => {
       profitBank: 0, // Should be at least 6%
       profitCash: 0, // Should be at least 8%
       balanceSheet: {
-        proprietorCapital: 0,
-        reservesAndSurplus: 0,
-        sundryDebtors: 0,
-        sundryCreditors: 0,
-        cashBalance: 0,
-        bankBalance: 0,
-        inventory: 0,
+        // Assets
+        investmentsST: 0,
+        investmentsLT: 0,
+        currentBank: 0,
+        currentCash: 0,
+        currentStock: 0,
+        currentReceivables: 0,
+        currentLoansGiven: 0,
+        currentOther: 0,
+        fixedGrossBlock: 0,
+        fixedDepreciation: 0,
+        // Liabilities
+        equityCapital: 0,
+        equityReserves: 0,
+        nonCurrentSecured: 0,
+        nonCurrentUnsecured: 0,
+        nonCurrentAdvances: 0,
+        currentPayables: 0,
+        currentProvisions: 0,
+        currentOtherLiab: 0,
       }
     },
     capitalGains: {
-      stcg: 0, // Example: 111A
-      ltcg: 0, // Example: 112A
+      stcg: { q1: 0, q2: 0, q3: 0, q4: 0, q5: 0 }, // 111A 20%
+      ltcg: { q1: 0, q2: 0, q3: 0, q4: 0, q5: 0 }, // 112A 12.5%
     },
     otherSources: {
       savingsInterest: 0,
       fdInterest: 0,
       taxRefundInterest: 0,
+      bondsInterest: 0,
+      epfInterest: 0,
+      loansInterest: 0,
       anyOtherIncome: 0,
-      dividend: {
-        q1: 0, // Up to 15 Jun
-        q2: 0, // 16 Jun - 15 Sep
-        q3: 0, // 16 Sep - 15 Dec
-        q4: 0, // 16 Dec - 15 Mar
-        q5: 0, // 16 Mar - 31 Mar
+      dividend: { q1: 0, q2: 0, q3: 0, q4: 0, q5: 0 },
+      gifts: {
+        immovable: 0,
+        movable: 0,
+        monetary: 0,
+        isExemptOccasion: false,
       }
     },
     exemptIncome: {
       agriculture: 0,
       ppfInterest: 0,
+      insuranceMaturity: 0,
+      npsWithdrawal: 0,
+      pfMaturity: 0,
+      hufShare: 0,
+      ssyMaturity: 0,
       otherExempt: 0,
     },
     bfla: {
       businessLoss: 0,
       stcgLoss: 0,
       ltcgLoss: 0,
+    },
+    deductions: {
+      sec80CCD2: 0,
+      sec80CCH: 0,
+    },
+    prepaidTaxes: {
+      advanceTax: 0,
+      tdsSalary: 0,
+      tdsOther: 0,
+      tcs: 0,
     }
   });
 

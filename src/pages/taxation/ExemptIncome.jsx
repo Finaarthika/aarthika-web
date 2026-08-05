@@ -64,6 +64,36 @@ export default function ExemptIncome() {
               onChange={handleChange}
             />
             <InputField 
+              label="Insurance Maturity / Bonus" 
+              name="insuranceMaturity"
+              value={exemptIncome.insuranceMaturity} 
+              onChange={handleChange}
+            />
+            <InputField 
+              label="NPS / UPS Withdrawal" 
+              name="npsWithdrawal"
+              value={exemptIncome.npsWithdrawal} 
+              onChange={handleChange}
+            />
+            <InputField 
+              label="Provident Fund Maturity" 
+              name="pfMaturity"
+              value={exemptIncome.pfMaturity} 
+              onChange={handleChange}
+            />
+            <InputField 
+              label="Share from HUF" 
+              name="hufShare"
+              value={exemptIncome.hufShare} 
+              onChange={handleChange}
+            />
+            <InputField 
+              label="Sukanya Samriddhi Yojana (SSY)" 
+              name="ssyMaturity"
+              value={exemptIncome.ssyMaturity} 
+              onChange={handleChange}
+            />
+            <InputField 
               label="Any Other Exempt Income" 
               name="otherExempt"
               value={exemptIncome.otherExempt} 
@@ -85,7 +115,11 @@ export default function ExemptIncome() {
             &larr; Back
           </button>
           <button 
-            onClick={() => navigate('/taxation/adjustments')}
+            onClick={() => {
+              if (taxData.incomes.hasDeductions) navigate('/taxation/deductions');
+              else if (taxData.incomes.hasPrepaidTaxes) navigate('/taxation/taxes-paid');
+              else navigate('/taxation/adjustments');
+            }}
             className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition-colors flex items-center gap-2"
           >
             Save & Continue

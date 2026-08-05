@@ -6,6 +6,8 @@ import BusinessIncome from './BusinessIncome';
 import CapitalGains from './CapitalGains';
 import OtherSources from './OtherSources';
 import ExemptIncome from './ExemptIncome';
+import Deductions from './Deductions';
+import TaxesPaid from './TaxesPaid';
 import LossAdjustments from './LossAdjustments';
 import Computation from './Computation';
 
@@ -39,6 +41,8 @@ const TaxationLayout = () => {
     { label: 'Capital Gains', path: '/taxation/capital-gains', show: taxData.incomes.hasCapitalGains },
     { label: 'Other Sources', path: '/taxation/other-sources', show: taxData.incomes.hasOtherSources },
     { label: 'Exempt Income', path: '/taxation/exempt-income', show: taxData.incomes.hasExemptIncome },
+    { label: 'Deductions (80CCD, 80CCH)', path: '/taxation/deductions', show: taxData.incomes.hasDeductions },
+    { label: 'Prepaid Taxes', path: '/taxation/taxes-paid', show: taxData.incomes.hasPrepaidTaxes },
     { label: 'Loss Adjustments', path: '/taxation/adjustments', show: true }, // Always show for BFLA
     { label: 'Computation & Docs', path: '/taxation/computation', show: true },
   ].filter(item => item.show);
@@ -100,6 +104,8 @@ const TaxationLayout = () => {
               <Route path="/capital-gains" element={<CapitalGains />} />
               <Route path="/other-sources" element={<OtherSources />} />
               <Route path="/exempt-income" element={<ExemptIncome />} />
+              <Route path="/deductions" element={<Deductions />} />
+              <Route path="/taxes-paid" element={<TaxesPaid />} />
               <Route path="/adjustments" element={<LossAdjustments />} />
               <Route path="/computation" element={<Computation />} />
             </Routes>

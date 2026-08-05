@@ -186,23 +186,60 @@ export default function BusinessIncome() {
             <p className="text-sm text-gray-500">As of 31st March 2026</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
+            {/* Assets */}
             <div>
-              <h4 className="text-md font-medium text-gray-300 pb-2 mb-4 border-b border-gray-800">Sources of Funds</h4>
-              <div className="space-y-4">
-                <InputField label="Proprietor's Capital" value={balanceSheet.proprietorCapital} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'proprietorCapital', Number(e.target.value))} />
-                <InputField label="Reserves & Surplus" value={balanceSheet.reservesAndSurplus} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'reservesAndSurplus', Number(e.target.value))} />
-                <InputField label="Sundry Creditors" value={balanceSheet.sundryCreditors} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'sundryCreditors', Number(e.target.value))} />
+              <h4 className="text-md font-bold text-blue-400 pb-2 mb-4 border-b border-gray-800">ASSETS</h4>
+              
+              <div className="space-y-4 mb-6">
+                <h5 className="text-sm font-semibold text-gray-500 uppercase">Fixed Assets</h5>
+                <InputField label="Gross Block" value={balanceSheet.fixedGrossBlock} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'fixedGrossBlock', Number(e.target.value))} />
+                <InputField label="Depreciation" value={balanceSheet.fixedDepreciation} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'fixedDepreciation', Number(e.target.value))} />
+                <div className="flex justify-between text-sm py-2 px-4 bg-[#121212] rounded">
+                  <span className="text-gray-400">Net Block:</span>
+                  <span className="text-white font-medium">₹{(Number(balanceSheet.fixedGrossBlock) - Number(balanceSheet.fixedDepreciation)).toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+
+              <div className="space-y-4 mb-6">
+                <h5 className="text-sm font-semibold text-gray-500 uppercase">Investments</h5>
+                <InputField label="Short Term Investments" value={balanceSheet.investmentsST} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'investmentsST', Number(e.target.value))} />
+                <InputField label="Long Term Investments" value={balanceSheet.investmentsLT} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'investmentsLT', Number(e.target.value))} />
+              </div>
+
+              <div className="space-y-4 mb-6">
+                <h5 className="text-sm font-semibold text-gray-500 uppercase">Current Assets</h5>
+                <InputField label="Bank Balance" value={balanceSheet.currentBank} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentBank', Number(e.target.value))} />
+                <InputField label="Cash Balance" value={balanceSheet.currentCash} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentCash', Number(e.target.value))} />
+                <InputField label="Stock in Trade / Inventory" value={balanceSheet.currentStock} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentStock', Number(e.target.value))} />
+                <InputField label="Sundry Debtors / Receivables" value={balanceSheet.currentReceivables} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentReceivables', Number(e.target.value))} />
+                <InputField label="Loans & Advances Given" value={balanceSheet.currentLoansGiven} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentLoansGiven', Number(e.target.value))} />
+                <InputField label="Other Current Assets" value={balanceSheet.currentOther} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentOther', Number(e.target.value))} />
               </div>
             </div>
             
+            {/* Liabilities */}
             <div>
-              <h4 className="text-md font-medium text-gray-300 pb-2 mb-4 border-b border-gray-800">Application of Funds</h4>
-              <div className="space-y-4">
-                <InputField label="Fixed Assets / Inventory" value={balanceSheet.inventory} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'inventory', Number(e.target.value))} />
-                <InputField label="Sundry Debtors" value={balanceSheet.sundryDebtors} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'sundryDebtors', Number(e.target.value))} />
-                <InputField label="Cash Balance" value={balanceSheet.cashBalance} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'cashBalance', Number(e.target.value))} />
-                <InputField label="Bank Balance" value={balanceSheet.bankBalance} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'bankBalance', Number(e.target.value))} />
+              <h4 className="text-md font-bold text-red-400 pb-2 mb-4 border-b border-gray-800">LIABILITIES</h4>
+              
+              <div className="space-y-4 mb-6">
+                <h5 className="text-sm font-semibold text-gray-500 uppercase">Equity</h5>
+                <InputField label="Proprietor's Capital" value={balanceSheet.equityCapital} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'equityCapital', Number(e.target.value))} />
+                <InputField label="Reserves & Surplus" value={balanceSheet.equityReserves} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'equityReserves', Number(e.target.value))} />
+              </div>
+
+              <div className="space-y-4 mb-6">
+                <h5 className="text-sm font-semibold text-gray-500 uppercase">Non-Current Liabilities</h5>
+                <InputField label="Secured Loans" value={balanceSheet.nonCurrentSecured} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'nonCurrentSecured', Number(e.target.value))} />
+                <InputField label="Unsecured Loans" value={balanceSheet.nonCurrentUnsecured} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'nonCurrentUnsecured', Number(e.target.value))} />
+                <InputField label="Advances" value={balanceSheet.nonCurrentAdvances} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'nonCurrentAdvances', Number(e.target.value))} />
+              </div>
+
+              <div className="space-y-4 mb-6">
+                <h5 className="text-sm font-semibold text-gray-500 uppercase">Current Liabilities</h5>
+                <InputField label="Sundry Creditors / Payables" value={balanceSheet.currentPayables} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentPayables', Number(e.target.value))} />
+                <InputField label="Provisions for Expenses" value={balanceSheet.currentProvisions} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentProvisions', Number(e.target.value))} />
+                <InputField label="Other Current Liabilities" value={balanceSheet.currentOtherLiab} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentOtherLiab', Number(e.target.value))} />
               </div>
             </div>
           </div>

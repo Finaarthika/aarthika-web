@@ -136,6 +136,26 @@ export default function Onboarding() {
           </div>
         </div>
 
+        {/* Adjustments & Deductions Section */}
+        <div className="bg-[#1a1a1a] p-6 rounded-xl border border-gray-800">
+          <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+            <span className="w-8 h-8 rounded-full bg-blue-600/20 text-blue-500 flex items-center justify-center text-sm">3</span>
+            Deductions & Taxes Paid
+          </h3>
+          <div className="space-y-4">
+            <Toggle 
+              label="Claim Deductions (Sec 80CCD(2), 80CCH)" 
+              value={taxData.incomes.hasDeductions} 
+              onChange={(val) => handleIncomeChange('hasDeductions', val)} 
+            />
+            <Toggle 
+              label="Taxes Already Paid (TDS, TCS, Advance Tax)" 
+              value={taxData.incomes.hasPrepaidTaxes} 
+              onChange={(val) => handleIncomeChange('hasPrepaidTaxes', val)} 
+            />
+          </div>
+        </div>
+
         <div className="flex justify-end">
           <button 
             onClick={() => navigate('/taxation/business')}
