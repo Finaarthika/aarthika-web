@@ -6,9 +6,10 @@ import BusinessIncome from './BusinessIncome';
 import CapitalGains from './CapitalGains';
 import OtherSources from './OtherSources';
 import LossAdjustments from './LossAdjustments';
+import Computation from './Computation';
 
 // Placeholder components for routing
-const Computation = () => <div className="p-8 text-white"><h2 className="text-2xl font-bold mb-4">Tax Computation</h2><p className="text-gray-400">Final calculation and summary.</p></div>;
+// All routes imported
 
 const SidebarItem = ({ icon, label, path, isActive, onClick }) => (
   <button 
