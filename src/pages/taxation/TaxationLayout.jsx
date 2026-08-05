@@ -5,9 +5,9 @@ import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import BusinessIncome from './BusinessIncome';
 import CapitalGains from './CapitalGains';
 import OtherSources from './OtherSources';
+import LossAdjustments from './LossAdjustments';
 
 // Placeholder components for routing
-const Adjustments = () => <div className="p-8 text-white"><h2 className="text-2xl font-bold mb-4">Loss Adjustments</h2><p className="text-gray-400">Enter brought forward losses.</p></div>;
 const Computation = () => <div className="p-8 text-white"><h2 className="text-2xl font-bold mb-4">Tax Computation</h2><p className="text-gray-400">Final calculation and summary.</p></div>;
 
 const SidebarItem = ({ icon, label, path, isActive, onClick }) => (
@@ -96,7 +96,7 @@ const TaxationLayout = () => {
               <Route path="/business" element={<BusinessIncome />} />
               <Route path="/capital-gains" element={<CapitalGains />} />
               <Route path="/other-sources" element={<OtherSources />} />
-              <Route path="/adjustments" element={<Adjustments />} />
+              <Route path="/adjustments" element={<LossAdjustments />} />
               <Route path="/computation" element={<Computation />} />
             </Routes>
           </div>
