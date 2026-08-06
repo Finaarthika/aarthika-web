@@ -243,6 +243,53 @@ export default function BusinessIncome() {
               </div>
             </div>
           </div>
+
+          {/* Balancing Figure Alert */}
+          {(() => {
+            const totalAssets = (Number(balanceSheet.fixedGrossBlock) - Number(balanceSheet.fixedDepreciation)) +
+              Number(balanceSheet.investmentsST) + Number(balanceSheet.investmentsLT) +
+              Number(balanceSheet.currentBank) + Number(balanceSheet.currentCash) + Number(balanceSheet.currentStock) +
+              Number(balanceSheet.currentReceivables) + Number(balanceSheet.currentLoansGiven) + Number(balanceSheet.currentOther);
+              
+            const totalLiabilities = Number(balanceSheet.equityCapital) + Number(balanceSheet.equityReserves) +
+              Number(balanceSheet.nonCurrentSecured) + Number(balanceSheet.nonCurrentUnsecured) + Number(balanceSheet.nonCurrentAdvances) +
+              Number(balanceSheet.currentPayables) + Number(balanceSheet.currentProvisions) + Number(balanceSheet.currentOtherLiab);
+              
+            const difference = Math.abs(totalAssets - totalLiabilities);
+            
+            if (difference > 0) {
+              return (
+                <div className="mt-8 p-4 bg-orange-900/20 border border-orange-500/50 rounded-lg flex items-center justify-between">
+                  <div>
+                    <h4 className="text-orange-400 font-bold flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      Balance Sheet Mismatch
+                    </h4>
+                    <p className="text-orange-300/80 text-sm mt-1">Total Assets (₹{totalAssets.toLocaleString('en-IN')}) and Total Liabilities (₹{totalLiabilities.toLocaleString('en-IN')}) do not match.</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-orange-400/80 text-xs font-semibold uppercase tracking-wider mb-1">Balancing Figure</p>
+                    <p className="text-2xl font-bold text-orange-400">₹{difference.toLocaleString('en-IN')}</p>
+                  </div>
+                </div>
+              );
+            }
+            return (
+              <div className="mt-8 p-4 bg-emerald-900/20 border border-emerald-500/50 rounded-lg flex items-center justify-between">
+                <div>
+                  <h4 className="text-emerald-400 font-bold flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    Balance Sheet Tally Matched
+                  </h4>
+                  <p className="text-emerald-300/80 text-sm mt-1">Total Assets (₹{totalAssets.toLocaleString('en-IN')}) exactly match Total Liabilities.</p>
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         <div className="flex justify-between">

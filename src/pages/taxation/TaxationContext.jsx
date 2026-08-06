@@ -63,12 +63,14 @@ export const TaxationProvider = ({ children }) => {
       epfInterest: 0,
       loansInterest: 0,
       anyOtherIncome: 0,
+      anyOtherIncomeNarration: '',
       dividend: { q1: 0, q2: 0, q3: 0, q4: 0, q5: 0 },
       gifts: {
         immovable: 0,
         movable: 0,
         monetary: 0,
         isExemptOccasion: false,
+        exemptGiftNarration: '',
       }
     },
     exemptIncome: {

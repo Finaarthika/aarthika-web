@@ -27,7 +27,7 @@ const InputField = ({ label, value, onChange, name, type = "number", prefix = "â
 );
 
 export default function CapitalGains() {
-  const { taxData, updateTaxData } = useTaxation();
+  const { taxData, updateTaxData, updateNestedTaxData } = useTaxation();
   const navigate = useNavigate();
   const { capitalGains } = taxData;
 

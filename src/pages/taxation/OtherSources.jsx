@@ -174,6 +174,21 @@ export default function OtherSources() {
             />
           </div>
 
+          {otherSources.gifts.isExemptOccasion && (
+            <div className="mb-6 animate-fade-in">
+              <label className="block text-sm font-medium text-gray-400 mb-2">
+                Occasion / Source Narration (e.g. "Marriage", "Will")
+              </label>
+              <input
+                type="text"
+                value={otherSources.gifts.exemptGiftNarration}
+                onChange={(e) => updateNestedTaxData('otherSources', 'gifts', 'exemptGiftNarration', e.target.value)}
+                placeholder="Enter occasion details..."
+                className="w-full bg-[#121212] border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+              />
+            </div>
+          )}
+
           <div className="p-4 bg-[#121212] rounded-lg border border-gray-800 flex justify-between items-center">
             <div>
               <p className="text-gray-400 text-sm">Total Gifts Received</p>
@@ -195,13 +210,27 @@ export default function OtherSources() {
             Miscellaneous Incomes
           </h3>
           
-          <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <InputField 
               label="Any Other Income (not reported above)" 
               name="anyOtherIncome"
               value={otherSources.anyOtherIncome} 
               onChange={handleChange}
             />
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-2">
+                Narration / Details
+              </label>
+              <input
+                type="text"
+                name="anyOtherIncomeNarration"
+                value={otherSources.anyOtherIncomeNarration || ''}
+                onChange={(e) => updateTaxData('otherSources', 'anyOtherIncomeNarration', e.target.value)}
+                placeholder="e.g. Freelance consulting"
+                className="w-full bg-[#121212] border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+              />
+            </div>
           </div>
         </div>
 
