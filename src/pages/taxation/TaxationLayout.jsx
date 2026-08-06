@@ -10,6 +10,7 @@ import Deductions from './Deductions';
 import TaxesPaid from './TaxesPaid';
 import LossAdjustments from './LossAdjustments';
 import Computation from './Computation';
+import BankAccounts from './BankAccounts';
 
 // Placeholder components for routing
 // All routes imported
@@ -37,6 +38,7 @@ const TaxationLayout = () => {
   // Dynamically build nav items based on selected incomes
   const navItems = [
     { label: 'Client Profile', path: '/taxation', show: true },
+    { label: 'Bank Accounts', path: '/taxation/bank-accounts', show: true },
     { label: 'Business & Profession', path: '/taxation/business', show: taxData.incomes.hasBusiness },
     { label: 'Capital Gains', path: '/taxation/capital-gains', show: taxData.incomes.hasCapitalGains },
     { label: 'Other Sources', path: '/taxation/other-sources', show: taxData.incomes.hasOtherSources },
@@ -100,6 +102,7 @@ const TaxationLayout = () => {
           <div className="max-w-5xl mx-auto bg-[#1a1a1a] rounded-xl border border-gray-800 min-h-[500px] shadow-2xl">
             <Routes>
               <Route path="/" element={<Onboarding />} />
+              <Route path="/bank-accounts" element={<BankAccounts />} />
               <Route path="/business" element={<BusinessIncome />} />
               <Route path="/capital-gains" element={<CapitalGains />} />
               <Route path="/other-sources" element={<OtherSources />} />

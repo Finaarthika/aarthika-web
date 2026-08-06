@@ -13,6 +13,8 @@ export default function TaxDocumentGenerator({ onClose }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const data = taxData;
   const { business } = data;
+  const bankAccounts = data.bankAccounts || [];
+  const taxDeductors = data.taxDeductors || [];
 
   // -- MATH COMPUTATIONS --
   const grossBusiness = Number(business.profitBank) + Number(business.profitCash);
@@ -340,6 +342,68 @@ export default function TaxDocumentGenerator({ onClose }) {
                   </tr>
                 </tbody>
               </table>
+
+              {taxDeductors.length > 0 && (
+                <>
+                  <SectionHeader title="Statement of Taxes Paid (Form 26AS/AIS)" />
+                  <table className="w-full text-[11px] border-collapse mb-8 border border-gray-200">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-200">
+                        <th className="py-2 px-3 text-left font-bold text-gray-800 border-r border-gray-200">Name of Deductor</th>
+                        <th className="py-2 px-3 text-left font-bold text-gray-800 border-r border-gray-200">TAN / PAN</th>
+                        <th className="py-2 px-3 text-left font-bold text-gray-800 border-r border-gray-200">Tax Type</th>
+                        <th className="py-2 px-3 text-right font-bold text-gray-800 border-r border-gray-200">Gross Amt.</th>
+                        <th className="py-2 px-3 text-right font-bold text-gray-800">Tax Deducted</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 text-gray-700">
+                      {taxDeductors.map((row, i) => (
+                        <tr key={i}>
+                          <td className="py-2 px-3 border-r border-gray-200">{row.deductorName || '--'}</td>
+                          <td className="py-2 px-3 border-r border-gray-200 uppercase">{row.tan || '--'}</td>
+                          <td className="py-2 px-3 border-r border-gray-200">{row.type}</td>
+                          <td className="py-2 px-3 text-right border-r border-gray-200">₹{formatCur(row.grossAmount)}</td>
+                          <td className="py-2 px-3 text-right font-semibold">₹{formatCur(row.taxDeducted)}</td>
+                        </tr>
+                      ))}
+                      <tr className="bg-gray-50">
+                        <td colSpan="4" className="py-2 px-3 text-right font-bold text-gray-800 border-r border-gray-200">Total Taxes Claimed</td>
+                        <td className="py-2 px-3 text-right font-bold text-gray-900">₹{formatCur(totalPrepaid)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </>
+              )}
+
+              {bankAccounts.length > 0 && (
+                <>
+                  <SectionHeader title="Details of Bank Accounts" />
+                  <table className="w-full text-[11px] border-collapse mb-8 border border-gray-200">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-200">
+                        <th className="py-2 px-3 text-left font-bold text-gray-800 border-r border-gray-200">Bank Name</th>
+                        <th className="py-2 px-3 text-left font-bold text-gray-800 border-r border-gray-200">IFSC Code</th>
+                        <th className="py-2 px-3 text-left font-bold text-gray-800 border-r border-gray-200">Account No.</th>
+                        <th className="py-2 px-3 text-left font-bold text-gray-800 border-r border-gray-200">Type</th>
+                        <th className="py-2 px-3 text-center font-bold text-gray-800">Refund?</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 text-gray-700">
+                      {bankAccounts.map((row, i) => (
+                        <tr key={i}>
+                          <td className="py-2 px-3 border-r border-gray-200 font-semibold">{row.bankName || '--'}</td>
+                          <td className="py-2 px-3 border-r border-gray-200 uppercase">{row.ifsc || '--'}</td>
+                          <td className="py-2 px-3 border-r border-gray-200">{row.accountNumber || '--'}</td>
+                          <td className="py-2 px-3 border-r border-gray-200">{row.type}</td>
+                          <td className="py-2 px-3 text-center">
+                            {row.isRefund ? <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded font-bold">Yes</span> : '--'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </>
+              )}
 
               <PageFooter num={3} total={totalPages} />
             </div>

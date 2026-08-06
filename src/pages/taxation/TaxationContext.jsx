@@ -12,6 +12,10 @@ export const TaxationProvider = ({ children }) => {
       lastName: '',
       assessmentYear: '2026-27', // AY for FY 2025-26
     },
+    bankAccounts: [
+      { id: 1, bankName: '', ifsc: '', accountNumber: '', type: 'Savings', isRefund: true }
+    ],
+    taxDeductors: [], // Array of { id, deductorName, tan, grossAmount, taxDeducted, headOfIncome }
     incomes: {
       hasBusiness: false,
       hasCapitalGains: false,
@@ -123,8 +127,15 @@ export const TaxationProvider = ({ children }) => {
     }));
   };
 
+  const updateArrayData = (arrayName, newArray) => {
+    setTaxData(prev => ({
+      ...prev,
+      [arrayName]: newArray
+    }));
+  };
+
   return (
-    <TaxationContext.Provider value={{ taxData, setTaxData, updateTaxData, updateNestedTaxData }}>
+    <TaxationContext.Provider value={{ taxData, setTaxData, updateTaxData, updateNestedTaxData, updateArrayData }}>
       {children}
     </TaxationContext.Provider>
   );
