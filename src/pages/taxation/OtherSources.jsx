@@ -42,7 +42,7 @@ const InputField = ({ label, value, onChange, name, type = "number", prefix = "â
       <input
         type={type}
         name={name}
-        value={value === 0 ? '' : value}
+        value={value}
         onChange={onChange}
         placeholder="0"
         className={`w-full bg-[#121212] border border-gray-800 rounded-lg py-2.5 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors ${prefix ? 'pl-10 pr-4' : 'px-4'}`}
@@ -58,15 +58,15 @@ export default function OtherSources() {
   const { otherSources } = taxData;
 
   const handleChange = (e) => {
-    updateTaxData('otherSources', e.target.name, Number(e.target.value));
+    updateTaxData('otherSources', e.target.name, e.target.value === '' ? '' : Number(e.target.value));
   };
 
   const handleDividendChange = (e) => {
-    updateNestedTaxData('otherSources', 'dividend', e.target.name, Number(e.target.value));
+    updateNestedTaxData('otherSources', 'dividend', e.target.name, e.target.value === '' ? '' : Number(e.target.value));
   };
 
   const handleGiftChange = (e) => {
-    updateNestedTaxData('otherSources', 'gifts', e.target.name, Number(e.target.value));
+    updateNestedTaxData('otherSources', 'gifts', e.target.name, e.target.value === '' ? '' : Number(e.target.value));
   };
 
   const handleGiftToggle = (val) => {

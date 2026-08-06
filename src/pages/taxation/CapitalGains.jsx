@@ -1,237 +1,98 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useTaxation } from './TaxationContext';
 import { useNavigate } from 'react-router-dom';
 
-const getQuarter = (dateStr) => {
-  if (!dateStr) return null;
-  const d = new Date(dateStr);
-  const m = d.getMonth() + 1; // 1-12
-  const day = d.getDate();
-  
-  if ((m >= 4 && m <= 5) || (m === 6 && day <= 15)) return 'q1'; // Apr 1 - Jun 15
-  if ((m === 6 && day > 15) || m === 7 || m === 8 || (m === 9 && day <= 15)) return 'q2'; // Jun 16 - Sep 15
-  if ((m === 9 && day > 15) || m === 10 || m === 11 || (m === 12 && day <= 15)) return 'q3'; // Sep 16 - Dec 15
-  if ((m === 12 && day > 15) || m === 1 || m === 2 || (m === 3 && day <= 15)) return 'q4'; // Dec 16 - Mar 15
-  if (m === 3 && day > 15) return 'q5'; // Mar 16 - Mar 31
-  return 'q5'; // fallback
-};
-
-const getCapitalGainType = (buyDate, sellDate, type) => {
-  if (!buyDate || !sellDate) return 'stcg';
-  const b = new Date(buyDate);
-  const s = new Date(sellDate);
-  const diffTime = Math.abs(s - b);
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-  // Equity/MF holds 12 months for LTCG
-  if (type === 'Equity/MF' && diffDays > 365) return 'ltcg';
-  return 'stcg';
-};
+const InputField = ({ label, value, onChange, name, type = "number", prefix = "₹", note }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-400 mb-2">
+      {label}
+    </label>
+    <div className="relative">
+      {prefix && (
+        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          <span className="text-gray-500 font-medium">{prefix}</span>
+        </div>
+      )}
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder="0"
+        className={`w-full bg-[#121212] border border-gray-800 rounded-lg py-2.5 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors ${prefix ? 'pl-10 pr-4' : 'px-4'}`}
+      />
+    </div>
+    {note && <p className="text-xs text-gray-500 mt-2">{note}</p>}
+  </div>
+);
 
 export default function CapitalGains() {
-  const { taxData, updateArrayData, updateNestedTaxData } = useTaxation();
+  const { taxData, updateTaxData, updateNestedTaxData } = useTaxation();
   const navigate = useNavigate();
-  const cgTransactions = taxData.cgTransactions || [];
+  const { capitalGains } = taxData;
 
-  useEffect(() => {
-    // Auto-calculate the totals into the context object
-    const stcgTotals = { q1: 0, q2: 0, q3: 0, q4: 0, q5: 0 };
-    const ltcgTotals = { q1: 0, q2: 0, q3: 0, q4: 0, q5: 0 };
-
-    cgTransactions.forEach(tx => {
-      const profit = (Number(tx.sellValue) || 0) - (Number(tx.buyValue) || 0) - (Number(tx.expenses) || 0);
-      if (profit === 0) return;
-      
-      const type = getCapitalGainType(tx.buyDate, tx.sellDate, tx.type);
-      const q = getQuarter(tx.sellDate);
-      
-      if (q) {
-        if (type === 'stcg') stcgTotals[q] += profit;
-        else ltcgTotals[q] += profit;
-      }
-    });
-
-    Object.keys(stcgTotals).forEach(q => updateNestedTaxData('capitalGains', 'stcg', q, stcgTotals[q]));
-    Object.keys(ltcgTotals).forEach(q => updateNestedTaxData('capitalGains', 'ltcg', q, ltcgTotals[q]));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cgTransactions]);
-
-  const handleAddRow = () => {
-    const newId = cgTransactions.length > 0 ? Math.max(...cgTransactions.map(t => t.id)) + 1 : 1;
-    updateArrayData('cgTransactions', [
-      ...cgTransactions, 
-      { id: newId, assetName: '', isin: '', type: 'Equity/MF', buyDate: '', sellDate: '', buyValue: 0, sellValue: 0, expenses: 0 }
-    ]);
+  const handleCapitalChange = (type, q, val) => {
+    updateNestedTaxData('capitalGains', type, q, val === '' ? '' : Number(val));
   };
 
-  const handleRemoveRow = (id) => {
-    updateArrayData('cgTransactions', cgTransactions.filter(t => t.id !== id));
-  };
-
-  const handleChange = (id, field, value) => {
-    updateArrayData('cgTransactions', cgTransactions.map(t => 
-      t.id === id ? { ...t, [field]: value } : t
-    ));
-  };
-
-  const totalStcg = Object.values(taxData.capitalGains.stcg).reduce((a, b) => a + Number(b), 0);
-  const totalLtcg = Object.values(taxData.capitalGains.ltcg).reduce((a, b) => a + Number(b), 0);
+  const totalStcg = Object.values(capitalGains.stcg).reduce((a,b) => Number(a) + Number(b), 0);
+  const totalLtcg = Object.values(capitalGains.ltcg).reduce((a,b) => Number(a) + Number(b), 0);
 
   return (
-    <div className="max-w-6xl mx-auto py-8">
-      <div className="mb-8 flex justify-between items-end">
-        <div>
-          <h2 className="text-3xl font-bold text-white mb-2">Capital Gains (Schedule CG)</h2>
-          <p className="text-gray-400">Add your individual trades. We will automatically classify STCG/LTCG and calculate advance tax quarters.</p>
-        </div>
-        <button 
-          onClick={handleAddRow}
-          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-        >
-          + Add Transaction
-        </button>
+    <div className="max-w-4xl mx-auto py-8 pb-20">
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold text-white mb-2">Capital Gains</h2>
+        <p className="text-gray-400">Enter your aggregate Short-Term and Long-Term Capital Gains with quarterly breakdown for Advance Tax.</p>
       </div>
 
-      <div className="space-y-6 mb-8">
-        {cgTransactions.length === 0 ? (
-          <div className="bg-[#1a1a1a] p-12 rounded-xl border border-gray-800 text-center">
-            <p className="text-gray-500 mb-4">No capital gains transactions added yet. Click to add a stock or mutual fund trade.</p>
-            <button 
-              onClick={handleAddRow}
-              className="px-5 py-2.5 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors border border-gray-700"
-            >
-              Add First Trade
-            </button>
+      <div className="space-y-8">
+        <div className="bg-[#1a1a1a] p-6 rounded-xl border border-gray-800">
+          <div className="mb-6">
+            <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+              <span className="w-8 h-8 rounded-full bg-blue-600/20 text-blue-500 flex items-center justify-center text-sm">1</span>
+              Short-Term Capital Gains (u/s 111A - 20%)
+            </h3>
+            <p className="text-sm text-gray-400 mt-1 ml-10">Quarterly breakdown for accurate Advance Tax accrual</p>
           </div>
-        ) : (
-          <div className="bg-[#1a1a1a] rounded-xl border border-gray-800 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-[#242424] border-b border-gray-800 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    <th className="p-4">Asset Details</th>
-                    <th className="p-4">Dates</th>
-                    <th className="p-4">Buy & Sell Values</th>
-                    <th className="p-4">Gain/Loss</th>
-                    <th className="p-4 text-center">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-800">
-                  {cgTransactions.map((row) => {
-                    const profit = (Number(row.sellValue) || 0) - (Number(row.buyValue) || 0) - (Number(row.expenses) || 0);
-                    const gainType = getCapitalGainType(row.buyDate, row.sellDate, row.type);
-                    return (
-                      <tr key={row.id} className="hover:bg-[#1f1f1f] transition-colors">
-                        <td className="p-4 align-top w-1/4">
-                          <input
-                            type="text"
-                            placeholder="Asset Name (e.g., RIL)"
-                            className="w-full bg-[#121212] border border-gray-700 rounded text-sm text-white p-2 mb-2 focus:ring-1 focus:ring-blue-500 outline-none"
-                            value={row.assetName}
-                            onChange={(e) => handleChange(row.id, 'assetName', e.target.value)}
-                          />
-                          <input
-                            type="text"
-                            placeholder="ISIN (Optional)"
-                            className="w-full bg-[#121212] border border-gray-700 rounded text-sm text-gray-400 p-2 mb-2 focus:ring-1 focus:ring-blue-500 outline-none uppercase"
-                            value={row.isin || ''}
-                            onChange={(e) => handleChange(row.id, 'isin', e.target.value)}
-                          />
-                          <select
-                            className="w-full bg-[#121212] border border-gray-700 rounded text-sm text-gray-400 p-2 focus:ring-1 focus:ring-blue-500 outline-none"
-                            value={row.type}
-                            onChange={(e) => handleChange(row.id, 'type', e.target.value)}
-                          >
-                            <option value="Equity/MF">Equity / Equity MF</option>
-                            <option value="Debt/Other">Debt MF / Unlisted</option>
-                          </select>
-                        </td>
-                        <td className="p-4 align-top w-1/5">
-                          <div className="mb-2">
-                            <label className="text-xs text-gray-500 block mb-1">Buy Date</label>
-                            <input
-                              type="date"
-                              className="w-full bg-[#121212] border border-gray-700 rounded text-sm text-white p-2 focus:ring-1 focus:ring-blue-500 outline-none"
-                              value={row.buyDate}
-                              onChange={(e) => handleChange(row.id, 'buyDate', e.target.value)}
-                            />
-                          </div>
-                          <div>
-                            <label className="text-xs text-gray-500 block mb-1">Sell Date</label>
-                            <input
-                              type="date"
-                              className="w-full bg-[#121212] border border-gray-700 rounded text-sm text-white p-2 focus:ring-1 focus:ring-blue-500 outline-none"
-                              value={row.sellDate}
-                              onChange={(e) => handleChange(row.id, 'sellDate', e.target.value)}
-                            />
-                          </div>
-                        </td>
-                        <td className="p-4 align-top w-1/4">
-                          <input
-                            type="number"
-                            placeholder="Buy Value (₹)"
-                            className="w-full bg-[#121212] border border-gray-700 rounded text-sm text-white p-2 mb-2 focus:ring-1 focus:ring-blue-500 outline-none"
-                            value={row.buyValue || ''}
-                            onChange={(e) => handleChange(row.id, 'buyValue', Number(e.target.value))}
-                          />
-                          <input
-                            type="number"
-                            placeholder="Sell Value (₹)"
-                            className="w-full bg-[#121212] border border-gray-700 rounded text-sm text-white p-2 mb-2 focus:ring-1 focus:ring-blue-500 outline-none"
-                            value={row.sellValue || ''}
-                            onChange={(e) => handleChange(row.id, 'sellValue', Number(e.target.value))}
-                          />
-                          <input
-                            type="number"
-                            placeholder="Transfer Exp (₹)"
-                            className="w-full bg-[#121212] border border-gray-700 rounded text-sm text-white p-2 focus:ring-1 focus:ring-blue-500 outline-none"
-                            value={row.expenses || ''}
-                            onChange={(e) => handleChange(row.id, 'expenses', Number(e.target.value))}
-                          />
-                        </td>
-                        <td className="p-4 align-top">
-                          {row.buyDate && row.sellDate ? (
-                            <div className={`p-3 rounded border ${profit >= 0 ? 'bg-green-900/20 border-green-500/30' : 'bg-red-900/20 border-red-500/30'}`}>
-                              <p className={`text-lg font-bold ${profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                ₹{profit.toLocaleString('en-IN')}
-                              </p>
-                              <p className="text-xs font-semibold text-gray-400 mt-1 uppercase">
-                                {gainType === 'stcg' ? 'Short Term (STCG)' : 'Long Term (LTCG)'}
-                              </p>
-                              <p className="text-[10px] text-gray-500 mt-1 uppercase">
-                                Qtr: {getQuarter(row.sellDate)}
-                              </p>
-                            </div>
-                          ) : (
-                            <p className="text-sm text-gray-500 italic">Enter dates to calculate gain...</p>
-                          )}
-                        </td>
-                        <td className="p-4 align-top text-center">
-                          <button 
-                            onClick={() => handleRemoveRow(row.id)}
-                            className="text-red-500 hover:text-red-400 p-2 text-xl font-bold"
-                            title="Remove Row"
-                          >
-                            &times;
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-            
-            <div className="bg-[#242424] p-4 flex justify-between items-center border-t border-gray-800">
-              <span className="text-gray-400 font-medium text-sm">Aggregate STCG: <span className="text-white ml-2">₹{totalStcg.toLocaleString('en-IN')}</span></span>
-              <span className="text-gray-400 font-medium text-sm">Aggregate LTCG: <span className="text-white ml-2">₹{totalLtcg.toLocaleString('en-IN')}</span></span>
-            </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <InputField label="i. Up to 15-Jun-2025" name="stcg_q1" value={capitalGains.stcg.q1} onChange={(e) => handleCapitalChange('stcg', 'q1', e.target.value)} />
+            <InputField label="ii. 16-Jun to 15-Sep" name="stcg_q2" value={capitalGains.stcg.q2} onChange={(e) => handleCapitalChange('stcg', 'q2', e.target.value)} />
+            <InputField label="iii. 16-Sep to 15-Dec" name="stcg_q3" value={capitalGains.stcg.q3} onChange={(e) => handleCapitalChange('stcg', 'q3', e.target.value)} />
+            <InputField label="iv. 16-Dec to 15-Mar" name="stcg_q4" value={capitalGains.stcg.q4} onChange={(e) => handleCapitalChange('stcg', 'q4', e.target.value)} />
+            <InputField label="v. 16-Mar to 31-Mar" name="stcg_q5" value={capitalGains.stcg.q5} onChange={(e) => handleCapitalChange('stcg', 'q5', e.target.value)} />
           </div>
-        )}
+          
+          <div className="p-3 bg-[#121212] rounded-lg border border-gray-800">
+            <p className="text-gray-400 text-sm">Total STCG (111A): <span className="text-white font-bold text-lg">₹{totalStcg.toLocaleString('en-IN')}</span></p>
+          </div>
+        </div>
+
+        <div className="bg-[#1a1a1a] p-6 rounded-xl border border-gray-800">
+          <div className="mb-6">
+            <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+              <span className="w-8 h-8 rounded-full bg-blue-600/20 text-blue-500 flex items-center justify-center text-sm">2</span>
+              Long-Term Capital Gains (u/s 112A - 12.5%)
+            </h3>
+            <p className="text-sm text-gray-400 mt-1 ml-10">Exemption up to ₹1.25 Lakhs available</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <InputField label="i. Up to 15-Jun-2025" name="ltcg_q1" value={capitalGains.ltcg.q1} onChange={(e) => handleCapitalChange('ltcg', 'q1', e.target.value)} />
+            <InputField label="ii. 16-Jun to 15-Sep" name="ltcg_q2" value={capitalGains.ltcg.q2} onChange={(e) => handleCapitalChange('ltcg', 'q2', e.target.value)} />
+            <InputField label="iii. 16-Sep to 15-Dec" name="ltcg_q3" value={capitalGains.ltcg.q3} onChange={(e) => handleCapitalChange('ltcg', 'q3', e.target.value)} />
+            <InputField label="iv. 16-Dec to 15-Mar" name="ltcg_q4" value={capitalGains.ltcg.q4} onChange={(e) => handleCapitalChange('ltcg', 'q4', e.target.value)} />
+            <InputField label="v. 16-Mar to 31-Mar" name="ltcg_q5" value={capitalGains.ltcg.q5} onChange={(e) => handleCapitalChange('ltcg', 'q5', e.target.value)} />
+          </div>
+
+          <div className="p-3 bg-[#121212] rounded-lg border border-gray-800">
+            <p className="text-gray-400 text-sm">Total LTCG (112A): <span className="text-white font-bold text-lg">₹{totalLtcg.toLocaleString('en-IN')}</span></p>
+          </div>
+        </div>
 
         <div className="flex justify-between">
           <button 
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/taxation/business')}
             className="text-gray-400 hover:text-white font-medium py-3 px-6 transition-colors"
           >
             &larr; Back
@@ -239,9 +100,6 @@ export default function CapitalGains() {
           <button 
             onClick={() => {
               if (taxData.incomes.hasOtherSources) navigate('/taxation/other-sources');
-              else if (taxData.incomes.hasExemptIncome) navigate('/taxation/exempt-income');
-              else if (taxData.incomes.hasDeductions) navigate('/taxation/deductions');
-              else if (taxData.incomes.hasPrepaidTaxes) navigate('/taxation/taxes-paid');
               else navigate('/taxation/adjustments');
             }}
             className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition-colors flex items-center gap-2"

@@ -16,7 +16,7 @@ const InputField = ({ label, value, onChange, name, type = "number", prefix = "â
       <input
         type={type}
         name={name}
-        value={value === 0 ? '' : value}
+        value={value}
         onChange={onChange}
         placeholder="0"
         className={`w-full bg-[#121212] border border-gray-800 rounded-lg py-2.5 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors ${prefix ? 'pl-10 pr-4' : 'px-4'}`}
@@ -32,7 +32,7 @@ export default function ExemptIncome() {
   const { exemptIncome } = taxData;
 
   const handleChange = (e) => {
-    updateTaxData('exemptIncome', e.target.name, Number(e.target.value));
+    updateTaxData('exemptIncome', e.target.name, e.target.value === '' ? '' : Number(e.target.value));
   };
 
   return (
