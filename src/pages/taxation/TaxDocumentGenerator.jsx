@@ -3,8 +3,8 @@ import html2pdf from 'html2pdf.js';
 import { useTaxation } from './TaxationContext';
 
 const formatCur = (num) => {
-  if (!num) return '0';
-  return Number(num).toLocaleString('en-IN');
+  if (!num) return '0.00';
+  return Number(num).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
 export default function TaxDocumentGenerator({ onClose }) {
@@ -14,7 +14,7 @@ export default function TaxDocumentGenerator({ onClose }) {
   const data = taxData;
   const { business } = data;
   const bankAccounts = data.bankAccounts || [];
-  const cgTransactions = data.cgTransactions || [];
+  const taxDeductors = data.taxDeductors || [];
 
   // -- MATH COMPUTATIONS --
   const grossBusiness = Number(business.profitBank) + Number(business.profitCash);
@@ -71,25 +71,12 @@ export default function TaxDocumentGenerator({ onClose }) {
   const taxDue = Math.max(0, grossTaxLiability - totalPrepaid);
   const taxRefund = Math.max(0, totalPrepaid - grossTaxLiability);
 
-  // Balance Sheet Totals
-  const bsFixedNet = Number(business.balanceSheet.fixedGrossBlock) - Number(business.balanceSheet.fixedDepreciation);
-  const bsInvest = Number(business.balanceSheet.investmentsST) + Number(business.balanceSheet.investmentsLT);
-  const bsCurrentAssets = Number(business.balanceSheet.currentBank) + Number(business.balanceSheet.currentCash) + Number(business.balanceSheet.currentStock) + Number(business.balanceSheet.currentReceivables) + Number(business.balanceSheet.currentLoansGiven) + Number(business.balanceSheet.currentOther);
-  const bsTotalAssets = bsFixedNet + bsInvest + bsCurrentAssets;
-
-  const bsEquity = Number(business.balanceSheet.equityCapital) + Number(business.balanceSheet.equityReserves);
-  const bsNonCurrentLiab = Number(business.balanceSheet.nonCurrentSecured) + Number(business.balanceSheet.nonCurrentUnsecured) + Number(business.balanceSheet.nonCurrentAdvances);
-  const bsCurrentLiab = Number(business.balanceSheet.currentPayables) + Number(business.balanceSheet.currentProvisions) + Number(business.balanceSheet.currentOtherLiab);
-  const bsTotalLiab = bsEquity + bsNonCurrentLiab + bsCurrentLiab;
-
-  const totalPages = (data.incomes.hasBusiness ? 5 : 3) + (cgTransactions.length > 0 ? Math.ceil(cgTransactions.length / 10) : 0);
-
   const handleDownload = () => {
     setIsGenerating(true);
     const element = documentRef.current;
     const opt = {
       margin: 0,
-      filename: `Tax_Computation_${data.clientDetails.pan || 'Client'}.pdf`,
+      filename: `Detailed_Computation_${data.clientDetails.pan || 'Client'}.pdf`,
       image: { type: 'jpeg', quality: 1 },
       html2canvas: { scale: 2, useCORS: true, letterRendering: true, windowWidth: 794 },
       jsPDF: { unit: 'px', format: [794, 1123], orientation: 'portrait' }
@@ -100,39 +87,37 @@ export default function TaxDocumentGenerator({ onClose }) {
     });
   };
 
-  // Tax2Win Premium Styling Components
-  const PageWrapper = ({ children, pageNum }) => (
-    <div className="bg-white w-[794px] h-[1123px] relative px-14 pt-16 pb-24 border-b border-gray-300">
-      {children}
-      <div className="absolute bottom-10 left-14 right-14 flex justify-between items-center text-[10px] text-gray-400">
-        <p>Disclaimer: This report is for informational purposes only and is not necessarily reflecting data reported in income tax return (ITR).</p>
-        <p className="font-semibold text-gray-500 whitespace-nowrap ml-4">Page {pageNum} of {totalPages}</p>
+  // Tax2Win Strict Styling
+  const tableBorder = "border border-black border-collapse";
+  const cellStyle = "p-2 border border-black text-[13px]";
+  const boldHeader = "p-2 font-bold bg-white text-[13px] border border-black";
+  
+  const HeaderLogo = () => (
+    <div className="flex justify-between items-center mb-8">
+      <div className="flex items-center gap-2 text-[#2b59ff] font-bold text-2xl tracking-tighter">
+        <div className="w-8 h-8 rounded-full bg-[#2b59ff] flex items-center justify-center text-white">
+          A
+        </div>
+        Aarthika
       </div>
+      <div className="text-[13px]">ITR #2845613</div>
     </div>
   );
 
-  const Header = ({ title }) => (
-    <div className="flex justify-between items-start mb-14">
-      <h1 className="text-[28px] font-bold text-[#1f2937] tracking-tight">{title}</h1>
-      <div className="text-right">
-        <p className="text-[15px] text-[#4b5563] font-medium">Financial Year 2025-26</p>
-        <p className="text-[11px] text-[#9ca3af] font-semibold tracking-widest uppercase mt-1">Assessment Year 2026-27</p>
-      </div>
-    </div>
+  const TitleHeader = ({ title }) => (
+    <h1 className="text-center text-xl font-normal mb-8">{title}</h1>
   );
 
-  const SectionTitle = ({ title }) => (
-    <div className="mt-8 mb-6">
-      <h2 className="text-[13px] font-bold text-[#1f2937] tracking-wide uppercase mb-2">{title}</h2>
-      <hr className="border-t-[1.5px] border-[#1f2937]" />
+  const PageFooter = ({ pageNum }) => (
+    <div className="absolute bottom-6 left-12 right-12 flex justify-between text-[11px] text-gray-800">
+      <div>Aarthika.in</div>
+      <div>Page {pageNum}</div>
+      <div>2026-08-04 18:46:14</div>
     </div>
   );
-
-  const tdClass = "py-3 px-4 border-b border-r border-[#e5e7eb] text-[13px] text-[#1f2937]";
-  const tdLabelClass = "py-3 px-4 border-b border-r border-[#e5e7eb] text-[13px] text-[#4b5563] bg-[#f9fafb]";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto font-sans">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
       <div className="bg-[#121212] border border-gray-800 rounded-xl max-w-4xl w-full shadow-2xl relative my-8">
         
         {/* Actions Header */}
@@ -150,610 +135,415 @@ export default function TaxDocumentGenerator({ onClose }) {
 
         {/* PDF Container - Exact scaling 794x1123 */}
         <div className="overflow-x-auto bg-gray-900 flex justify-center py-8">
-          <div ref={documentRef} className="flex flex-col text-[#1f2937] bg-gray-100" style={{ width: '794px' }}>
+          <div ref={documentRef} className="flex flex-col text-black bg-white" style={{ width: '794px', fontFamily: 'Arial, Helvetica, sans-serif' }}>
             
             {/* PAGE 1 */}
-            <PageWrapper pageNum={1}>
-              <Header title="Tax Computation" />
+            <div className="bg-white w-[794px] h-[1123px] relative px-12 pt-12 pb-24 shadow-sm border-b border-gray-300">
+              <HeaderLogo />
+              <TitleHeader title="Detailed Computation as per New Tax Regime (ITR-4)" />
               
-              <SectionTitle title="Personal Details" />
-              <table className="w-full border-l border-t border-[#e5e7eb] mb-10 border-collapse">
+              <h2 className="text-center text-[22px] font-normal mb-6">Basic Details</h2>
+              <table className={`w-full ${tableBorder} mb-8`}>
                 <tbody>
+                  <tr><td colSpan="4" className={`${boldHeader}`}>Personal Information</td></tr>
                   <tr>
-                    <td className={tdLabelClass}>Name</td>
-                    <td className={`${tdClass} uppercase`}>{data.clientDetails.firstName} {data.clientDetails.lastName}</td>
-                    <td className={tdLabelClass}>PAN</td>
-                    <td className={`${tdClass} uppercase`}>{data.clientDetails.pan || 'N/A'}</td>
+                    <td className={`${boldHeader} w-1/4`}>Name</td>
+                    <td colSpan="3" className={`${cellStyle}`}>{data.clientDetails.firstName} {data.clientDetails.lastName}</td>
                   </tr>
                   <tr>
-                    <td className={tdLabelClass}>Date of Birth</td>
-                    <td className={tdClass}>--</td>
-                    <td className={tdLabelClass}>Mobile Number</td>
-                    <td className={tdClass}>--</td>
+                    <td className={`${boldHeader}`}>Permanent Address</td>
+                    <td colSpan="3" className={`${cellStyle}`}>--</td>
                   </tr>
                   <tr>
-                    <td className={tdLabelClass}>Email</td>
-                    <td className={tdClass}>--</td>
-                    <td className={tdLabelClass}>Residential Status</td>
-                    <td className={`${tdClass} uppercase`}>Resident</td>
+                    <td className={`${boldHeader}`}>Father's Name</td>
+                    <td colSpan="3" className={`${cellStyle}`}>--</td>
                   </tr>
                   <tr>
-                    <td className={tdLabelClass}>Address</td>
-                    <td colSpan="3" className={tdClass}>--</td>
+                    <td className={`${boldHeader}`}>PAN</td>
+                    <td className={`${cellStyle} w-1/4 uppercase`}>{data.clientDetails.pan || 'N/A'}</td>
+                    <td className={`${boldHeader} w-1/4`}>Date of Birth</td>
+                    <td className={`${cellStyle} w-1/4`}>--</td>
+                  </tr>
+                  <tr>
+                    <td className={`${boldHeader}`}>E-Mail</td>
+                    <td className={`${cellStyle}`}>--</td>
+                    <td className={`${boldHeader}`}>Financial Year</td>
+                    <td className={`${cellStyle}`}>01-04-2025 to 31-03-2026</td>
+                  </tr>
+                  <tr>
+                    <td className={`${boldHeader}`}>Mobile</td>
+                    <td className={`${cellStyle}`}>--</td>
+                    <td className={`${boldHeader}`}>Assessment Year</td>
+                    <td className={`${cellStyle}`}>01-04-2026 to 31-03-2027</td>
+                  </tr>
+                  <tr>
+                    <td className={`${boldHeader}`}>Residential Status</td>
+                    <td className={`${cellStyle}`}>Resident</td>
+                    <td className={`${boldHeader}`}>Status</td>
+                    <td className={`${cellStyle}`}>Individual</td>
+                  </tr>
+                  <tr>
+                    <td className={`${boldHeader}`}>Return Type</td>
+                    <td className={`${cellStyle}`}>Original Return</td>
+                    <td className={`${boldHeader}`}>Regime</td>
+                    <td className={`${cellStyle}`}>New Tax Regime</td>
+                  </tr>
+                  <tr>
+                    <td className={`${boldHeader}`}>Return Filed Section</td>
+                    <td className={`${cellStyle}`}>On Or Before Due Date 139(1)</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${cellStyle}`}></td>
                   </tr>
                 </tbody>
               </table>
 
-              <SectionTitle title="Income Tax Return Details" />
-              <table className="w-full border-l border-t border-[#e5e7eb] mb-10 border-collapse">
+              <h2 className="text-center text-[22px] font-normal mb-6 mt-12">Computation of Income</h2>
+              <table className={`w-full ${tableBorder}`}>
+                <thead>
+                  <tr>
+                    <th className={`${boldHeader} text-center`}>Description</th>
+                    <th className={`${boldHeader} text-center w-[20%]`}>Amount</th>
+                    <th className={`${boldHeader} text-center w-[20%]`}>Amount</th>
+                  </tr>
+                </thead>
                 <tbody>
                   <tr>
-                    <td className={tdLabelClass}>Form</td>
-                    <td className={tdClass}>ITR-3</td>
-                    <td className={tdLabelClass}>Type</td>
-                    <td className={tdClass}>ORIGINAL</td>
+                    <td className={`${boldHeader}`}>Income from Salary</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${boldHeader} text-right`}>0.00</td>
                   </tr>
                   <tr>
-                    <td className={tdLabelClass}>Regime</td>
-                    <td className={tdClass}>NEW</td>
-                    <td className={tdLabelClass}>Filing under section</td>
-                    <td className={tdClass}>139(1)</td>
+                    <td className={`${boldHeader}`}>Income from Business (Annexure #1)</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${boldHeader} text-right`}>{formatCur(grossBusiness)}</td>
+                  </tr>
+                  <tr>
+                    <td className={`${boldHeader} pl-8`}>Income from Presumptive (Annexure #1)</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${cellStyle}`}></td>
+                  </tr>
+                  <tr>
+                    <td className={`${cellStyle} pl-12`}>Section 44AD (Annexure #1)</td>
+                    <td className={`${cellStyle} text-right`}>{formatCur(grossBusiness)}</td>
+                    <td className={`${cellStyle}`}></td>
+                  </tr>
+                  {(grossStcg > 0 || grossLtcg > 0) && (
+                    <tr>
+                      <td className={`${boldHeader}`}>Income from Capital Gains</td>
+                      <td className={`${cellStyle}`}></td>
+                      <td className={`${boldHeader} text-right`}>{formatCur(grossStcg + grossLtcg)}</td>
+                    </tr>
+                  )}
+                  <tr>
+                    <td className={`${boldHeader}`}>Income from House Property</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${boldHeader} text-right`}>0.00</td>
+                  </tr>
+                  <tr>
+                    <td className={`${boldHeader}`}>Income from Other Sources (Annexure #2)</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${boldHeader} text-right`}>{formatCur(grossOther)}</td>
+                  </tr>
+                  <tr>
+                    <td className={`${boldHeader}`}>Gross Total Income</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${boldHeader} text-right`}>{formatCur(grossTotalIncome)}</td>
+                  </tr>
+                  <tr>
+                    <td className={`${boldHeader}`}>Gross Total Income including LTCG u/s 112A</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${boldHeader} text-right`}>{formatCur(grossTotalIncome)}</td>
+                  </tr>
+                  <tr>
+                    <td className={`${boldHeader}`}>Less: Deductions</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${boldHeader} text-right`}>{formatCur(totalDeductions)}</td>
+                  </tr>
+                  <tr>
+                    <td className={`${boldHeader}`}>Taxable Total Income</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${boldHeader} text-right`}>{formatCur(totalIncome)}</td>
+                  </tr>
+                  <tr>
+                    <td className={`${boldHeader}`}>Tax Payable on Total Income</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${boldHeader} text-right`}>{formatCur(totalTax)}</td>
                   </tr>
                 </tbody>
               </table>
 
-              <SectionTitle title="Tax Computation Summary" />
-              <table className="w-full border-l border-t border-[#e5e7eb] mb-10 border-collapse">
-                <tbody>
-                  <tr>
-                    <td className={`${tdClass} font-semibold w-[60%]`}>Gross Total Income</td>
-                    <td className={`${tdClass} font-bold text-right w-[40%]`}>₹{formatCur(grossTotalIncome)}</td>
-                  </tr>
-                  <tr>
-                    <td className={`${tdClass} font-semibold`}>Deductions</td>
-                    <td className={`${tdClass} font-bold text-right`}>₹{formatCur(totalDeductions)}</td>
-                  </tr>
-                  <tr>
-                    <td className={`${tdClass} font-semibold`}>Total Taxable Income</td>
-                    <td className={`${tdClass} font-bold text-right`}>₹{formatCur(totalIncome)}</td>
-                  </tr>
-                  <tr>
-                    <td className={`${tdClass} font-semibold`}>Gross Tax Liability</td>
-                    <td className={`${tdClass} font-bold text-right`}>₹{formatCur(grossTaxLiability)}</td>
-                  </tr>
-                  <tr>
-                    <td className={`${tdClass} font-semibold`}>Interest & Penalty</td>
-                    <td className={`${tdClass} font-bold text-right`}>₹0</td>
-                  </tr>
-                  <tr>
-                    <td className={`${tdClass} font-semibold`}>Total Taxes Paid</td>
-                    <td className={`${tdClass} font-bold text-right`}>₹{formatCur(totalPrepaid)}</td>
-                  </tr>
-                  <tr>
-                    <td className={`${tdLabelClass} font-bold text-[15px]`}>Tax Dues / (Refund)</td>
-                    <td className={`${tdLabelClass} font-bold text-[15px] text-right`}>₹{formatCur(taxDue > 0 ? taxDue : -taxRefund)}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </PageWrapper>
+              <PageFooter pageNum={1} />
+            </div>
 
             {/* PAGE 2 */}
-            <PageWrapper pageNum={2}>
-              <Header title="Computation of Income" />
-              
-              <table className="w-full border-l border-t border-[#e5e7eb] mb-10 border-collapse">
+            <div className="bg-white w-[794px] h-[1123px] relative px-12 pt-12 pb-24 shadow-sm border-b border-gray-300">
+              <div className="flex justify-end text-[13px] mb-4">ITR #2845613</div>
+              <table className={`w-full ${tableBorder}`}>
                 <thead>
-                  <tr className="bg-[#f9fafb]">
-                    <th className={`${tdClass} font-bold text-left w-[50%]`}>Particulars</th>
-                    <th className={`${tdClass} font-bold text-right w-[25%]`}>Amount</th>
-                    <th className={`${tdClass} font-bold text-right w-[25%]`}>Total</th>
+                  <tr>
+                    <th className={`${boldHeader} text-center`}>Description</th>
+                    <th className={`${boldHeader} text-center w-[20%]`}>Amount</th>
+                    <th className={`${boldHeader} text-center w-[20%]`}>Amount</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className={`${tdClass} text-[#4b5563]`}>1. Total Head-wise Income</td>
-                    <td className={tdClass}></td>
-                    <td className={`${tdClass} font-bold text-right`}>₹{formatCur(grossTotalIncome + Number(data.bfla.businessLoss) + Number(data.bfla.stcgLoss) + Number(data.bfla.ltcgLoss))}</td>
+                    <td className={`${cellStyle}`}>Less: Rebate u/s 87A</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${cellStyle} text-right`}>{formatCur(rebate87a)}</td>
                   </tr>
                   <tr>
-                    <td className={`${tdClass} pl-8 text-[#4b5563]`}>a. Taxable Business & Profession Income</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(grossBusiness)}</td>
-                    <td className={tdClass}></td>
+                    <td className={`${boldHeader}`}>Tax Payable After Rebate</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${boldHeader} text-right`}>{formatCur(taxAfterRebate)}</td>
                   </tr>
                   <tr>
-                    <td className={`${tdClass} pl-8 text-[#4b5563]`}>b. Taxable Capital Gains</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(grossStcg + grossLtcg)}</td>
-                    <td className={tdClass}></td>
+                    <td className={`${cellStyle} pl-8`}>Add: Surcharge</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${cellStyle} text-right`}>0.00</td>
                   </tr>
                   <tr>
-                    <td className={`${tdClass} pl-8 text-[#4b5563]`}>c. Taxable Other Sources Income</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(grossOther)}</td>
-                    <td className={tdClass}></td>
-                  </tr>
-                  
-                  <tr>
-                    <td className={`${tdClass} text-[#4b5563]`}>2. Losses Adjusted</td>
-                    <td className={tdClass}></td>
-                    <td className={`${tdClass} font-bold text-right`}>₹{formatCur(Number(data.bfla.businessLoss) + Number(data.bfla.stcgLoss) + Number(data.bfla.ltcgLoss))}</td>
+                    <td className={`${cellStyle} pl-8`}>Add: Health & Education Cess</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${cellStyle} text-right`}>{formatCur(healthEduCess)}</td>
                   </tr>
                   <tr>
-                    <td className={`${tdClass} pl-8 text-[#4b5563]`}>a. Brought Forward Business Loss</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(data.bfla.businessLoss)}</td>
-                    <td className={tdClass}></td>
+                    <td className={`${boldHeader}`}>Gross Tax Liability</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${boldHeader} text-right`}>{formatCur(grossTaxLiability)}</td>
                   </tr>
                   <tr>
-                    <td className={`${tdClass} pl-8 text-[#4b5563]`}>b. Brought Forward STCG Loss</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(data.bfla.stcgLoss)}</td>
-                    <td className={tdClass}></td>
+                    <td className={`${boldHeader}`}>Balance Tax After Relief</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${boldHeader} text-right`}>{formatCur(grossTaxLiability)}</td>
                   </tr>
                   <tr>
-                    <td className={`${tdClass} pl-8 text-[#4b5563]`}>c. Brought Forward LTCG Loss</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(data.bfla.ltcgLoss)}</td>
-                    <td className={tdClass}></td>
-                  </tr>
-
-                  <tr>
-                    <td className={`${tdClass} text-[#4b5563]`}>3. Gross Total Income (1 - 2)</td>
-                    <td className={tdClass}></td>
-                    <td className={`${tdClass} font-bold text-right`}>₹{formatCur(grossTotalIncome)}</td>
+                    <td className={`${cellStyle}`}>Less: Total Advance Tax Paid</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${cellStyle} text-right`}>{formatCur(data.prepaidTaxes.advanceTax)}</td>
                   </tr>
                   <tr>
-                    <td className={`${tdClass} text-[#4b5563]`}>4. Total Chapter VI-A Deductions</td>
-                    <td className={tdClass}></td>
-                    <td className={`${tdClass} font-bold text-right`}>₹{formatCur(totalDeductions)}</td>
+                    <td className={`${cellStyle}`}>Less: Total Self Assessment Tax Paid</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${cellStyle} text-right`}>0.00</td>
                   </tr>
                   <tr>
-                    <td className={`${tdClass} text-[#4b5563]`}>5. Total Taxable Income (3 - 4)</td>
-                    <td className={tdClass}></td>
-                    <td className={`${tdClass} font-bold text-right`}>₹{formatCur(totalIncome)}</td>
-                  </tr>
-
-                  <tr>
-                    <td className={`${tdClass} text-[#4b5563]`}>6. Exempt Income u/s 10</td>
-                    <td className={tdClass}></td>
-                    <td className={`${tdClass} font-bold text-right`}>₹{formatCur(totalExemptIncome)}</td>
-                  </tr>
-                  {exemptGifts > 0 && (
-                    <tr>
-                      <td className={`${tdClass} pl-8 text-[#4b5563]`}>Gifts on Specific Occasion</td>
-                      <td className={`${tdClass} text-right`}>₹{formatCur(exemptGifts)}</td>
-                      <td className={tdClass}></td>
-                    </tr>
-                  )}
-                  {Number(data.exemptIncome.agriculture) > 0 && (
-                    <tr>
-                      <td className={`${tdClass} pl-8 text-[#4b5563]`}>Agricultural Income</td>
-                      <td className={`${tdClass} text-right`}>₹{formatCur(data.exemptIncome.agriculture)}</td>
-                      <td className={tdClass}></td>
-                    </tr>
-                  )}
-
-                  <tr>
-                    <td className={`${tdClass} text-[#4b5563]`}>7. Tax Payable</td>
-                    <td className={tdClass}></td>
-                    <td className={`${tdClass} font-bold text-right`}>₹{formatCur(totalTax)}</td>
+                    <td className={`${cellStyle}`}>Less: Total TDS Claimed</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${cellStyle} text-right`}>{formatCur(Number(data.prepaidTaxes.tdsSalary) + Number(data.prepaidTaxes.tdsOther))}</td>
                   </tr>
                   <tr>
-                    <td className={`${tdClass} pl-8 text-[#4b5563]`}>a. Tax Payable at Normal Rate</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(normalTax)}</td>
-                    <td className={tdClass}></td>
+                    <td className={`${cellStyle}`}>Less: Tax Collected at Source</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${cellStyle} text-right`}>{formatCur(data.prepaidTaxes.tcs)}</td>
                   </tr>
                   <tr>
-                    <td className={`${tdClass} pl-8 text-[#4b5563]`}>b. Tax Payable at Special Rate (111A STCG)</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(taxUnder111A)}</td>
-                    <td className={tdClass}></td>
+                    <td className={`${cellStyle}`}>Add: Interest u/s 234A</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${cellStyle} text-right`}>0.00</td>
                   </tr>
                   <tr>
-                    <td className={`${tdClass} pl-8 text-[#4b5563]`}>c. Tax Payable at Special Rate (112A LTCG)</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(taxUnder112A)}</td>
-                    <td className={tdClass}></td>
-                  </tr>
-
-                  <tr>
-                    <td className={`${tdClass} text-[#4b5563]`}>8. Rebate u/s 87a</td>
-                    <td className={tdClass}></td>
-                    <td className={`${tdClass} font-bold text-right`}>₹{formatCur(rebate87a)}</td>
+                    <td className={`${cellStyle}`}>Add: Interest u/s 234B</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${cellStyle} text-right`}>0.00</td>
                   </tr>
                   <tr>
-                    <td className={`${tdClass} text-[#4b5563]`}>9. Tax Payable after Rebate (7 - 8)</td>
-                    <td className={tdClass}></td>
-                    <td className={`${tdClass} font-bold text-right`}>₹{formatCur(taxAfterRebate)}</td>
+                    <td className={`${cellStyle}`}>Add: Interest u/s 234C</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${cellStyle} text-right`}>0.00</td>
                   </tr>
                   <tr>
-                    <td className={`${tdClass} text-[#4b5563]`}>10. Surcharge & Cess</td>
-                    <td className={tdClass}></td>
-                    <td className={`${tdClass} font-bold text-right`}>₹{formatCur(healthEduCess)}</td>
+                    <td className={`${cellStyle}`}>Add: Late Filing Fees u/s 234F</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${cellStyle} text-right`}>0.00</td>
                   </tr>
                   <tr>
-                    <td className={`${tdClass} pl-8 text-[#4b5563]`}>a. Surcharge</td>
-                    <td className={`${tdClass} text-right`}>₹0</td>
-                    <td className={tdClass}></td>
+                    <td className={`${boldHeader}`}>{taxDue > 0 ? 'Tax Payable' : 'Refund Due'}</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${boldHeader} text-right`}>{formatCur(taxDue > 0 ? taxDue : taxRefund)}</td>
                   </tr>
                   <tr>
-                    <td className={`${tdClass} pl-8 text-[#4b5563]`}>b. Health & Education Cess (4%)</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(healthEduCess)}</td>
-                    <td className={tdClass}></td>
-                  </tr>
-                </tbody>
-              </table>
-            </PageWrapper>
-
-            {/* PAGE 3 */}
-            <PageWrapper pageNum={3}>
-              <table className="w-full border-l border-t border-[#e5e7eb] mb-10 border-collapse -mt-10">
-                <thead>
-                  <tr className="bg-[#f9fafb]">
-                    <th className={`${tdClass} font-bold text-left w-[50%]`}>Particulars</th>
-                    <th className={`${tdClass} font-bold text-right w-[25%]`}>Amount</th>
-                    <th className={`${tdClass} font-bold text-right w-[25%]`}>Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td className={`${tdClass} text-[#4b5563]`}>11. Total Tax and Cess (9 + 10)</td>
-                    <td className={tdClass}></td>
-                    <td className={`${tdClass} font-bold text-right`}>₹{formatCur(grossTaxLiability)}</td>
-                  </tr>
-                  <tr>
-                    <td className={`${tdClass} text-[#4b5563]`}>12. Relief u/s 89</td>
-                    <td className={tdClass}></td>
-                    <td className={`${tdClass} font-bold text-right`}>₹0</td>
-                  </tr>
-                  <tr>
-                    <td className={`${tdClass} text-[#4b5563]`}>13. Interest & Penalty</td>
-                    <td className={tdClass}></td>
-                    <td className={`${tdClass} font-bold text-right`}>₹0</td>
-                  </tr>
-                  <tr>
-                    <td className={`${tdClass} pl-8 text-[#4b5563]`}>a. Late Filing Interest u/s 234A</td>
-                    <td className={`${tdClass} text-right`}>₹0</td>
-                    <td className={tdClass}></td>
-                  </tr>
-                  <tr>
-                    <td className={`${tdClass} pl-8 text-[#4b5563]`}>b. Default in Advance Tax u/s 234B</td>
-                    <td className={`${tdClass} text-right`}>₹0</td>
-                    <td className={tdClass}></td>
-                  </tr>
-                  <tr>
-                    <td className={`${tdClass} pl-8 text-[#4b5563]`}>c. Deferment of Advance Tax u/s 234C</td>
-                    <td className={`${tdClass} text-right`}>₹0</td>
-                    <td className={tdClass}></td>
-                  </tr>
-                  <tr>
-                    <td className={`${tdClass} pl-8 text-[#4b5563]`}>d. Late Filing Fees u/s 234F</td>
-                    <td className={`${tdClass} text-right`}>₹0</td>
-                    <td className={tdClass}></td>
-                  </tr>
-                  <tr>
-                    <td className={`${tdClass} text-[#4b5563]`}>14. Total Tax Payable (11 - 12 + 13)</td>
-                    <td className={tdClass}></td>
-                    <td className={`${tdClass} font-bold text-right`}>₹{formatCur(grossTaxLiability)}</td>
-                  </tr>
-                  <tr>
-                    <td className={`${tdClass} text-[#4b5563]`}>15. Total Taxes Paid</td>
-                    <td className={tdClass}></td>
-                    <td className={`${tdClass} font-bold text-right`}>₹{formatCur(totalPrepaid)}</td>
-                  </tr>
-                  <tr>
-                    <td className={`${tdClass} pl-8 text-[#4b5563]`}>a. Advance Tax</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(data.prepaidTaxes.advanceTax)}</td>
-                    <td className={tdClass}></td>
-                  </tr>
-                  <tr>
-                    <td className={`${tdClass} pl-8 text-[#4b5563]`}>b. TDS on Salary</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(data.prepaidTaxes.tdsSalary)}</td>
-                    <td className={tdClass}></td>
-                  </tr>
-                  <tr>
-                    <td className={`${tdClass} pl-8 text-[#4b5563]`}>c. TDS on Other Income</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(data.prepaidTaxes.tdsOther)}</td>
-                    <td className={tdClass}></td>
-                  </tr>
-                  <tr>
-                    <td className={`${tdClass} pl-8 text-[#4b5563]`}>d. TCS</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(data.prepaidTaxes.tcs)}</td>
-                    <td className={tdClass}></td>
-                  </tr>
-                  <tr>
-                    <td className={`${tdLabelClass} font-bold text-[15px]`}>16. Tax Dues / (Refund) (14 - 15)</td>
-                    <td className={tdLabelClass}></td>
-                    <td className={`${tdLabelClass} font-bold text-[15px] text-right`}>₹{formatCur(taxDue > 0 ? taxDue : -taxRefund)}</td>
+                    <td className={`${cellStyle}`}>Exempt Income (Only for reporting purposes)(Annexure #3)</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${cellStyle} text-right`}>{formatCur(totalExemptIncome)}</td>
                   </tr>
                 </tbody>
               </table>
 
-              <SectionTitle title="Quarterly Accrual Details (For Advance Tax)" />
-              <table className="w-full border-l border-t border-[#e5e7eb] mb-10 border-collapse">
+              <h2 className="text-center text-[22px] font-normal mb-6 mt-16">Details of Bank Accounts</h2>
+              <table className={`w-full ${tableBorder}`}>
                 <thead>
-                  <tr className="bg-[#f9fafb]">
-                    <th className={`${tdClass} font-semibold text-left`}>Income Source</th>
-                    <th className={`${tdClass} font-semibold text-right`}>Up to 15 Jun</th>
-                    <th className={`${tdClass} font-semibold text-right`}>16 Jun - 15 Sep</th>
-                    <th className={`${tdClass} font-semibold text-right`}>16 Sep - 15 Dec</th>
-                    <th className={`${tdClass} font-semibold text-right`}>16 Dec - 15 Mar</th>
-                    <th className={`${tdClass} font-semibold text-right`}>16 Mar - 31 Mar</th>
-                  </tr>
-                </thead>
-                <tbody>
                   <tr>
-                    <td className={`${tdClass} font-medium`}>STCG @ 20% (111A)</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(data.capitalGains.stcg.q1)}</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(data.capitalGains.stcg.q2)}</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(data.capitalGains.stcg.q3)}</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(data.capitalGains.stcg.q4)}</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(data.capitalGains.stcg.q5)}</td>
-                  </tr>
-                  <tr>
-                    <td className={`${tdClass} font-medium`}>LTCG @ 12.5% (112A)</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(data.capitalGains.ltcg.q1)}</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(data.capitalGains.ltcg.q2)}</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(data.capitalGains.ltcg.q3)}</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(data.capitalGains.ltcg.q4)}</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(data.capitalGains.ltcg.q5)}</td>
-                  </tr>
-                  <tr>
-                    <td className={`${tdClass} font-medium`}>Dividend Income</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(data.otherSources.dividend.q1)}</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(data.otherSources.dividend.q2)}</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(data.otherSources.dividend.q3)}</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(data.otherSources.dividend.q4)}</td>
-                    <td className={`${tdClass} text-right`}>₹{formatCur(data.otherSources.dividend.q5)}</td>
-                  </tr>
-                </tbody>
-              </table>
-
-              <SectionTitle title="Details of Bank Accounts" />
-              <table className="w-full border-l border-t border-[#e5e7eb] mb-10 border-collapse">
-                <thead>
-                  <tr className="bg-[#f9fafb]">
-                    <th className={`${tdClass} font-semibold text-left`}>Bank Name</th>
-                    <th className={`${tdClass} font-semibold text-left`}>IFSC Code</th>
-                    <th className={`${tdClass} font-semibold text-left`}>Account No.</th>
-                    <th className={`${tdClass} font-semibold text-left`}>Type</th>
-                    <th className={`${tdClass} font-semibold text-center`}>Refund?</th>
+                    <th className={`${boldHeader} text-center`}>Bank Name</th>
+                    <th className={`${boldHeader} text-center`}>IFSC Code</th>
+                    <th className={`${boldHeader} text-center`}>Account Number</th>
+                    <th className={`${boldHeader} text-center`}>Account Type</th>
+                    <th className={`${boldHeader} text-center`}>Selected for Refund?</th>
                   </tr>
                 </thead>
                 <tbody>
                   {bankAccounts.length > 0 ? bankAccounts.map((b, i) => (
                     <tr key={i}>
-                      <td className={tdClass}>{b.bankName || '--'}</td>
-                      <td className={tdClass}>{b.ifsc || '--'}</td>
-                      <td className={tdClass}>{b.accountNumber || '--'}</td>
-                      <td className={tdClass}>{b.type || 'Savings'}</td>
-                      <td className={`${tdClass} text-center`}>
-                        {b.isRefund ? (
-                          <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded text-[11px] font-bold">Yes</span>
-                        ) : '--'}
-                      </td>
+                      <td className={`${cellStyle} text-center`}>{b.bankName || '--'}</td>
+                      <td className={`${cellStyle} text-center`}>{b.ifsc || '--'}</td>
+                      <td className={`${cellStyle} text-center`}>{b.accountNumber || '--'}</td>
+                      <td className={`${cellStyle} text-center`}>{b.type || '--'}</td>
+                      <td className={`${cellStyle} text-center`}>{b.isRefund ? 'Yes' : 'No'}</td>
                     </tr>
                   )) : (
                     <tr>
-                      <td colSpan="5" className={`${tdClass} text-center`}>--</td>
+                      <td colSpan="5" className={`${cellStyle} text-center`}>No Bank Accounts</td>
                     </tr>
                   )}
                 </tbody>
               </table>
-            </PageWrapper>
 
-            {/* PAGE 4 & 5 (CONDITIONAL BALANCE SHEET) */}
-            {data.incomes.hasBusiness && (
-              <>
-                <PageWrapper pageNum={4}>
-                  <Header title="Balance Sheet" />
-                  <div className="mt-8 mb-6">
-                    <h2 className="text-[15px] font-bold text-[#1f2937]">Balance Sheet as of 31st March 2026</h2>
-                  </div>
-                  
-                  <table className="w-full border-l border-t border-[#e5e7eb] border-collapse">
-                    <thead>
-                      <tr className="bg-[#f9fafb]">
-                        <th className={`${tdClass} font-bold text-left w-[50%]`}>Particulars</th>
-                        <th className={`${tdClass} font-bold text-right w-[25%]`}>Amount</th>
-                        <th className={`${tdClass} font-bold text-right w-[25%]`}>Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td className={`${tdClass} text-[#4b5563]`}>Equity & Liabilities</td>
-                        <td className={tdClass}></td>
-                        <td className={`${tdClass} font-bold text-right`}>₹{formatCur(bsTotalLiab)}</td>
-                      </tr>
-                      <tr>
-                        <td className={`${tdClass} text-[#4b5563]`}>Equity</td>
-                        <td className={tdClass}></td>
-                        <td className={`${tdClass} font-bold text-right`}>₹{formatCur(bsEquity)}</td>
-                      </tr>
-                      <tr>
-                        <td className={`${tdClass} pl-8 text-[#4b5563]`}>Proprietor's Capital</td>
-                        <td className={`${tdClass} text-right`}>₹{formatCur(business.balanceSheet.equityCapital)}</td>
-                        <td className={tdClass}></td>
-                      </tr>
-                      <tr>
-                        <td className={`${tdClass} pl-8 text-[#4b5563]`}>Reserves & Surplus</td>
-                        <td className={`${tdClass} text-right`}>₹{formatCur(business.balanceSheet.equityReserves)}</td>
-                        <td className={tdClass}></td>
-                      </tr>
-                      
-                      <tr>
-                        <td className={`${tdClass} text-[#4b5563]`}>Non-Current Liabilities</td>
-                        <td className={tdClass}></td>
-                        <td className={`${tdClass} font-bold text-right`}>₹{formatCur(bsNonCurrentLiab)}</td>
-                      </tr>
-                      <tr>
-                        <td className={`${tdClass} pl-8 text-[#4b5563]`}>Secured Loans</td>
-                        <td className={`${tdClass} text-right`}>₹{formatCur(business.balanceSheet.nonCurrentSecured)}</td>
-                        <td className={tdClass}></td>
-                      </tr>
-                      <tr>
-                        <td className={`${tdClass} pl-8 text-[#4b5563]`}>Unsecured Loans</td>
-                        <td className={`${tdClass} text-right`}>₹{formatCur(business.balanceSheet.nonCurrentUnsecured)}</td>
-                        <td className={tdClass}></td>
-                      </tr>
-                      <tr>
-                        <td className={`${tdClass} pl-8 text-[#4b5563]`}>Advances</td>
-                        <td className={`${tdClass} text-right`}>₹{formatCur(business.balanceSheet.nonCurrentAdvances)}</td>
-                        <td className={tdClass}></td>
-                      </tr>
+              <PageFooter pageNum={2} />
+            </div>
 
-                      <tr>
-                        <td className={`${tdClass} text-[#4b5563]`}>Current Liabilities</td>
-                        <td className={tdClass}></td>
-                        <td className={`${tdClass} font-bold text-right`}>₹{formatCur(bsCurrentLiab)}</td>
-                      </tr>
-                      <tr>
-                        <td className={`${tdClass} pl-8 text-[#4b5563]`}>Payables</td>
-                        <td className={`${tdClass} text-right`}>₹{formatCur(business.balanceSheet.currentPayables)}</td>
-                        <td className={tdClass}></td>
-                      </tr>
-                      <tr>
-                        <td className={`${tdClass} pl-8 text-[#4b5563]`}>Provisions for Expenses</td>
-                        <td className={`${tdClass} text-right`}>₹{formatCur(business.balanceSheet.currentProvisions)}</td>
-                        <td className={tdClass}></td>
-                      </tr>
-                      <tr>
-                        <td className={`${tdClass} pl-8 text-[#4b5563]`}>Other Current Liabilities</td>
-                        <td className={`${tdClass} text-right`}>₹{formatCur(business.balanceSheet.currentOtherLiab)}</td>
-                        <td className={tdClass}></td>
-                      </tr>
-                      
-                      <tr>
-                        <td className={`${tdClass} text-[#4b5563]`}>Total Equity & Liabilities</td>
-                        <td className={tdClass}></td>
-                        <td className={`${tdClass} font-bold text-right`}>₹{formatCur(bsTotalLiab)}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </PageWrapper>
-
-                <PageWrapper pageNum={5}>
-                  <Header title="Balance Sheet (Cont.)" />
-                  
-                  <table className="w-full border-l border-t border-[#e5e7eb] border-collapse mt-8">
-                    <thead>
-                      <tr className="bg-[#f9fafb]">
-                        <th className={`${tdClass} font-bold text-left w-[50%]`}>Particulars</th>
-                        <th className={`${tdClass} font-bold text-right w-[25%]`}>Amount</th>
-                        <th className={`${tdClass} font-bold text-right w-[25%]`}>Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td className={`${tdClass} text-[#4b5563]`}>Assets</td>
-                        <td className={tdClass}></td>
-                        <td className={`${tdClass} font-bold text-right`}>₹{formatCur(bsTotalAssets)}</td>
-                      </tr>
-                      <tr>
-                        <td className={`${tdClass} text-[#4b5563]`}>Fixed Assets</td>
-                        <td className={tdClass}></td>
-                        <td className={`${tdClass} font-bold text-right`}>₹{formatCur(bsFixedNet)}</td>
-                      </tr>
-                      <tr>
-                        <td className={`${tdClass} pl-8 text-[#4b5563]`}>Net Block (Gross Block - Depreciation)</td>
-                        <td className={`${tdClass} text-right`}>₹{formatCur(bsFixedNet)}</td>
-                        <td className={tdClass}></td>
-                      </tr>
-                      
-                      <tr>
-                        <td className={`${tdClass} text-[#4b5563]`}>Investments</td>
-                        <td className={tdClass}></td>
-                        <td className={`${tdClass} font-bold text-right`}>₹{formatCur(bsInvest)}</td>
-                      </tr>
-                      <tr>
-                        <td className={`${tdClass} pl-8 text-[#4b5563]`}>Short Term Investments</td>
-                        <td className={`${tdClass} text-right`}>₹{formatCur(business.balanceSheet.investmentsST)}</td>
-                        <td className={tdClass}></td>
-                      </tr>
-                      <tr>
-                        <td className={`${tdClass} pl-8 text-[#4b5563]`}>Long Term Investments</td>
-                        <td className={`${tdClass} text-right`}>₹{formatCur(business.balanceSheet.investmentsLT)}</td>
-                        <td className={tdClass}></td>
-                      </tr>
-
-                      <tr>
-                        <td className={`${tdClass} text-[#4b5563]`}>Current Assets</td>
-                        <td className={tdClass}></td>
-                        <td className={`${tdClass} font-bold text-right`}>₹{formatCur(bsCurrentAssets)}</td>
-                      </tr>
-                      <tr>
-                        <td className={`${tdClass} pl-8 text-[#4b5563]`}>Bank Balance</td>
-                        <td className={`${tdClass} text-right`}>₹{formatCur(business.balanceSheet.currentBank)}</td>
-                        <td className={tdClass}></td>
-                      </tr>
-                      <tr>
-                        <td className={`${tdClass} pl-8 text-[#4b5563]`}>Cash Balance</td>
-                        <td className={`${tdClass} text-right`}>₹{formatCur(business.balanceSheet.currentCash)}</td>
-                        <td className={tdClass}></td>
-                      </tr>
-                      <tr>
-                        <td className={`${tdClass} pl-8 text-[#4b5563]`}>Closing Stock</td>
-                        <td className={`${tdClass} text-right`}>₹{formatCur(business.balanceSheet.currentStock)}</td>
-                        <td className={tdClass}></td>
-                      </tr>
-                      <tr>
-                        <td className={`${tdClass} pl-8 text-[#4b5563]`}>Receivables</td>
-                        <td className={`${tdClass} text-right`}>₹{formatCur(business.balanceSheet.currentReceivables)}</td>
-                        <td className={tdClass}></td>
-                      </tr>
-                      <tr>
-                        <td className={`${tdClass} pl-8 text-[#4b5563]`}>Loans and Advances</td>
-                        <td className={`${tdClass} text-right`}>₹{formatCur(business.balanceSheet.currentLoansGiven)}</td>
-                        <td className={tdClass}></td>
-                      </tr>
-                      <tr>
-                        <td className={`${tdClass} pl-8 text-[#4b5563]`}>Other Current Assets</td>
-                        <td className={`${tdClass} text-right`}>₹{formatCur(business.balanceSheet.currentOther)}</td>
-                        <td className={tdClass}></td>
-                      </tr>
-                      
-                      <tr>
-                        <td className={`${tdClass} text-[#4b5563]`}>Total Assets</td>
-                        <td className={tdClass}></td>
-                        <td className={`${tdClass} font-bold text-right`}>₹{formatCur(bsTotalAssets)}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  {bsTotalAssets !== bsTotalLiab && (
-                    <p className="text-red-500 font-bold mt-4 text-[13px] text-center">Warning: Balance Sheet does not tally. Difference: ₹{formatCur(Math.abs(bsTotalAssets - bsTotalLiab))}</p>
-                  )}
-                </PageWrapper>
-              </>
-            )}
-
-            {/* CAPITAL GAINS TRANSACTIONS */}
-            {cgTransactions.length > 0 && Array.from({ length: Math.ceil(cgTransactions.length / 10) }).map((_, pageIdx) => (
-              <PageWrapper key={`cg-${pageIdx}`} pageNum={(data.incomes.hasBusiness ? 5 : 3) + pageIdx + 1}>
-                <SectionTitle title={`Capital Gains Transactions (Part ${pageIdx + 1})`} />
-                <table className="w-full border-l border-t border-[#e5e7eb] border-collapse">
-                  <thead>
-                    <tr className="bg-[#f9fafb]">
-                      <th className={`${tdClass} font-semibold text-left`}>Asset</th>
-                      <th className={`${tdClass} font-semibold text-left`}>Buy Date</th>
-                      <th className={`${tdClass} font-semibold text-left`}>Sell Date</th>
-                      <th className={`${tdClass} font-semibold text-right`}>Buy Val</th>
-                      <th className={`${tdClass} font-semibold text-right`}>Sell Val</th>
-                      <th className={`${tdClass} font-semibold text-right`}>Gain/Loss</th>
+            {/* PAGE 3 */}
+            <div className="bg-white w-[794px] h-[1123px] relative px-12 pt-12 pb-24 shadow-sm border-b border-gray-300">
+              <div className="flex justify-end text-[13px] mb-4">ITR #2845613</div>
+              <h2 className="text-center text-[22px] font-normal mb-2">Statement of Taxes Paid</h2>
+              <p className="text-center text-[13px] mb-4">Details of Tax Deducted at Source on Income Other than Salary<br/>As per Form 16A issued by Deductor(s)</p>
+              
+              <table className={`w-full ${tableBorder} mb-12`}>
+                <thead>
+                  <tr>
+                    <th className={`${boldHeader} text-center`}>Name of Deductor</th>
+                    <th className={`${boldHeader} text-center`}>TAN of the Deductor</th>
+                    <th className={`${boldHeader} text-center`}>Deducted Year</th>
+                    <th className={`${boldHeader} text-center`}>Gross amount on which TDS deducted</th>
+                    <th className={`${boldHeader} text-center`}>Tax Deducted</th>
+                    <th className={`${boldHeader} text-center`}>Head of Income</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {taxDeductors.length > 0 ? taxDeductors.map((t, i) => (
+                    <tr key={i}>
+                      <td className={`${cellStyle}`}>{t.deductorName || '--'}</td>
+                      <td className={`${cellStyle}`}>{t.tan || '--'}</td>
+                      <td className={`${cellStyle} text-center`}>2025</td>
+                      <td className={`${cellStyle} text-right`}>{formatCur(t.grossAmount)}</td>
+                      <td className={`${cellStyle} text-right`}>{formatCur(t.taxDeducted)}</td>
+                      <td className={`${cellStyle} text-center`}>{t.headOfIncome || 'Income from Other Source'}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {cgTransactions.slice(pageIdx * 10, (pageIdx + 1) * 10).map((t, i) => {
-                      const gain = Number(t.sellValue) - Number(t.buyValue) - Number(t.expenses);
-                      return (
-                        <tr key={i}>
-                          <td className={tdClass}>{t.assetName || '--'}</td>
-                          <td className={tdClass}>{t.buyDate || '--'}</td>
-                          <td className={tdClass}>{t.sellDate || '--'}</td>
-                          <td className={`${tdClass} text-right`}>₹{formatCur(t.buyValue)}</td>
-                          <td className={`${tdClass} text-right`}>₹{formatCur(t.sellValue)}</td>
-                          <td className={`${tdClass} text-right font-bold ${gain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {gain >= 0 ? '₹' : '-₹'}{formatCur(Math.abs(gain))}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </PageWrapper>
-            ))}
+                  )) : (
+                    <tr>
+                      <td colSpan="6" className={`${cellStyle} text-center`}>No Deductors</td>
+                    </tr>
+                  )}
+                  <tr>
+                    <td colSpan="3" className={`${boldHeader} text-right`}>Total</td>
+                    <td className={`${boldHeader} text-right`}>{formatCur(taxDeductors.reduce((sum, d) => sum + Number(d.grossAmount), 0))}</td>
+                    <td className={`${boldHeader} text-right`}>{formatCur(taxDeductors.reduce((sum, d) => sum + Number(d.taxDeducted), 0))}</td>
+                    <td className={`${cellStyle}`}></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <h2 className="text-center text-[22px] font-normal mb-2">Income from Business</h2>
+              <p className="text-center text-[13px] mb-6">Note: For detailed calculations refer to</p>
+              <h3 className="text-center text-lg mb-2">Annexure #1: Section 44AD (Income from Presumptive)</h3>
+              
+              <table className={`w-full ${tableBorder} mb-12`}>
+                <thead>
+                  <tr>
+                    <th className={`${boldHeader} text-center`}>Business Name</th>
+                    <th className={`${boldHeader} text-center`}>Turnover</th>
+                    <th className={`${boldHeader} text-center`}>Profit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className={`${cellStyle} text-center`}>{business.businessName || 'Retail Sale of Other Products'}</td>
+                    <td className={`${cellStyle} text-right`}>{formatCur(Number(business.turnoverBank) + Number(business.turnoverCash))}</td>
+                    <td className={`${cellStyle} text-right`}>{formatCur(grossBusiness)}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <h2 className="text-center text-[22px] font-normal mb-4">Income from Other Sources</h2>
+              <h3 className="text-center text-lg mb-4">(Annexure #2)</h3>
+              
+              <table className={`w-full ${tableBorder}`}>
+                <thead>
+                  <tr>
+                    <th className={`${boldHeader} text-center`}>Particulars</th>
+                    <th className={`${boldHeader} text-center w-[20%]`}>Amount</th>
+                    <th className={`${boldHeader} text-center w-[20%]`}>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Number(data.otherSources.savingsInterest) > 0 && (
+                    <tr><td className={`${cellStyle}`}>Saving Bank Interest</td><td className={`${cellStyle}`}></td><td className={`${cellStyle} text-right`}>{formatCur(data.otherSources.savingsInterest)}</td></tr>
+                  )}
+                  {Number(data.otherSources.fdInterest) > 0 && (
+                    <tr><td className={`${cellStyle}`}>Interest on Fixed Deposit</td><td className={`${cellStyle}`}></td><td className={`${cellStyle} text-right`}>{formatCur(data.otherSources.fdInterest)}</td></tr>
+                  )}
+                  {dividendSum > 0 && (
+                    <tr><td className={`${cellStyle}`}>Dividend Income</td><td className={`${cellStyle} text-right`}>{formatCur(dividendSum)}</td><td className={`${cellStyle}`}></td></tr>
+                  )}
+                  {Number(data.otherSources.familyPension) > 0 && (
+                    <tr><td className={`${cellStyle}`}>Family Pension</td><td className={`${cellStyle} text-right`}>{formatCur(data.otherSources.familyPension)}</td><td className={`${cellStyle}`}></td></tr>
+                  )}
+                  {familyPensionDeduction > 0 && (
+                    <tr><td className={`${cellStyle}`}>Less: Family Pension Standard Deduction</td><td className={`${cellStyle} text-right`}>{formatCur(familyPensionDeduction)}</td><td className={`${cellStyle}`}></td></tr>
+                  )}
+                  {Number(data.otherSources.anyOtherIncome) > 0 && (
+                    <tr><td className={`${cellStyle}`}>Other Taxable Income</td><td className={`${cellStyle}`}></td><td className={`${cellStyle} text-right`}>{formatCur(data.otherSources.anyOtherIncome)}</td></tr>
+                  )}
+                  <tr>
+                    <td className={`${boldHeader}`}>Total Taxable Income</td>
+                    <td className={`${cellStyle}`}></td>
+                    <td className={`${boldHeader} text-right`}>{formatCur(grossOther)}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <PageFooter pageNum={3} />
+            </div>
+
+            {/* PAGE 4 */}
+            <div className="bg-white w-[794px] h-[1123px] relative px-12 pt-12 pb-24 shadow-sm">
+              <div className="flex justify-end text-[13px] mb-4">ITR #2845613</div>
+              <h2 className="text-center text-[22px] font-normal mb-4">Exempt Income</h2>
+              <h3 className="text-center text-lg mb-4">(Annexure #3)</h3>
+              
+              <table className={`w-full ${tableBorder} mb-8`}>
+                <thead>
+                  <tr>
+                    <th className={`${boldHeader} text-center`}>Particulars</th>
+                    <th className={`${boldHeader} text-center w-[30%]`}>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className={`${cellStyle}`}>Agricultural income(Less than or equal to 5000)</td>
+                    <td className={`${cellStyle} text-right`}>{formatCur(data.exemptIncome.agriculture)}</td>
+                  </tr>
+                  {Number(data.exemptIncome.ppfInterest) > 0 && (
+                    <tr><td className={`${cellStyle}`}>PPF Interest</td><td className={`${cellStyle} text-right`}>{formatCur(data.exemptIncome.ppfInterest)}</td></tr>
+                  )}
+                  {Number(exemptGifts) > 0 && (
+                    <tr><td className={`${cellStyle}`}>Exempt Gifts</td><td className={`${cellStyle} text-right`}>{formatCur(exemptGifts)}</td></tr>
+                  )}
+                  {Number(data.exemptIncome.otherExempt) > 0 && (
+                    <tr><td className={`${cellStyle}`}>Other Exempt Income</td><td className={`${cellStyle} text-right`}>{formatCur(data.exemptIncome.otherExempt)}</td></tr>
+                  )}
+                  <tr>
+                    <td className={`${boldHeader}`}>Total Exempt Income</td>
+                    <td className={`${boldHeader} text-right`}>{formatCur(totalExemptIncome)}</td>
+                  </tr>
+                </tbody>
+              </table>
+              
+              <div className="text-[10.5px] text-justify text-gray-700 mt-8">
+                <strong>Disclaimer:</strong> Your income tax return has been prepared and filed based on the data you provided. If any false or inaccurate deductions or exemption claims were included, the responsibility rests solely with you. If you find discrepancies in the calculations or the tax return form, please contact us at support@aarthika.in within 48 hours for modifications. Post this period, Aarthika and its representatives will not be liable for any discrepancies or issues. We act as an intermediary, processing your information for the tax department.
+              </div>
+
+              <PageFooter pageNum={4} />
+            </div>
 
           </div>
         </div>
