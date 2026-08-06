@@ -16,6 +16,8 @@ import BasicDetails2 from './BasicDetails2';
 import BankDetails from './BankDetails';
 import ExtraDetails from './ExtraDetails';
 
+import BusinessTradingDetails from './BusinessTradingDetails';
+
 const TaxationLayout = () => {
   const { taxData } = useTaxation();
   const navigate = useNavigate();
@@ -30,6 +32,7 @@ const TaxationLayout = () => {
     { label: 'Basic Details 2', path: '/taxation/basic-details-2' },
     { label: 'Capital Gain Income', path: '/taxation/capital-gains' },
     { label: 'Business Income', path: '/taxation/business' },
+    { label: 'Business & Trading Details', path: '/taxation/business-trading-details' },
     { label: 'Other Sources Income', path: '/taxation/other-sources' },
     { label: 'Exempt Income', path: '/taxation/exempt-income' },
     { label: 'Deductions', path: '/taxation/deductions' },
@@ -104,6 +107,7 @@ const TaxationLayout = () => {
           <Route path="/basic-details" element={<BasicDetails />} />
           <Route path="/basic-details-2" element={<BasicDetails2 />} />
           <Route path="/business" element={<BusinessIncome />} />
+          <Route path="/business-trading-details" element={<BusinessTradingDetails />} />
           <Route path="/capital-gains" element={<CapitalGains />} />
           <Route path="/other-sources" element={<OtherSources />} />
           <Route path="/exempt-income" element={<ExemptIncome />} />

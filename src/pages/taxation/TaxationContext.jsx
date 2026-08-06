@@ -42,6 +42,11 @@ export const TaxationProvider = ({ children }) => {
       hasPrepaidTaxes: false,
     },
     business: {
+      businessIncomeType: 'presumptive',
+      presumptiveType: '44AD',
+      businessCategory: '',
+      businessDescription: '',
+      hasFinancialParticulars: false,
       isRegisteredGST: false,
       gstin: '',
       gstTurnover: 0,
