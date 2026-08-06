@@ -88,9 +88,10 @@ export default function TaxDocumentGenerator({ onClose }) {
   };
 
   // Tax2Win Strict Styling
-  const tableBorder = "border border-black border-collapse";
-  const cellStyle = "p-2 border border-black text-[13px]";
-  const boldHeader = "p-2 font-bold bg-white text-[13px] border border-black";
+  const tableBorder = "border border-gray-300 border-collapse shadow-sm";
+  const cellStyle = "p-2 border border-gray-300 text-[13px] text-gray-700";
+  const boldHeader = "p-2 font-bold bg-slate-50 text-slate-800 text-[13px] border border-gray-300";
+  const mainHeader = "p-2 font-bold bg-[#0f2e4c] text-white text-[13px] border border-[#0f2e4c]";
   
   const HeaderLogo = () => (
     <div className="flex justify-between items-center mb-8">
@@ -201,9 +202,9 @@ export default function TaxDocumentGenerator({ onClose }) {
               <table className={`w-full ${tableBorder}`}>
                 <thead>
                   <tr>
-                    <th className={`${boldHeader} text-center`}>Description</th>
-                    <th className={`${boldHeader} text-center w-[20%]`}>Amount</th>
-                    <th className={`${boldHeader} text-center w-[20%]`}>Amount</th>
+                    <th className={`${mainHeader} text-center`}>Description</th>
+                    <th className={`${mainHeader} text-center w-[20%]`}>Amount</th>
+                    <th className={`${mainHeader} text-center w-[20%]`}>Amount</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -281,9 +282,9 @@ export default function TaxDocumentGenerator({ onClose }) {
               <table className={`w-full ${tableBorder}`}>
                 <thead>
                   <tr>
-                    <th className={`${boldHeader} text-center`}>Description</th>
-                    <th className={`${boldHeader} text-center w-[20%]`}>Amount</th>
-                    <th className={`${boldHeader} text-center w-[20%]`}>Amount</th>
+                    <th className={`${mainHeader} text-center`}>Description</th>
+                    <th className={`${mainHeader} text-center w-[20%]`}>Amount</th>
+                    <th className={`${mainHeader} text-center w-[20%]`}>Amount</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -374,11 +375,11 @@ export default function TaxDocumentGenerator({ onClose }) {
               <table className={`w-full ${tableBorder}`}>
                 <thead>
                   <tr>
-                    <th className={`${boldHeader} text-center`}>Bank Name</th>
-                    <th className={`${boldHeader} text-center`}>IFSC Code</th>
-                    <th className={`${boldHeader} text-center`}>Account Number</th>
-                    <th className={`${boldHeader} text-center`}>Account Type</th>
-                    <th className={`${boldHeader} text-center`}>Selected for Refund?</th>
+                    <th className={`${mainHeader} text-center`}>Bank Name</th>
+                    <th className={`${mainHeader} text-center`}>IFSC Code</th>
+                    <th className={`${mainHeader} text-center`}>Account Number</th>
+                    <th className={`${mainHeader} text-center`}>Account Type</th>
+                    <th className={`${mainHeader} text-center`}>Selected for Refund?</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -410,12 +411,12 @@ export default function TaxDocumentGenerator({ onClose }) {
               <table className={`w-full ${tableBorder} mb-12`}>
                 <thead>
                   <tr>
-                    <th className={`${boldHeader} text-center`}>Name of Deductor</th>
-                    <th className={`${boldHeader} text-center`}>TAN of the Deductor</th>
-                    <th className={`${boldHeader} text-center`}>Deducted Year</th>
-                    <th className={`${boldHeader} text-center`}>Gross amount on which TDS deducted</th>
-                    <th className={`${boldHeader} text-center`}>Tax Deducted</th>
-                    <th className={`${boldHeader} text-center`}>Head of Income</th>
+                    <th className={`${mainHeader} text-center`}>Name of Deductor</th>
+                    <th className={`${mainHeader} text-center`}>TAN of the Deductor</th>
+                    <th className={`${mainHeader} text-center`}>Deducted Year</th>
+                    <th className={`${mainHeader} text-center`}>Gross amount on which TDS deducted</th>
+                    <th className={`${mainHeader} text-center`}>Tax Deducted</th>
+                    <th className={`${mainHeader} text-center`}>Head of Income</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -449,9 +450,9 @@ export default function TaxDocumentGenerator({ onClose }) {
               <table className={`w-full ${tableBorder} mb-12`}>
                 <thead>
                   <tr>
-                    <th className={`${boldHeader} text-center`}>Business Name</th>
-                    <th className={`${boldHeader} text-center`}>Turnover</th>
-                    <th className={`${boldHeader} text-center`}>Profit</th>
+                    <th className={`${mainHeader} text-center`}>Business Name</th>
+                    <th className={`${mainHeader} text-center`}>Turnover</th>
+                    <th className={`${mainHeader} text-center`}>Profit</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -463,15 +464,62 @@ export default function TaxDocumentGenerator({ onClose }) {
                 </tbody>
               </table>
 
+              {business.hasFinancialParticulars && (
+                <>
+                  <h3 className="text-center text-lg mt-6 mb-2 font-semibold text-slate-700">Balance Sheet (as on 31st March)</h3>
+                  <table className={`w-full ${tableBorder} mb-12`}>
+                    <thead>
+                      <tr>
+                        <th className={`${mainHeader} text-center w-1/2`}>Assets</th>
+                        <th className={`${mainHeader} text-center w-1/2`}>Capital and Liabilities</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="p-0 align-top border-r border-gray-300">
+                          <table className="w-full">
+                            <tbody>
+                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Fixed Assets</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.fixedGrossBlock)}</td></tr>
+                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Stock-in-Trade</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.currentStock)}</td></tr>
+                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Balance with Banks</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.currentBank)}</td></tr>
+                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Cash Balance</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.currentCash)}</td></tr>
+                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Sundry Debtors</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.currentReceivables)}</td></tr>
+                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Loans and Advances</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.currentLoansGiven)}</td></tr>
+                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Investments</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.investmentsST)}</td></tr>
+                              <tr><td className={`${cellStyle} border-0`}>Other Assets</td><td className={`${cellStyle} border-0 text-right`}>{formatCur(business.balanceSheet?.currentOther)}</td></tr>
+                            </tbody>
+                          </table>
+                        </td>
+                        <td className="p-0 align-top">
+                          <table className="w-full">
+                            <tbody>
+                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Proprietor's Capital</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.equityCapital)}</td></tr>
+                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Reserves & Surplus</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.equityReserves)}</td></tr>
+                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Sundry Creditors</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.currentPayables)}</td></tr>
+                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Secured Loans</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.nonCurrentSecured)}</td></tr>
+                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Unsecured Loans</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.nonCurrentUnsecured)}</td></tr>
+                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Provisions</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.currentProvisions)}</td></tr>
+                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Advances</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.nonCurrentAdvances)}</td></tr>
+                              <tr><td className={`${cellStyle} border-0`}>Other Liabilities</td><td className={`${cellStyle} border-0 text-right`}>{formatCur(business.balanceSheet?.currentOtherLiab)}</td></tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </>
+              )}
+
+
               <h2 className="text-center text-[22px] font-normal mb-4">Income from Other Sources</h2>
               <h3 className="text-center text-lg mb-4">(Annexure #2)</h3>
               
               <table className={`w-full ${tableBorder}`}>
                 <thead>
                   <tr>
-                    <th className={`${boldHeader} text-center`}>Particulars</th>
-                    <th className={`${boldHeader} text-center w-[20%]`}>Amount</th>
-                    <th className={`${boldHeader} text-center w-[20%]`}>Amount</th>
+                    <th className={`${mainHeader} text-center`}>Particulars</th>
+                    <th className={`${mainHeader} text-center w-[20%]`}>Amount</th>
+                    <th className={`${mainHeader} text-center w-[20%]`}>Amount</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -513,11 +561,12 @@ export default function TaxDocumentGenerator({ onClose }) {
               <table className={`w-full ${tableBorder} mb-8`}>
                 <thead>
                   <tr>
-                    <th className={`${boldHeader} text-center`}>Particulars</th>
-                    <th className={`${boldHeader} text-center w-[30%]`}>Amount</th>
+                    <th className={`${mainHeader} text-center`}>Particulars</th>
+                    <th className={`${mainHeader} text-center w-[30%]`}>Amount</th>
                   </tr>
                 </thead>
                 <tbody>
+                  
                   <tr>
                     <td className={`${cellStyle}`}>Agricultural income(Less than or equal to 5000)</td>
                     <td className={`${cellStyle} text-right`}>{formatCur(data.exemptIncome.agriculture)}</td>
@@ -525,13 +574,28 @@ export default function TaxDocumentGenerator({ onClose }) {
                   {Number(data.exemptIncome.ppfInterest) > 0 && (
                     <tr><td className={`${cellStyle}`}>PPF Interest</td><td className={`${cellStyle} text-right`}>{formatCur(data.exemptIncome.ppfInterest)}</td></tr>
                   )}
+                  {Number(data.exemptIncome.insuranceMaturity) > 0 && (
+                    <tr><td className={`${cellStyle}`}>Insurance Maturity / Bonus</td><td className={`${cellStyle} text-right`}>{formatCur(data.exemptIncome.insuranceMaturity)}</td></tr>
+                  )}
+                  {Number(data.exemptIncome.npsWithdrawal) > 0 && (
+                    <tr><td className={`${cellStyle}`}>NPS / UPS Withdrawal</td><td className={`${cellStyle} text-right`}>{formatCur(data.exemptIncome.npsWithdrawal)}</td></tr>
+                  )}
+                  {Number(data.exemptIncome.pfMaturity) > 0 && (
+                    <tr><td className={`${cellStyle}`}>Provident Fund Maturity</td><td className={`${cellStyle} text-right`}>{formatCur(data.exemptIncome.pfMaturity)}</td></tr>
+                  )}
+                  {Number(data.exemptIncome.hufShare) > 0 && (
+                    <tr><td className={`${cellStyle}`}>Share from HUF</td><td className={`${cellStyle} text-right`}>{formatCur(data.exemptIncome.hufShare)}</td></tr>
+                  )}
+                  {Number(data.exemptIncome.ssyMaturity) > 0 && (
+                    <tr><td className={`${cellStyle}`}>Sukanya Samriddhi Yojana (SSY)</td><td className={`${cellStyle} text-right`}>{formatCur(data.exemptIncome.ssyMaturity)}</td></tr>
+                  )}
                   {Number(exemptGifts) > 0 && (
                     <tr><td className={`${cellStyle}`}>Exempt Gifts</td><td className={`${cellStyle} text-right`}>{formatCur(exemptGifts)}</td></tr>
                   )}
                   {Number(data.exemptIncome.otherExempt) > 0 && (
                     <tr><td className={`${cellStyle}`}>Other Exempt Income</td><td className={`${cellStyle} text-right`}>{formatCur(data.exemptIncome.otherExempt)}</td></tr>
                   )}
-                  <tr>
+<tr>
                     <td className={`${boldHeader}`}>Total Exempt Income</td>
                     <td className={`${boldHeader} text-right`}>{formatCur(totalExemptIncome)}</td>
                   </tr>

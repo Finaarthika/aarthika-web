@@ -3,30 +3,71 @@ import { useTaxation } from './TaxationContext';
 import { useNavigate } from 'react-router-dom';
 
 const TaxInput = ({ label, value, onChange, placeholder, prefix, note, required, uppercase, type = "text", name }) => {
-  const [localValue, setLocalValue] = React.useState(value === 0 || value === null || value === undefined ? '' : value);
+  const formatVal = (v) => {
+    if (v === null || v === undefined || v === '') return '';
+    if (prefix === '₹') {
+      let str = String(v).replace(/[^0-9.]/g, '');
+      if (!str) return '';
+      let parts = str.split('.');
+      let intPart = parts[0];
+      if (intPart.length > 3) {
+        let lastThree = intPart.substring(intPart.length - 3);
+        let otherNumbers = intPart.substring(0, intPart.length - 3);
+        intPart = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + ',' + lastThree;
+      }
+      return parts.length > 1 ? intPart + '.' + parts[1] : intPart;
+    }
+    return String(v);
+  };
+
+  const [localValue, setLocalValue] = React.useState(formatVal(value));
+
   React.useEffect(() => {
     if (Number.isNaN(value) || typeof value === 'object') return;
-    if (String(value) !== String(localValue) && value !== Number(localValue)) {
-      setLocalValue(value === 0 || value === null || value === undefined ? '' : value);
+    const cleanValue = prefix === '₹' ? String(value).replace(/[^0-9.]/g, '') : String(value);
+    const cleanLocal = prefix === '₹' ? String(localValue).replace(/[^0-9.]/g, '') : String(localValue);
+    
+    if (cleanValue !== cleanLocal && String(value) !== cleanLocal) {
+      setLocalValue(formatVal(value));
     }
-  }, [value]);
+  }, [value, prefix]);
+
   const handleChange = (e) => {
     let val = e.target.value;
     if (uppercase) val = val.toUpperCase();
+    
     if (prefix === '₹') {
        val = val.replace(/[^0-9.]/g, '');
-       if ((val.match(/\./g) || []).length > 1) return;
-    }
-    setLocalValue(val);
-    if (onChange) {
-       e.target.value = val;
-       if (name) e.target.name = name;
-       onChange(e);
+       if ((val.match(/\./g) || []).length > 1) return; 
+       
+       setLocalValue(formatVal(val));
+       
+       if (onChange) {
+           e.target.value = val;
+           if (name) e.target.name = name;
+           onChange(e);
+       }
+    } else {
+       setLocalValue(val);
+       if (onChange) {
+           e.target.value = val;
+           if (name) e.target.name = name;
+           onChange(e);
+       }
     }
   };
+
   return (
     <div className="flex flex-col">
-      <label className="text-xs text-gray-500 mb-1">{label}{required && <span className="text-red-500 ml-0.5">*</span>}</label>
+      <label className="text-[11px] text-gray-500 mb-1 flex items-center gap-1">
+        {label}
+        {required && <span className="text-red-500">*</span>}
+        {note && (
+          <div className="w-3.5 h-3.5 rounded-full border border-gray-400 text-gray-400 flex items-center justify-center text-[9px] font-bold cursor-help" title={note}>
+            i
+          </div>
+        )}
+      </label>
       <div className="relative">
         {prefix && <span className="absolute left-3 top-2 text-gray-500 text-[14px]">{prefix}</span>}
         <input
@@ -36,49 +77,12 @@ const TaxInput = ({ label, value, onChange, placeholder, prefix, note, required,
           value={localValue}
           onChange={handleChange}
           placeholder={placeholder || ''}
-          className={`w-full border border-gray-300 rounded-md py-2 text-[14px] text-slate-800 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 ${prefix ? 'pl-7 pr-3' : 'px-3'} ${uppercase ? 'uppercase' : ''}`}
+          className={`w-full border border-gray-300 rounded-[4px] py-2 text-[14px] text-slate-800 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 ${prefix ? 'pl-7 pr-3' : 'px-3'} ${uppercase ? 'uppercase' : ''}`}
         />
       </div>
-      {note && <p className="text-[11px] text-gray-400 mt-1">{note}</p>}
     </div>
   );
 };
-
-
-const TaxInputText = ({ label, value, onChange, placeholder }) => (
-  <div className="flex flex-col">
-    <label className="text-xs text-gray-500 mb-1">{label}</label>
-    <input
-      type="text"
-      value={value || ''}
-      onChange={onChange}
-      placeholder={placeholder}
-      className="w-full border border-gray-300 rounded-md px-3 py-2 text-[14px] text-slate-800 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
-    />
-  </div>
-);
-
-const YesNoToggle = ({ value, onChange, label }) => (
-  <div className="flex flex-col mb-6">
-    <span className="text-[14px] text-slate-700 mb-3">{label}</span>
-    <div className="flex gap-4">
-      <label className="flex items-center gap-2 cursor-pointer" onClick={() => onChange(true)}>
-        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${value ? 'border-green-600' : 'border-gray-400'}`}>
-          {value && <div className="w-2 h-2 rounded-full bg-green-600" />}
-        </div>
-        <span className="text-[14px] font-semibold text-slate-700">Yes</span>
-        <input type="radio" className="hidden" checked={value} readOnly />
-      </label>
-      <label className="flex items-center gap-2 cursor-pointer" onClick={() => onChange(false)}>
-        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${!value ? 'border-green-600' : 'border-gray-400'}`}>
-          {!value && <div className="w-2 h-2 rounded-full bg-green-600" />}
-        </div>
-        <span className="text-[14px] font-semibold text-slate-700">No</span>
-        <input type="radio" className="hidden" checked={!value} readOnly />
-      </label>
-    </div>
-  </div>
-);
 
 export default function OtherSources() {
   const { taxData, updateTaxData, updateNestedTaxData } = useTaxation();

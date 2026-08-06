@@ -3,27 +3,60 @@ import { useTaxation } from './TaxationContext';
 import { useNavigate } from 'react-router-dom';
 
 const TaxInput = ({ label, value, onChange, placeholder, prefix, note, required, uppercase, type = "text", name }) => {
-  const [localValue, setLocalValue] = React.useState(value === 0 || value === null || value === undefined ? '' : value);
+  const formatVal = (v) => {
+    if (v === null || v === undefined || v === '') return '';
+    if (prefix === '₹') {
+      let str = String(v).replace(/[^0-9.]/g, '');
+      if (!str) return '';
+      let parts = str.split('.');
+      let intPart = parts[0];
+      if (intPart.length > 3) {
+        let lastThree = intPart.substring(intPart.length - 3);
+        let otherNumbers = intPart.substring(0, intPart.length - 3);
+        intPart = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + ',' + lastThree;
+      }
+      return parts.length > 1 ? intPart + '.' + parts[1] : intPart;
+    }
+    return String(v);
+  };
+
+  const [localValue, setLocalValue] = React.useState(formatVal(value));
+
   React.useEffect(() => {
     if (Number.isNaN(value) || typeof value === 'object') return;
-    if (String(value) !== String(localValue) && value !== Number(localValue)) {
-      setLocalValue(value === 0 || value === null || value === undefined ? '' : value);
+    const cleanValue = prefix === '₹' ? String(value).replace(/[^0-9.]/g, '') : String(value);
+    const cleanLocal = prefix === '₹' ? String(localValue).replace(/[^0-9.]/g, '') : String(localValue);
+    
+    if (cleanValue !== cleanLocal && String(value) !== cleanLocal) {
+      setLocalValue(formatVal(value));
     }
-  }, [value]);
+  }, [value, prefix]);
+
   const handleChange = (e) => {
     let val = e.target.value;
     if (uppercase) val = val.toUpperCase();
+    
     if (prefix === '₹') {
        val = val.replace(/[^0-9.]/g, '');
-       if ((val.match(/\./g) || []).length > 1) return;
-    }
-    setLocalValue(val);
-    if (onChange) {
-       e.target.value = val;
-       if (name) e.target.name = name;
-       onChange(e);
+       if ((val.match(/\./g) || []).length > 1) return; 
+       
+       setLocalValue(formatVal(val));
+       
+       if (onChange) {
+           e.target.value = val;
+           if (name) e.target.name = name;
+           onChange(e);
+       }
+    } else {
+       setLocalValue(val);
+       if (onChange) {
+           e.target.value = val;
+           if (name) e.target.name = name;
+           onChange(e);
+       }
     }
   };
+
   return (
     <div className="flex flex-col">
       <label className="text-[11px] text-gray-500 mb-1 flex items-center gap-1">

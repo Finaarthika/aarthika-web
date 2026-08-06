@@ -3,30 +3,71 @@ import { useTaxation } from './TaxationContext';
 import { useNavigate } from 'react-router-dom';
 
 const TaxInput = ({ label, value, onChange, placeholder, prefix, note, required, uppercase, type = "text", name }) => {
-  const [localValue, setLocalValue] = React.useState(value === 0 || value === null || value === undefined ? '' : value);
+  const formatVal = (v) => {
+    if (v === null || v === undefined || v === '') return '';
+    if (prefix === '₹') {
+      let str = String(v).replace(/[^0-9.]/g, '');
+      if (!str) return '';
+      let parts = str.split('.');
+      let intPart = parts[0];
+      if (intPart.length > 3) {
+        let lastThree = intPart.substring(intPart.length - 3);
+        let otherNumbers = intPart.substring(0, intPart.length - 3);
+        intPart = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + ',' + lastThree;
+      }
+      return parts.length > 1 ? intPart + '.' + parts[1] : intPart;
+    }
+    return String(v);
+  };
+
+  const [localValue, setLocalValue] = React.useState(formatVal(value));
+
   React.useEffect(() => {
     if (Number.isNaN(value) || typeof value === 'object') return;
-    if (String(value) !== String(localValue) && value !== Number(localValue)) {
-      setLocalValue(value === 0 || value === null || value === undefined ? '' : value);
+    const cleanValue = prefix === '₹' ? String(value).replace(/[^0-9.]/g, '') : String(value);
+    const cleanLocal = prefix === '₹' ? String(localValue).replace(/[^0-9.]/g, '') : String(localValue);
+    
+    if (cleanValue !== cleanLocal && String(value) !== cleanLocal) {
+      setLocalValue(formatVal(value));
     }
-  }, [value]);
+  }, [value, prefix]);
+
   const handleChange = (e) => {
     let val = e.target.value;
     if (uppercase) val = val.toUpperCase();
+    
     if (prefix === '₹') {
        val = val.replace(/[^0-9.]/g, '');
-       if ((val.match(/\./g) || []).length > 1) return;
-    }
-    setLocalValue(val);
-    if (onChange) {
-       e.target.value = val;
-       if (name) e.target.name = name;
-       onChange(e);
+       if ((val.match(/\./g) || []).length > 1) return; 
+       
+       setLocalValue(formatVal(val));
+       
+       if (onChange) {
+           e.target.value = val;
+           if (name) e.target.name = name;
+           onChange(e);
+       }
+    } else {
+       setLocalValue(val);
+       if (onChange) {
+           e.target.value = val;
+           if (name) e.target.name = name;
+           onChange(e);
+       }
     }
   };
+
   return (
     <div className="flex flex-col">
-      <label className="text-xs text-gray-500 mb-1">{label}{required && <span className="text-red-500 ml-0.5">*</span>}</label>
+      <label className="text-[11px] text-gray-500 mb-1 flex items-center gap-1">
+        {label}
+        {required && <span className="text-red-500">*</span>}
+        {note && (
+          <div className="w-3.5 h-3.5 rounded-full border border-gray-400 text-gray-400 flex items-center justify-center text-[9px] font-bold cursor-help" title={note}>
+            i
+          </div>
+        )}
+      </label>
       <div className="relative">
         {prefix && <span className="absolute left-3 top-2 text-gray-500 text-[14px]">{prefix}</span>}
         <input
@@ -36,77 +77,14 @@ const TaxInput = ({ label, value, onChange, placeholder, prefix, note, required,
           value={localValue}
           onChange={handleChange}
           placeholder={placeholder || ''}
-          className={`w-full border border-gray-300 rounded-md py-2 text-[14px] text-slate-800 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 ${prefix ? 'pl-7 pr-3' : 'px-3'} ${uppercase ? 'uppercase' : ''}`}
+          className={`w-full border border-gray-300 rounded-[4px] py-2 text-[14px] text-slate-800 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 ${prefix ? 'pl-7 pr-3' : 'px-3'} ${uppercase ? 'uppercase' : ''}`}
         />
       </div>
-      {note && <p className="text-[11px] text-gray-400 mt-1">{note}</p>}
     </div>
   );
 };
 
-const AccordionItem = ({ id, title, subtitle, icon, isExpanded, onToggle, children }) => {
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4">
-      <div className="p-5 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 border border-gray-200 rounded-lg flex items-center justify-center text-gray-500 bg-gray-50">
-            {icon}
-          </div>
-          <div>
-            <h3 className="font-bold text-[15px] text-slate-800">{title}</h3>
-            <p className="text-[12px] text-gray-500 mt-0.5">{subtitle}</p>
-          </div>
-        </div>
-        <button 
-          onClick={onToggle}
-          className="bg-[#1b7a43] hover:bg-green-700 text-white font-semibold py-1.5 px-4 rounded-full text-[13px] flex items-center gap-1.5 transition-colors"
-        >
-          <span>{isExpanded ? '-' : '+'}</span> {isExpanded ? 'Close' : 'Add'}
-        </button>
-      </div>
-      
-      {isExpanded && (
-        <div className="p-6 border-t border-gray-100 bg-slate-50/50">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default function CapitalGains() {
-  const { taxData, updateNestedTaxData, updateArrayData } = useTaxation();
-  const navigate = useNavigate();
-  const { capitalGains, cgTransactions } = taxData;
-  const [expandedSection, setExpandedSection] = React.useState(null);
-
-  const [formData, setFormData] = React.useState({
-    type: 'Equity', buyDate: '', sellDate: '', buyValue: '', sellValue: '', expenses: ''
-  });
-
-  const handleCapitalChange = (type, q, val) => {
-    updateNestedTaxData('capitalGains', type, q, val === '' ? '' : Number(val));
-  };
-
-  const handleSaveTransaction = () => {
-    const newId = cgTransactions.length > 0 ? Math.max(...cgTransactions.map(t => t.id)) + 1 : 1;
-    updateArrayData('cgTransactions', [
-      ...cgTransactions,
-      { 
-        id: newId, 
-        assetName: 'Added manually',
-        type: formData.type, 
-        buyDate: formData.buyDate, 
-        sellDate: formData.sellDate,
-        buyValue: Number(formData.buyValue) || 0,
-        sellValue: Number(formData.sellValue) || 0,
-        expenses: Number(formData.expenses) || 0
-      }
-    ]);
-    setFormData({ type: 'Equity', buyDate: '', sellDate: '', buyValue: '', sellValue: '', expenses: '' });
-  };
-
-  const handleRemoveTransaction = (id) => {
+const handleRemoveTransaction = (id) => {
     updateArrayData('cgTransactions', cgTransactions.filter(t => t.id !== id));
   };
 
