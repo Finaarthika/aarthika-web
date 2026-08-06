@@ -84,7 +84,69 @@ const TaxInput = ({ label, value, onChange, placeholder, prefix, note, required,
   );
 };
 
-const handleRemoveTransaction = (id) => {
+const AccordionItem = ({ id, title, subtitle, icon, isExpanded, onToggle, children }) => {
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4">
+      <div className="p-5 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 border border-gray-200 rounded-lg flex items-center justify-center text-gray-500 bg-gray-50">
+            {icon}
+          </div>
+          <div>
+            <h3 className="font-bold text-[15px] text-slate-800">{title}</h3>
+            <p className="text-[12px] text-gray-500 mt-0.5">{subtitle}</p>
+          </div>
+        </div>
+        <button 
+          onClick={onToggle}
+          className="bg-[#1b7a43] hover:bg-green-700 text-white font-semibold py-1.5 px-4 rounded-full text-[13px] flex items-center gap-1.5 transition-colors"
+        >
+          <span>{isExpanded ? '-' : '+'}</span> {isExpanded ? 'Close' : 'Add'}
+        </button>
+      </div>
+      
+      {isExpanded && (
+        <div className="p-6 border-t border-gray-100 bg-slate-50/50">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default function CapitalGains() {
+  const { taxData, updateNestedTaxData, updateArrayData } = useTaxation();
+  const navigate = useNavigate();
+  const { capitalGains, cgTransactions } = taxData;
+  const [expandedSection, setExpandedSection] = React.useState(null);
+
+  const [formData, setFormData] = React.useState({
+    type: 'Equity', buyDate: '', sellDate: '', buyValue: '', sellValue: '', expenses: ''
+  });
+
+  const handleCapitalChange = (type, q, val) => {
+    updateNestedTaxData('capitalGains', type, q, val === '' ? '' : Number(val));
+  };
+
+  const handleSaveTransaction = () => {
+    const newId = cgTransactions.length > 0 ? Math.max(...cgTransactions.map(t => t.id)) + 1 : 1;
+    updateArrayData('cgTransactions', [
+      ...cgTransactions,
+      { 
+        id: newId, 
+        assetName: 'Added manually',
+        type: formData.type, 
+        buyDate: formData.buyDate, 
+        sellDate: formData.sellDate,
+        buyValue: Number(formData.buyValue) || 0,
+        sellValue: Number(formData.sellValue) || 0,
+        expenses: Number(formData.expenses) || 0
+      }
+    ]);
+    setFormData({ type: 'Equity', buyDate: '', sellDate: '', buyValue: '', sellValue: '', expenses: '' });
+  };
+
+  const handleRemoveTransaction = (id) => {
     updateArrayData('cgTransactions', cgTransactions.filter(t => t.id !== id));
   };
 
