@@ -15,6 +15,8 @@ export default function TaxDocumentGenerator({ onClose }) {
   const { business } = data;
   const bankAccounts = data.bankAccounts || [];
   const taxDeductors = data.taxDeductors || [];
+  const cgTransactions = data.cgTransactions || [];
+
 
   // -- MATH COMPUTATIONS --
   const grossBusiness = Number(business.profitBank) + Number(business.profitCash);
@@ -26,10 +28,13 @@ export default function TaxDocumentGenerator({ onClose }) {
   const taxableGifts = (!data.otherSources.gifts.isExemptOccasion && totalGifts > 50000) ? totalGifts : 0;
   const exemptGifts = (data.otherSources.gifts.isExemptOccasion && totalGifts > 0) ? totalGifts : 0;
 
+  const familyPensionDeduction = Math.min(Number(data.otherSources.familyPension) * 0.3333, 15000);
+  const taxableFamilyPension = Math.max(0, Number(data.otherSources.familyPension) - familyPensionDeduction);
+
   const grossOther = Number(data.otherSources.savingsInterest) + Number(data.otherSources.fdInterest) + 
                      Number(data.otherSources.taxRefundInterest) + Number(data.otherSources.bondsInterest) +
                      Number(data.otherSources.epfInterest) + Number(data.otherSources.loansInterest) +
-                     Number(data.otherSources.anyOtherIncome) + dividendSum + taxableGifts;
+                     Number(data.otherSources.anyOtherIncome) + dividendSum + taxableGifts + taxableFamilyPension;
 
   const totalExemptIncome = Number(data.exemptIncome.agriculture) + Number(data.exemptIncome.insuranceMaturity) +
                             Number(data.exemptIncome.ppfInterest) + Number(data.exemptIncome.npsWithdrawal) +
@@ -165,7 +170,8 @@ export default function TaxDocumentGenerator({ onClose }) {
     </div>
   );
 
-  const totalPages = data.incomes.hasBusiness ? 5 : 3;
+  const totalPages = (data.incomes.hasBusiness ? 5 : 3) + (cgTransactions.length > 0 ? Math.ceil(cgTransactions.length / 10) : 0);
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
@@ -235,6 +241,8 @@ export default function TaxDocumentGenerator({ onClose }) {
                 <Tr label="a. Taxable Business & Profession Income" amt={grossBusiness} isSub={true} />
                 <Tr label="b. Taxable Capital Gains" amt={grossStcg + grossLtcg} isSub={true} />
                 <Tr label="c. Taxable Other Sources Income" amt={grossOther} isSub={true} />
+                {Number(data.otherSources.familyPension) > 0 && <Tr label="Family Pension (Gross)" amt={Number(data.otherSources.familyPension)} isSub={true} />}
+                {Number(data.otherSources.familyPension) > 0 && <Tr label="Less: Family Pension Standard Deduction" amt={-familyPensionDeduction} isSub={true} />}
 
                 <Tr label="2. Losses Adjusted" isHeader={true} total={Number(data.bfla.businessLoss) + Number(data.bfla.stcgLoss) + Number(data.bfla.ltcgLoss)} />
                 <Tr label="a. Brought Forward Business Loss" amt={data.bfla.businessLoss} isSub={true} />
@@ -408,6 +416,49 @@ export default function TaxDocumentGenerator({ onClose }) {
               <PageFooter num={3} total={totalPages} />
             </div>
 
+            {/* PAGE X: Capital Gains Transactions (Chunked) */}
+            {cgTransactions.length > 0 && Array.from({ length: Math.ceil(cgTransactions.length / 10) }).map((_, pageIdx) => {
+              const chunk = cgTransactions.slice(pageIdx * 10, (pageIdx + 1) * 10);
+              return (
+                <div key={`cg-page-${pageIdx}`} className="bg-white w-[794px] h-[1123px] relative px-12 pt-12 pb-24 overflow-hidden shadow-xl">
+                  <SectionHeader title={`Capital Gains Transactions (Part ${pageIdx + 1})`} />
+                  <table className="w-full text-[11px] border-collapse mb-8 border border-gray-200">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-200">
+                        <th className="py-2 px-3 text-left font-bold text-gray-800 border-r border-gray-200">Asset</th>
+                        <th className="py-2 px-3 text-left font-bold text-gray-800 border-r border-gray-200">Buy Date</th>
+                        <th className="py-2 px-3 text-left font-bold text-gray-800 border-r border-gray-200">Sell Date</th>
+                        <th className="py-2 px-3 text-right font-bold text-gray-800 border-r border-gray-200">Buy Val</th>
+                        <th className="py-2 px-3 text-right font-bold text-gray-800 border-r border-gray-200">Sell Val</th>
+                        <th className="py-2 px-3 text-right font-bold text-gray-800">Gain/Loss</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 text-gray-700">
+                      {chunk.map((row, i) => {
+                        const profit = (Number(row.sellValue) || 0) - (Number(row.buyValue) || 0) - (Number(row.expenses) || 0);
+                        return (
+                          <tr key={i}>
+                            <td className="py-2 px-3 border-r border-gray-200">
+                              <span className="font-semibold">{row.assetName || '--'}</span>
+                              {row.isin && <div className="text-[9px] text-gray-500 uppercase">{row.isin}</div>}
+                            </td>
+                            <td className="py-2 px-3 border-r border-gray-200">{row.buyDate || '--'}</td>
+                            <td className="py-2 px-3 border-r border-gray-200">{row.sellDate || '--'}</td>
+                            <td className="py-2 px-3 text-right border-r border-gray-200">₹{formatCur(row.buyValue)}</td>
+                            <td className="py-2 px-3 text-right border-r border-gray-200">₹{formatCur(row.sellValue)}</td>
+                            <td className={`py-2 px-3 text-right font-bold ${profit >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                              ₹{formatCur(profit)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                  <PageFooter num={4 + pageIdx} total={totalPages} />
+                </div>
+              );
+            })}
+
             {/* PAGE 4: Balance Sheet (Equity & Liab) */}
             {data.incomes.hasBusiness && (
               <div className="bg-white w-[794px] h-[1123px] relative px-12 pt-12 pb-24 overflow-hidden shadow-xl">
@@ -434,7 +485,7 @@ export default function TaxDocumentGenerator({ onClose }) {
                   <Tr label="Total Equity & Liabilities" isHeader={true} total={bsTotalLiab} />
                 </TableLayout>
 
-                <PageFooter num={4} total={totalPages} />
+                <PageFooter num={4 + (cgTransactions.length > 0 ? Math.ceil(cgTransactions.length / 10) : 0)} total={totalPages} />
               </div>
             )}
 
@@ -464,7 +515,7 @@ export default function TaxDocumentGenerator({ onClose }) {
                   <Tr label="Total Assets" isHeader={true} total={bsTotalAssets} />
                 </TableLayout>
 
-                <PageFooter num={5} total={totalPages} />
+                <PageFooter num={5 + (cgTransactions.length > 0 ? Math.ceil(cgTransactions.length / 10) : 0)} total={totalPages} />
               </div>
             )}
           </div>

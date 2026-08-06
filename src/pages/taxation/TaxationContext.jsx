@@ -27,7 +27,9 @@ export const TaxationProvider = ({ children }) => {
     business: {
       isRegisteredGST: false,
       gstin: '',
+      gstTurnover: 0,
       businessName: '',
+      businessNatureCode: '09005', // Default: Retail Sale of Other Products
       turnoverBank: 0,
       turnoverCash: 0,
       profitBank: 0, // Should be at least 6%
@@ -59,6 +61,7 @@ export const TaxationProvider = ({ children }) => {
       stcg: { q1: 0, q2: 0, q3: 0, q4: 0, q5: 0 }, // 111A 20%
       ltcg: { q1: 0, q2: 0, q3: 0, q4: 0, q5: 0 }, // 112A 12.5%
     },
+    cgTransactions: [], // Array of { id, assetName, isin, type (Equity/MF), buyDate, sellDate, buyValue, sellValue, expenses }
     otherSources: {
       savingsInterest: 0,
       fdInterest: 0,
@@ -66,6 +69,7 @@ export const TaxationProvider = ({ children }) => {
       bondsInterest: 0,
       epfInterest: 0,
       loansInterest: 0,
+      familyPension: 0,
       anyOtherIncome: 0,
       anyOtherIncomeNarration: '',
       dividend: { q1: 0, q2: 0, q3: 0, q4: 0, q5: 0 },

@@ -44,10 +44,13 @@ export default function Computation() {
     const totalGifts = Number(otherSources.gifts.monetary) + Number(otherSources.gifts.movable) + Number(otherSources.gifts.immovable);
     const taxableGifts = (!otherSources.gifts.isExemptOccasion && totalGifts > 50000) ? totalGifts : 0;
 
+    const familyPensionDeduction = Math.min(Number(otherSources.familyPension) * 0.3333, 15000);
+    const taxableFamilyPension = Math.max(0, Number(otherSources.familyPension) - familyPensionDeduction);
+
     const grossOther = Number(otherSources.savingsInterest) + Number(otherSources.fdInterest) + 
                        Number(otherSources.taxRefundInterest) + Number(otherSources.bondsInterest) +
                        Number(otherSources.epfInterest) + Number(otherSources.loansInterest) +
-                       Number(otherSources.anyOtherIncome) + dividendSum + taxableGifts;
+                       Number(otherSources.anyOtherIncome) + dividendSum + taxableGifts + taxableFamilyPension;
 
     // 2. Apply BFLA (Brought Forward Loss Adjustments)
     const taxableBusiness = Math.max(0, grossBusiness - Number(bfla.businessLoss));

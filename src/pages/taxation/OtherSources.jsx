@@ -211,21 +211,32 @@ export default function OtherSources() {
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <InputField 
-              label="Any Other Income (not reported above)" 
-              name="anyOtherIncome"
-              value={otherSources.anyOtherIncome} 
-              onChange={handleChange}
-            />
+            <div className="space-y-6">
+              <InputField 
+                label="Family Pension" 
+                name="familyPension"
+                value={otherSources.familyPension} 
+                onChange={handleChange}
+                note="Standard deduction of 33.33% or ₹15,000 (whichever is lower) will be automatically applied."
+              />
+            </div>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-2">
-                Narration / Details
-              </label>
-              <input
-                type="text"
-                name="anyOtherIncomeNarration"
-                value={otherSources.anyOtherIncomeNarration || ''}
+            <div className="space-y-6">
+              <InputField 
+                label="Any Other Income (not reported above)" 
+                name="anyOtherIncome"
+                value={otherSources.anyOtherIncome} 
+                onChange={handleChange}
+              />
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Narration / Details
+                </label>
+                <input
+                  type="text"
+                  name="anyOtherIncomeNarration"
+                  value={otherSources.anyOtherIncomeNarration || ''}
                 onChange={(e) => updateTaxData('otherSources', 'anyOtherIncomeNarration', e.target.value)}
                 placeholder="e.g. Freelance consulting"
                 className="w-full bg-[#121212] border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"

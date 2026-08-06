@@ -80,6 +80,16 @@ export default function BusinessIncome() {
   const totalProfit = Number(business.profitBank) + Number(business.profitCash);
   const profitPercentage = totalTurnover > 0 ? ((totalProfit / totalTurnover) * 100).toFixed(2) : 0;
 
+  const cashPercentage = totalTurnover > 0 ? (Number(business.turnoverCash) / totalTurnover) * 100 : 0;
+  
+  // 44AD Strict Limits Validation
+  let presumptiveError = null;
+  if (cashPercentage > 5 && totalTurnover > 20000000) {
+    presumptiveError = "Turnover exceeds ₹2 Crore limit (since cash receipts > 5%). You are not eligible for Presumptive Taxation u/s 44AD. Tax Audit is mandatory.";
+  } else if (totalTurnover > 30000000) {
+    presumptiveError = "Turnover exceeds ₹3 Crore limit. You are not eligible for Presumptive Taxation u/s 44AD. Tax Audit is mandatory.";
+  }
+
   return (
     <div className="max-w-4xl mx-auto py-8 pb-20">
       <div className="mb-8">
@@ -103,13 +113,22 @@ export default function BusinessIncome() {
               />
             </div>
             {business.isRegisteredGST && (
-              <InputField 
-                label="GSTIN" 
-                type="text" 
-                prefix=""
-                value={business.gstin} 
-                onChange={(e) => updateTaxData('business', 'gstin', e.target.value)} 
-              />
+              <>
+                <InputField 
+                  label="GSTIN" 
+                  type="text" 
+                  prefix=""
+                  value={business.gstin} 
+                  onChange={(e) => updateTaxData('business', 'gstin', e.target.value)} 
+                />
+                <InputField 
+                  label="Turnover as per GST Return (GSTR-3B)" 
+                  type="number" 
+                  prefix="₹"
+                  value={business.gstTurnover || ''} 
+                  onChange={(e) => updateTaxData('business', 'gstTurnover', Number(e.target.value))} 
+                />
+              </>
             )}
             <div className="col-span-1 md:col-span-2">
               <InputField 
@@ -120,6 +139,21 @@ export default function BusinessIncome() {
                 onChange={(e) => updateTaxData('business', 'businessName', e.target.value)} 
               />
             </div>
+            <div className="col-span-1 md:col-span-2">
+              <label className="block text-sm font-medium text-gray-400 mb-2">Business Nature Code (For ITR)</label>
+              <select
+                className="w-full bg-[#121212] border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                value={business.businessNatureCode}
+                onChange={(e) => updateTaxData('business', 'businessNatureCode', e.target.value)}
+              >
+                <option value="09005">09005 - Retail Sale of Other Products</option>
+                <option value="09028">09028 - Retail sale of other goods</option>
+                <option value="14001">14001 - Software development</option>
+                <option value="16013">16013 - Legal profession</option>
+                <option value="16019">16019 - Other professional services</option>
+                <option value="21008">21008 - Other services n.e.c</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -129,6 +163,18 @@ export default function BusinessIncome() {
             <span className="w-8 h-8 rounded-full bg-blue-600/20 text-blue-500 flex items-center justify-center text-sm">2</span>
             Gross Receipts & Profit
           </h3>
+
+          {presumptiveError && (
+            <div className="mb-6 p-4 bg-red-900/20 border border-red-500/50 rounded-lg flex items-start gap-3">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div>
+                <h4 className="text-red-400 font-bold">Eligibility Alert</h4>
+                <p className="text-red-300 text-sm mt-1">{presumptiveError}</p>
+              </div>
+            </div>
+          )}
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
             <div className="space-y-6">
