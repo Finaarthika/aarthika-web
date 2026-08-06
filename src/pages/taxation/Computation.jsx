@@ -87,17 +87,17 @@ export default function Computation() {
 
     const totalTaxBase = taxOnNormalIncome + taxOnStcg + taxOnLtcg;
     
-    // 87A Rebate (up to 7 Lakhs, max 25000)
+    // 87A Rebate (up to 12 Lakhs)
     let rebate87A = 0;
-    if (totalIncome <= 700000) {
-      rebate87A = Math.min(totalTaxBase, 25000);
+    if (totalIncome <= 1200000) {
+      // Assuming rebate can cover total tax base (normal + special rates) as per simplified expectation
+      rebate87A = totalTaxBase;
     }
     // Marginal relief for 87A
-    else if (totalIncome > 700000 && totalIncome <= 727777) {
-      const taxAbove7L = totalTaxBase;
-      const incomeAbove7L = totalIncome - 700000;
-      if (taxAbove7L > incomeAbove7L) {
-        rebate87A = taxAbove7L - incomeAbove7L;
+    else {
+      const incomeAbove12L = totalIncome - 1200000;
+      if (totalTaxBase > incomeAbove12L) {
+        rebate87A = totalTaxBase - incomeAbove12L;
       }
     }
 
