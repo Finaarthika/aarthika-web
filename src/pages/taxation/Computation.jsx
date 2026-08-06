@@ -90,14 +90,14 @@ export default function Computation() {
     // 87A Rebate (up to 12 Lakhs)
     let rebate87A = 0;
     if (totalIncome <= 1200000) {
-      // Assuming rebate can cover total tax base (normal + special rates) as per simplified expectation
-      rebate87A = totalTaxBase;
+      // 87A Rebate ONLY against tax on Normal Income. Special rate taxes (STCG, LTCG) are not eligible.
+      rebate87A = taxOnNormalIncome;
     }
     // Marginal relief for 87A
     else {
       const incomeAbove12L = totalIncome - 1200000;
-      if (totalTaxBase > incomeAbove12L) {
-        rebate87A = totalTaxBase - incomeAbove12L;
+      if (taxOnNormalIncome > incomeAbove12L) {
+        rebate87A = taxOnNormalIncome - incomeAbove12L;
       }
     }
 

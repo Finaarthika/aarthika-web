@@ -64,6 +64,11 @@ export default function TaxDocumentGenerator({ onClose }) {
   let rebate87a = 0;
   if (totalIncome <= 1200000) {
     rebate87a = normalTax; 
+  } else {
+    const incomeAbove12L = totalIncome - 1200000;
+    if (normalTax > incomeAbove12L) {
+      rebate87a = normalTax - incomeAbove12L;
+    }
   }
   const taxAfterRebate = Math.max(0, totalTax - rebate87a);
   const healthEduCess = taxAfterRebate * 0.04;
