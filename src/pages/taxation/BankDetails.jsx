@@ -2,18 +2,48 @@ import React from 'react';
 import { useTaxation } from './TaxationContext';
 import { useNavigate } from 'react-router-dom';
 
-const TaxInput = ({ label, value, onChange, placeholder, required }) => (
-  <div className="flex flex-col">
-    <label className="text-xs text-gray-500 mb-1">{label}{required && <span className="text-red-500 ml-0.5">*</span>}</label>
-    <input
-      type="text"
-      value={value || ''}
-      onChange={onChange}
-      placeholder={placeholder || ''}
-      className="w-full border border-gray-300 rounded-md px-3 py-2 text-[14px] text-slate-800 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
-    />
-  </div>
-);
+const TaxInput = ({ label, value, onChange, placeholder, prefix, note, required, uppercase, type = "text", name }) => {
+  const [localValue, setLocalValue] = React.useState(value === 0 || value === null || value === undefined ? '' : value);
+  React.useEffect(() => {
+    if (Number.isNaN(value) || typeof value === 'object') return;
+    if (String(value) !== String(localValue) && value !== Number(localValue)) {
+      setLocalValue(value === 0 || value === null || value === undefined ? '' : value);
+    }
+  }, [value]);
+  const handleChange = (e) => {
+    let val = e.target.value;
+    if (uppercase) val = val.toUpperCase();
+    if (prefix === '₹') {
+       val = val.replace(/[^0-9.]/g, '');
+       if ((val.match(/\./g) || []).length > 1) return;
+    }
+    setLocalValue(val);
+    if (onChange) {
+       e.target.value = val;
+       if (name) e.target.name = name;
+       onChange(e);
+    }
+  };
+  return (
+    <div className="flex flex-col">
+      <label className="text-xs text-gray-500 mb-1">{label}{required && <span className="text-red-500 ml-0.5">*</span>}</label>
+      <div className="relative">
+        {prefix && <span className="absolute left-3 top-2 text-gray-500 text-[14px]">{prefix}</span>}
+        <input
+          type={type}
+          inputMode={prefix === '₹' ? 'numeric' : 'text'}
+          name={name}
+          value={localValue}
+          onChange={handleChange}
+          placeholder={placeholder || ''}
+          className={`w-full border border-gray-300 rounded-md py-2 text-[14px] text-slate-800 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 ${prefix ? 'pl-7 pr-3' : 'px-3'} ${uppercase ? 'uppercase' : ''}`}
+        />
+      </div>
+      {note && <p className="text-[11px] text-gray-400 mt-1">{note}</p>}
+    </div>
+  );
+};
+
 
 const TaxSelect = ({ label, value, onChange, required, options }) => (
   <div className="flex flex-col">
@@ -29,7 +59,7 @@ const TaxSelect = ({ label, value, onChange, required, options }) => (
 );
 
 export default function BankDetails() {
-  const { taxData, updateArrayData } = useTaxation();
+  const { taxData, updateArrayData, setTaxData } = useTaxation();
   const navigate = useNavigate();
   const bankAccounts = taxData.bankAccounts || [];
 
@@ -49,6 +79,19 @@ export default function BankDetails() {
     updateArrayData('bankAccounts', bankAccounts.map(b =>
       b.id === id ? { ...b, [field]: value } : b
     ));
+    
+    if (field === 'ifsc' && value.length === 11) {
+       fetch(`https://ifsc.razorpay.com/${value}`)
+         .then(res => res.json())
+         .then(data => {
+            if (data && data.BANK) {
+               setTaxData(prev => ({
+                 ...prev,
+                 bankAccounts: prev.bankAccounts.map(b => b.id === id ? { ...b, bankName: data.BANK } : b)
+               }));
+            }
+         }).catch(err => console.error('Invalid IFSC'));
+    }
   };
 
   const handleRefundToggle = (id) => {

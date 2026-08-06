@@ -47,7 +47,7 @@ export default function Onboarding() {
       <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
         <div className="px-8 py-2">
           <IncomeRow 
-            label={<span>Salary/ Pension <span className="font-normal">Income</span></span>} 
+            label={<span>Salary/ Pension Income</span>} 
             value={false} 
             onChange={() => {}} 
           />
@@ -57,34 +57,24 @@ export default function Onboarding() {
             onChange={(val) => handleIncomeChange('hasCapitalGains', val)} 
           />
           <IncomeRow 
-            label={<span>Business/ Profession <span className="font-normal">Income</span></span>} 
+            label={<span>Business/ Profession Income</span>} 
             value={taxData.incomes.hasBusiness} 
             onChange={(val) => handleIncomeChange('hasBusiness', val)} 
           />
           <IncomeRow 
-            label={<span>House Property (Home Loan/ Rental Income, etc) <span className="font-normal">Income</span></span>} 
+            label={<span>House Property (Home Loan/ Rental Income, etc) Income</span>} 
             value={false} 
             onChange={() => {}} 
           />
           <IncomeRow 
-            label={<span>Other Sources <span className="font-normal">Income</span> (Interest, Dividend, Gifts)</span>} 
+            label={<span>Other Sources Income</span>} 
             value={taxData.incomes.hasOtherSources} 
             onChange={(val) => handleIncomeChange('hasOtherSources', val)} 
           />
           <IncomeRow 
-            label={<span>Exempt <span className="font-normal">Income</span> (Agriculture, PPF, etc.)</span>} 
-            value={taxData.incomes.hasExemptIncome} 
-            onChange={(val) => handleIncomeChange('hasExemptIncome', val)} 
-          />
-          <IncomeRow 
-            label={<span>Claim Deductions <span className="font-normal">(Sec 80CCD, 80CCH)</span></span>} 
-            value={taxData.incomes.hasDeductions} 
-            onChange={(val) => handleIncomeChange('hasDeductions', val)} 
-          />
-          <IncomeRow 
-            label={<span>Taxes Already Paid <span className="font-normal">(TDS, TCS, Advance Tax)</span></span>} 
-            value={taxData.incomes.hasPrepaidTaxes} 
-            onChange={(val) => handleIncomeChange('hasPrepaidTaxes', val)} 
+            label={<span>Foreign Income</span>} 
+            value={false} 
+            onChange={() => {}} 
             isLast={true}
           />
         </div>

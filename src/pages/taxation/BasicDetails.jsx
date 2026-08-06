@@ -2,18 +2,48 @@ import React from 'react';
 import { useTaxation } from './TaxationContext';
 import { useNavigate } from 'react-router-dom';
 
-const TaxInput = ({ label, value, onChange, placeholder, required }) => (
-  <div className="flex flex-col">
-    <label className="text-xs text-gray-500 mb-1">{label}{required && <span className="text-red-500 ml-0.5">*</span>}</label>
-    <input
-      type="text"
-      value={value || ''}
-      onChange={onChange}
-      placeholder={placeholder || ''}
-      className="w-full border border-gray-300 rounded-md px-3 py-2 text-[14px] text-slate-800 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
-    />
-  </div>
-);
+const TaxInput = ({ label, value, onChange, placeholder, prefix, note, required, uppercase, type = "text", name }) => {
+  const [localValue, setLocalValue] = React.useState(value === 0 || value === null || value === undefined ? '' : value);
+  React.useEffect(() => {
+    if (Number.isNaN(value) || typeof value === 'object') return;
+    if (String(value) !== String(localValue) && value !== Number(localValue)) {
+      setLocalValue(value === 0 || value === null || value === undefined ? '' : value);
+    }
+  }, [value]);
+  const handleChange = (e) => {
+    let val = e.target.value;
+    if (uppercase) val = val.toUpperCase();
+    if (prefix === '₹') {
+       val = val.replace(/[^0-9.]/g, '');
+       if ((val.match(/\./g) || []).length > 1) return;
+    }
+    setLocalValue(val);
+    if (onChange) {
+       e.target.value = val;
+       if (name) e.target.name = name;
+       onChange(e);
+    }
+  };
+  return (
+    <div className="flex flex-col">
+      <label className="text-xs text-gray-500 mb-1">{label}{required && <span className="text-red-500 ml-0.5">*</span>}</label>
+      <div className="relative">
+        {prefix && <span className="absolute left-3 top-2 text-gray-500 text-[14px]">{prefix}</span>}
+        <input
+          type={type}
+          inputMode={prefix === '₹' ? 'numeric' : 'text'}
+          name={name}
+          value={localValue}
+          onChange={handleChange}
+          placeholder={placeholder || ''}
+          className={`w-full border border-gray-300 rounded-md py-2 text-[14px] text-slate-800 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 ${prefix ? 'pl-7 pr-3' : 'px-3'} ${uppercase ? 'uppercase' : ''}`}
+        />
+      </div>
+      {note && <p className="text-[11px] text-gray-400 mt-1">{note}</p>}
+    </div>
+  );
+};
+
 
 export default function BasicDetails() {
   const { taxData, updateTaxData } = useTaxation();
@@ -29,18 +59,17 @@ export default function BasicDetails() {
       <div className="bg-white rounded-2xl shadow-sm p-8 mb-8 border border-gray-100">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <TaxInput 
-            label="First Name" 
+            label="First Name #" 
             value={taxData.clientDetails.firstName} 
             onChange={(e) => updateTaxData('clientDetails', 'firstName', e.target.value)} 
-            required 
           />
           <TaxInput 
-            label="Middle Name" 
+            label="Middle Name #" 
             value={taxData.clientDetails.middleName} 
             onChange={(e) => updateTaxData('clientDetails', 'middleName', e.target.value)} 
           />
           <TaxInput 
-            label="Last Name" 
+            label="Last Name #" 
             value={taxData.clientDetails.lastName} 
             onChange={(e) => updateTaxData('clientDetails', 'lastName', e.target.value)} 
             required 

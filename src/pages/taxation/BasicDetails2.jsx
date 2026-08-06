@@ -2,18 +2,48 @@ import React, { useState } from 'react';
 import { useTaxation } from './TaxationContext';
 import { useNavigate } from 'react-router-dom';
 
-const TaxInput = ({ label, value, onChange, placeholder, required }) => (
-  <div className="flex flex-col">
-    <label className="text-xs text-gray-500 mb-1">{label}{required && <span className="text-red-500 ml-0.5">*</span>}</label>
-    <input
-      type="text"
-      value={value || ''}
-      onChange={onChange}
-      placeholder={placeholder || ''}
-      className="w-full border border-gray-300 rounded-md px-3 py-2 text-[14px] text-slate-800 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
-    />
-  </div>
-);
+const TaxInput = ({ label, value, onChange, placeholder, prefix, note, required, uppercase, type = "text", name }) => {
+  const [localValue, setLocalValue] = React.useState(value === 0 || value === null || value === undefined ? '' : value);
+  React.useEffect(() => {
+    if (Number.isNaN(value) || typeof value === 'object') return;
+    if (String(value) !== String(localValue) && value !== Number(localValue)) {
+      setLocalValue(value === 0 || value === null || value === undefined ? '' : value);
+    }
+  }, [value]);
+  const handleChange = (e) => {
+    let val = e.target.value;
+    if (uppercase) val = val.toUpperCase();
+    if (prefix === '₹') {
+       val = val.replace(/[^0-9.]/g, '');
+       if ((val.match(/\./g) || []).length > 1) return;
+    }
+    setLocalValue(val);
+    if (onChange) {
+       e.target.value = val;
+       if (name) e.target.name = name;
+       onChange(e);
+    }
+  };
+  return (
+    <div className="flex flex-col">
+      <label className="text-xs text-gray-500 mb-1">{label}{required && <span className="text-red-500 ml-0.5">*</span>}</label>
+      <div className="relative">
+        {prefix && <span className="absolute left-3 top-2 text-gray-500 text-[14px]">{prefix}</span>}
+        <input
+          type={type}
+          inputMode={prefix === '₹' ? 'numeric' : 'text'}
+          name={name}
+          value={localValue}
+          onChange={handleChange}
+          placeholder={placeholder || ''}
+          className={`w-full border border-gray-300 rounded-md py-2 text-[14px] text-slate-800 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 ${prefix ? 'pl-7 pr-3' : 'px-3'} ${uppercase ? 'uppercase' : ''}`}
+        />
+      </div>
+      {note && <p className="text-[11px] text-gray-400 mt-1">{note}</p>}
+    </div>
+  );
+};
+
 
 const TaxSelect = ({ label, value, onChange, required, options }) => (
   <div className="flex flex-col">
@@ -33,6 +63,27 @@ export default function BasicDetails2() {
   const navigate = useNavigate();
   const [sameAddress, setSameAddress] = useState(true);
 
+  const [pincodeDetails, setPincodeDetails] = useState('');
+
+  React.useEffect(() => {
+    const pin = taxData.clientDetails.pincode;
+    if (pin && pin.length === 6) {
+      fetch(`https://api.postalpincode.in/pincode/${pin}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data[0] && data[0].Status === 'Success') {
+            const po = data[0].PostOffice[0];
+            setPincodeDetails(`${po.District.toUpperCase()}, ${po.State.toUpperCase()}, India ✔`);
+          } else {
+            setPincodeDetails('Invalid Pincode ❌');
+          }
+        })
+        .catch(() => setPincodeDetails(''));
+    } else {
+      setPincodeDetails('');
+    }
+  }, [taxData.clientDetails.pincode]);
+
   return (
     <div className="max-w-5xl mx-auto py-4">
       <div className="text-center mb-8">
@@ -50,8 +101,10 @@ export default function BasicDetails2() {
               onChange={(e) => updateTaxData('clientDetails', 'pincode', e.target.value)} 
               required 
             />
-            {taxData.clientDetails.pincode && taxData.clientDetails.pincode.length >= 6 && (
-              <p className="text-[11px] font-bold text-green-600 mt-1">KISHANGANJ, BIHAR, India ✎</p>
+            {pincodeDetails && (
+              <p className={`text-[11px] font-bold mt-1 ${pincodeDetails.includes('Invalid') ? 'text-red-600' : 'text-green-600'}`}>
+                {pincodeDetails}
+              </p>
             )}
           </div>
           <TaxInput 

@@ -2,28 +2,54 @@ import React from 'react';
 import { useTaxation } from './TaxationContext';
 import { useNavigate } from 'react-router-dom';
 
-const TaxInput = ({ label, value, onChange, placeholder, prefix, note }) => (
-  <div className="flex flex-col">
-    <label className="text-xs text-gray-500 mb-1">{label}</label>
-    <div className="relative">
-      {prefix && <span className="absolute left-3 top-2 text-gray-500 text-[14px]">{prefix}</span>}
-      <input
-        type="text"
-        inputMode="numeric"
-        value={value === '' || value === 0 || value === undefined || value === null ? '' : value}
-        onChange={onChange}
-        placeholder={placeholder || ''}
-        className={`w-full border border-gray-300 rounded-md py-2 text-[14px] text-slate-800 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 ${prefix ? 'pl-7 pr-3' : 'px-3'}`}
-      />
+const TaxInput = ({ label, value, onChange, placeholder, prefix, note, required, uppercase, type = "text", name }) => {
+  const [localValue, setLocalValue] = React.useState(value === 0 || value === null || value === undefined ? '' : value);
+  React.useEffect(() => {
+    if (Number.isNaN(value) || typeof value === 'object') return;
+    if (String(value) !== String(localValue) && value !== Number(localValue)) {
+      setLocalValue(value === 0 || value === null || value === undefined ? '' : value);
+    }
+  }, [value]);
+  const handleChange = (e) => {
+    let val = e.target.value;
+    if (uppercase) val = val.toUpperCase();
+    if (prefix === '₹') {
+       val = val.replace(/[^0-9.]/g, '');
+       if ((val.match(/\./g) || []).length > 1) return;
+    }
+    setLocalValue(val);
+    if (onChange) {
+       e.target.value = val;
+       if (name) e.target.name = name;
+       onChange(e);
+    }
+  };
+  return (
+    <div className="flex flex-col">
+      <label className="text-xs text-gray-500 mb-1">{label}{required && <span className="text-red-500 ml-0.5">*</span>}</label>
+      <div className="relative">
+        {prefix && <span className="absolute left-3 top-2 text-gray-500 text-[14px]">{prefix}</span>}
+        <input
+          type={type}
+          inputMode={prefix === '₹' ? 'numeric' : 'text'}
+          name={name}
+          value={localValue}
+          onChange={handleChange}
+          placeholder={placeholder || ''}
+          className={`w-full border border-gray-300 rounded-md py-2 text-[14px] text-slate-800 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 ${prefix ? 'pl-7 pr-3' : 'px-3'} ${uppercase ? 'uppercase' : ''}`}
+        />
+      </div>
+      {note && <p className="text-[11px] text-gray-400 mt-1">{note}</p>}
     </div>
-    {note && <p className="text-[11px] text-gray-400 mt-1">{note}</p>}
-  </div>
-);
+  );
+};
+
 
 export default function CapitalGains() {
   const { taxData, updateNestedTaxData } = useTaxation();
   const navigate = useNavigate();
   const { capitalGains } = taxData;
+  const [expandedSection, setExpandedSection] = React.useState(null);
 
   const handleCapitalChange = (type, q, val) => {
     updateNestedTaxData('capitalGains', type, q, val === '' ? '' : Number(val));
@@ -32,52 +58,104 @@ export default function CapitalGains() {
   const totalStcg = Object.values(capitalGains.stcg).reduce((a,b) => Number(a) + Number(b), 0);
   const totalLtcg = Object.values(capitalGains.ltcg).reduce((a,b) => Number(a) + Number(b), 0);
 
+  const AccordionItem = ({ id, title, subtitle, icon }) => {
+    const isExpanded = expandedSection === id;
+    
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="p-5 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 border border-gray-200 rounded-lg flex items-center justify-center text-gray-500 bg-gray-50">
+              {icon}
+            </div>
+            <div>
+              <h3 className="font-bold text-[15px] text-slate-800">{title}</h3>
+              <p className="text-[12px] text-gray-500 mt-0.5">{subtitle}</p>
+            </div>
+          </div>
+          <button 
+            onClick={() => setExpandedSection(isExpanded ? null : id)}
+            className="bg-[#1b7a43] hover:bg-green-700 text-white font-semibold py-1.5 px-4 rounded-full text-[13px] flex items-center gap-1.5 transition-colors"
+          >
+            <span>{isExpanded ? '-' : '+'}</span> {isExpanded ? 'Close' : 'Add'}
+          </button>
+        </div>
+        
+        {isExpanded && id === 'equity' && (
+          <div className="p-6 border-t border-gray-100 bg-slate-50/50">
+            <div className="mb-6">
+              <h4 className="font-bold text-[14px] text-slate-800 mb-4">Short-Term Capital Gains (u/s 111A - 20%)</h4>
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+                <TaxInput label="Up to 15-Jun-2025" value={capitalGains.stcg.q1} onChange={(e) => handleCapitalChange('stcg', 'q1', e.target.value)} prefix="₹" />
+                <TaxInput label="16-Jun to 15-Sep" value={capitalGains.stcg.q2} onChange={(e) => handleCapitalChange('stcg', 'q2', e.target.value)} prefix="₹" />
+                <TaxInput label="16-Sep to 15-Dec" value={capitalGains.stcg.q3} onChange={(e) => handleCapitalChange('stcg', 'q3', e.target.value)} prefix="₹" />
+                <TaxInput label="16-Dec to 15-Mar" value={capitalGains.stcg.q4} onChange={(e) => handleCapitalChange('stcg', 'q4', e.target.value)} prefix="₹" />
+                <TaxInput label="16-Mar to 31-Mar" value={capitalGains.stcg.q5} onChange={(e) => handleCapitalChange('stcg', 'q5', e.target.value)} prefix="₹" />
+              </div>
+              <div className="text-right text-[13px] font-bold text-slate-700">Total STCG: ₹{totalStcg.toLocaleString('en-IN')}</div>
+            </div>
+            
+            <div>
+              <h4 className="font-bold text-[14px] text-slate-800 mb-4">Long-Term Capital Gains (u/s 112A - 12.5%)</h4>
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+                <TaxInput label="Up to 15-Jun-2025" value={capitalGains.ltcg.q1} onChange={(e) => handleCapitalChange('ltcg', 'q1', e.target.value)} prefix="₹" />
+                <TaxInput label="16-Jun to 15-Sep" value={capitalGains.ltcg.q2} onChange={(e) => handleCapitalChange('ltcg', 'q2', e.target.value)} prefix="₹" />
+                <TaxInput label="16-Sep to 15-Dec" value={capitalGains.ltcg.q3} onChange={(e) => handleCapitalChange('ltcg', 'q3', e.target.value)} prefix="₹" />
+                <TaxInput label="16-Dec to 15-Mar" value={capitalGains.ltcg.q4} onChange={(e) => handleCapitalChange('ltcg', 'q4', e.target.value)} prefix="₹" />
+                <TaxInput label="16-Mar to 31-Mar" value={capitalGains.ltcg.q5} onChange={(e) => handleCapitalChange('ltcg', 'q5', e.target.value)} prefix="₹" />
+              </div>
+              <div className="text-right text-[13px] font-bold text-slate-700">Total LTCG: ₹{totalLtcg.toLocaleString('en-IN')}</div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
-    <div className="max-w-5xl mx-auto py-4">
+    <div className="max-w-4xl mx-auto py-4">
       <div className="text-center mb-8">
-        <h1 className="text-[22px] font-bold text-slate-800 mb-1 uppercase tracking-wide">Enter Your Capital Gains / Losses Details</h1>
+        <h1 className="text-[22px] font-bold text-slate-800 mb-1 uppercase tracking-wide">Enter Your Capital Gains/Losses Details</h1>
+        <p className="text-[15px] text-gray-500 font-medium">Enter details of equity, debentures, property & other securities</p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm p-8 mb-8 border border-gray-100">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="bg-[#1b7a43] text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-sm">1</div>
-          <h3 className="font-bold text-lg text-slate-800">Short-Term Capital Gains (u/s 111A - 20%)</h3>
-        </div>
-        <p className="text-sm text-gray-500 mb-6">Quarterly breakdown for accurate Advance Tax accrual</p>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <TaxInput label="i. Up to 15-Jun-2025" value={capitalGains.stcg.q1} onChange={(e) => handleCapitalChange('stcg', 'q1', e.target.value)} prefix="₹" />
-          <TaxInput label="ii. 16-Jun to 15-Sep" value={capitalGains.stcg.q2} onChange={(e) => handleCapitalChange('stcg', 'q2', e.target.value)} prefix="₹" />
-          <TaxInput label="iii. 16-Sep to 15-Dec" value={capitalGains.stcg.q3} onChange={(e) => handleCapitalChange('stcg', 'q3', e.target.value)} prefix="₹" />
-          <TaxInput label="iv. 16-Dec to 15-Mar" value={capitalGains.stcg.q4} onChange={(e) => handleCapitalChange('stcg', 'q4', e.target.value)} prefix="₹" />
-          <TaxInput label="v. 16-Mar to 31-Mar" value={capitalGains.stcg.q5} onChange={(e) => handleCapitalChange('stcg', 'q5', e.target.value)} prefix="₹" />
-        </div>
-        
-        <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg flex justify-between items-center">
-          <span className="text-gray-600 font-medium text-[15px]">Total STCG (111A):</span>
-          <span className="text-slate-800 font-bold text-lg">₹{totalStcg.toLocaleString('en-IN')}</span>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-2xl shadow-sm p-8 mb-8 border border-gray-100">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="bg-[#1b7a43] text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-sm">2</div>
-          <h3 className="font-bold text-lg text-slate-800">Long-Term Capital Gains (u/s 112A - 12.5%)</h3>
-        </div>
-        <p className="text-sm text-gray-500 mb-6">Exemption up to ₹1.25 Lakhs available</p>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <TaxInput label="i. Up to 15-Jun-2025" value={capitalGains.ltcg.q1} onChange={(e) => handleCapitalChange('ltcg', 'q1', e.target.value)} prefix="₹" />
-          <TaxInput label="ii. 16-Jun to 15-Sep" value={capitalGains.ltcg.q2} onChange={(e) => handleCapitalChange('ltcg', 'q2', e.target.value)} prefix="₹" />
-          <TaxInput label="iii. 16-Sep to 15-Dec" value={capitalGains.ltcg.q3} onChange={(e) => handleCapitalChange('ltcg', 'q3', e.target.value)} prefix="₹" />
-          <TaxInput label="iv. 16-Dec to 15-Mar" value={capitalGains.ltcg.q4} onChange={(e) => handleCapitalChange('ltcg', 'q4', e.target.value)} prefix="₹" />
-          <TaxInput label="v. 16-Mar to 31-Mar" value={capitalGains.ltcg.q5} onChange={(e) => handleCapitalChange('ltcg', 'q5', e.target.value)} prefix="₹" />
-        </div>
-
-        <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg flex justify-between items-center">
-          <span className="text-gray-600 font-medium text-[15px]">Total LTCG (112A):</span>
-          <span className="text-slate-800 font-bold text-lg">₹{totalLtcg.toLocaleString('en-IN')}</span>
-        </div>
+      <div className="flex flex-col gap-4 mb-8">
+        <AccordionItem 
+          id="equity"
+          title="Equity, Mutual Funds, Intraday, F&O, and More" 
+          subtitle="Upload/Import your Tax P&L report or add the transactions manually"
+          icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" /></svg>}
+        />
+        <AccordionItem 
+          id="unlisted"
+          title="Unlisted & STT Unpaid" 
+          subtitle="For unlisted/STT unpaid shares you have to add the transactions manually"
+          icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>}
+        />
+        <AccordionItem 
+          id="bonds"
+          title="Income from Bonds and Debentures" 
+          subtitle="Add details if you earned from bonds & debentures"
+          icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
+        />
+        <AccordionItem 
+          id="other"
+          title="Income from Sale of Other Assets" 
+          subtitle="Add details if you earned from selling any other assets"
+          icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>}
+        />
+        <AccordionItem 
+          id="property"
+          title="Gains from Selling Land and Buildings" 
+          subtitle="Add details if you earned from selling land & buildings"
+          icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
+        />
+        <AccordionItem 
+          id="vda"
+          title="Income from Virtual Digital Assets (VDA)" 
+          subtitle="Add details if you earned from virtual digital assets (Crypto, NFT, DeFi Token, Gaming Token, etc.)"
+          icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>}
+        />
       </div>
 
       <div className="flex justify-between items-center mt-8">
