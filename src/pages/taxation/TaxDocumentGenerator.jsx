@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import html2pdf from 'html2pdf.js';
 import { useTaxation } from './TaxationContext';
+import aarthikaLogo from '../../assets/Aarthika (1).png';
 
 const formatCur = (num) => {
   if (!num) return '0.00';
@@ -99,14 +100,9 @@ export default function TaxDocumentGenerator({ onClose }) {
   const mainHeader = "p-2 font-bold bg-[#0f2e4c] text-white text-[13px] border border-[#0f2e4c]";
   
   const HeaderLogo = () => (
-    <div className="flex justify-between items-center mb-8">
-      <div className="flex items-center gap-2 text-[#2b59ff] font-bold text-2xl tracking-tighter">
-        <div className="w-8 h-8 rounded-full bg-[#2b59ff] flex items-center justify-center text-white">
-          A
-        </div>
-        Aarthika
-      </div>
-      <div className="text-[13px]">ITR #2845613</div>
+    <div className="flex justify-between items-center mb-8 border-b pb-4">
+      <img src={aarthikaLogo} alt="Aarthika" className="h-10 object-contain" />
+      <div className="text-[13px] font-semibold text-gray-600">ITR #2845613</div>
     </div>
   );
 
@@ -114,13 +110,7 @@ export default function TaxDocumentGenerator({ onClose }) {
     <h1 className="text-center text-xl font-normal mb-8">{title}</h1>
   );
 
-  const PageFooter = ({ pageNum }) => (
-    <div className="absolute bottom-6 left-12 right-12 flex justify-between text-[11px] text-gray-800">
-      <div>Aarthika.in</div>
-      <div>Page {pageNum}</div>
-      <div>2026-08-04 18:46:14</div>
-    </div>
-  );
+  
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
@@ -141,10 +131,8 @@ export default function TaxDocumentGenerator({ onClose }) {
 
         {/* PDF Container - Exact scaling 794x1123 */}
         <div className="overflow-x-auto bg-gray-900 flex justify-center py-8">
-          <div ref={documentRef} className="flex flex-col text-black bg-white" style={{ width: '794px', fontFamily: 'Arial, Helvetica, sans-serif' }}>
-            
-            {/* PAGE 1 */}
-            <div className="bg-white w-[794px] h-[1123px] relative px-12 pt-12 pb-24 shadow-sm border-b border-gray-300">
+          <div ref={documentRef} className="flex flex-col text-black bg-white mx-auto" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'Arial, Helvetica, sans-serif' }}>
+            <div className="p-8">
               <HeaderLogo />
               <TitleHeader title="Detailed Computation as per New Tax Regime (ITR-4)" />
               
@@ -278,12 +266,12 @@ export default function TaxDocumentGenerator({ onClose }) {
                 </tbody>
               </table>
 
-              <PageFooter pageNum={1} />
+              
             </div>
 
-            {/* PAGE 2 */}
-            <div className="bg-white w-[794px] h-[1123px] relative px-12 pt-12 pb-24 shadow-sm border-b border-gray-300">
-              <div className="flex justify-end text-[13px] mb-4">ITR #2845613</div>
+            <div className="html2pdf__page-break"></div>
+            <div className="mt-8">
+              
               <table className={`w-full ${tableBorder}`}>
                 <thead>
                   <tr>
@@ -404,12 +392,12 @@ export default function TaxDocumentGenerator({ onClose }) {
                 </tbody>
               </table>
 
-              <PageFooter pageNum={2} />
+              
             </div>
 
-            {/* PAGE 3 */}
-            <div className="bg-white w-[794px] h-[1123px] relative px-12 pt-12 pb-24 shadow-sm border-b border-gray-300">
-              <div className="flex justify-end text-[13px] mb-4">ITR #2845613</div>
+            <div className="html2pdf__page-break"></div>
+            <div className="mt-8">
+              
               <h2 className="text-center text-[22px] font-normal mb-2">Statement of Taxes Paid</h2>
               <p className="text-center text-[13px] mb-4">Details of Tax Deducted at Source on Income Other than Salary<br/>As per Form 16A issued by Deductor(s)</p>
               
@@ -554,12 +542,12 @@ export default function TaxDocumentGenerator({ onClose }) {
                 </tbody>
               </table>
 
-              <PageFooter pageNum={3} />
+              
             </div>
 
-            {/* PAGE 4 */}
-            <div className="bg-white w-[794px] h-[1123px] relative px-12 pt-12 pb-24 shadow-sm">
-              <div className="flex justify-end text-[13px] mb-4">ITR #2845613</div>
+            <div className="html2pdf__page-break"></div>
+            <div className="mt-8">
+              
               <h2 className="text-center text-[22px] font-normal mb-4">Exempt Income</h2>
               <h3 className="text-center text-lg mb-4">(Annexure #3)</h3>
               
@@ -611,9 +599,8 @@ export default function TaxDocumentGenerator({ onClose }) {
                 <strong>Disclaimer:</strong> Your income tax return has been prepared and filed based on the data you provided. If any false or inaccurate deductions or exemption claims were included, the responsibility rests solely with you. If you find discrepancies in the calculations or the tax return form, please contact us at support@aarthika.in within 48 hours for modifications. Post this period, Aarthika and its representatives will not be liable for any discrepancies or issues. We act as an intermediary, processing your information for the tax department.
               </div>
 
-              <PageFooter pageNum={4} />
+              
             </div>
-
           </div>
         </div>
       </div>
