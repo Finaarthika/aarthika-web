@@ -237,10 +237,11 @@ export default function OtherSources() {
                   type="text"
                   name="anyOtherIncomeNarration"
                   value={otherSources.anyOtherIncomeNarration || ''}
-                onChange={(e) => updateTaxData('otherSources', 'anyOtherIncomeNarration', e.target.value)}
-                placeholder="e.g. Freelance consulting"
-                className="w-full bg-[#121212] border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
-              />
+                  onChange={(e) => updateTaxData('otherSources', 'anyOtherIncomeNarration', e.target.value)}
+                  placeholder="e.g. Freelance consulting"
+                  className="w-full bg-[#121212] border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                />
+              </div>
             </div>
           </div>
         </div>
