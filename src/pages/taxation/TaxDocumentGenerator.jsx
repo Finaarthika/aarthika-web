@@ -3,8 +3,8 @@ import html2pdf from 'html2pdf.js';
 import { useTaxation } from './TaxationContext';
 
 const formatCur = (num) => {
-  if (!num) return '0.00';
-  return Number(num).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (!num) return '0';
+  return Number(num).toLocaleString('en-IN');
 };
 
 export default function TaxDocumentGenerator({ onClose }) {
@@ -14,7 +14,7 @@ export default function TaxDocumentGenerator({ onClose }) {
   const data = taxData;
   const { business } = data;
 
-  // Math
+  // -- MATH COMPUTATIONS --
   const grossBusiness = Number(business.profitBank) + Number(business.profitCash);
   const grossStcg = Object.values(data.capitalGains.stcg).reduce((sum, val) => sum + Number(val), 0);
   const grossLtcg = Object.values(data.capitalGains.ltcg).reduce((sum, val) => sum + Number(val), 0);
@@ -22,11 +22,17 @@ export default function TaxDocumentGenerator({ onClose }) {
   
   const totalGifts = Number(data.otherSources.gifts.monetary) + Number(data.otherSources.gifts.movable) + Number(data.otherSources.gifts.immovable);
   const taxableGifts = (!data.otherSources.gifts.isExemptOccasion && totalGifts > 50000) ? totalGifts : 0;
+  const exemptGifts = (data.otherSources.gifts.isExemptOccasion && totalGifts > 0) ? totalGifts : 0;
 
   const grossOther = Number(data.otherSources.savingsInterest) + Number(data.otherSources.fdInterest) + 
                      Number(data.otherSources.taxRefundInterest) + Number(data.otherSources.bondsInterest) +
                      Number(data.otherSources.epfInterest) + Number(data.otherSources.loansInterest) +
                      Number(data.otherSources.anyOtherIncome) + dividendSum + taxableGifts;
+
+  const totalExemptIncome = Number(data.exemptIncome.agriculture) + Number(data.exemptIncome.insuranceMaturity) +
+                            Number(data.exemptIncome.ppfInterest) + Number(data.exemptIncome.npsWithdrawal) +
+                            Number(data.exemptIncome.pfMaturity) + Number(data.exemptIncome.hufShare) +
+                            Number(data.exemptIncome.ssyMaturity) + Number(data.exemptIncome.otherExempt) + exemptGifts;
 
   const taxableBusiness = Math.max(0, grossBusiness - Number(data.bfla.businessLoss));
   let remainingStcgLoss = Number(data.bfla.stcgLoss);
@@ -39,24 +45,37 @@ export default function TaxDocumentGenerator({ onClose }) {
   const totalIncome = Math.max(0, grossTotalIncome - totalDeductions);
   const totalPrepaid = Number(data.prepaidTaxes.advanceTax) + Number(data.prepaidTaxes.tdsSalary) + Number(data.prepaidTaxes.tdsOther) + Number(data.prepaidTaxes.tcs);
   
-  // Tax Math
   const taxUnder111A = taxableStcg * 0.20;
   const taxUnder112A = Math.max(0, taxableLtcg - 125000) * 0.125;
-  const normalIncome = totalIncome - taxableStcg - taxableLtcg;
+  const normalIncome = Math.max(0, totalIncome - taxableStcg - taxableLtcg);
   let normalTax = 0;
-  if (normalIncome > 1200000) { normalTax += (normalIncome - 1200000) * 0.20; }
-  else if (normalIncome > 800000) { normalTax += (normalIncome - 800000) * 0.15; }
-  else if (normalIncome > 400000) { normalTax += (normalIncome - 400000) * 0.05; }
+  if (normalIncome > 1500000) { normalTax += (normalIncome - 1500000) * 0.30; }
+  if (normalIncome > 1200000) { normalTax += (Math.min(normalIncome, 1500000) - 1200000) * 0.20; }
+  if (normalIncome > 1000000) { normalTax += (Math.min(normalIncome, 1200000) - 1000000) * 0.15; }
+  if (normalIncome > 700000) { normalTax += (Math.min(normalIncome, 1000000) - 700000) * 0.10; }
+  if (normalIncome > 300000) { normalTax += (Math.min(normalIncome, 700000) - 300000) * 0.05; }
+  
   let totalTax = taxUnder111A + taxUnder112A + normalTax;
   let rebate87a = 0;
-  if (totalIncome <= 1200000 && totalTax > 0) {
-    rebate87a = totalTax; 
-    totalTax = 0;
+  if (totalIncome <= 1200000) {
+    rebate87a = normalTax; 
   }
-  const healthEduCess = totalTax * 0.04;
-  const grossTaxLiability = totalTax + healthEduCess;
+  const taxAfterRebate = Math.max(0, totalTax - rebate87a);
+  const healthEduCess = taxAfterRebate * 0.04;
+  const grossTaxLiability = Math.round(taxAfterRebate + healthEduCess);
   const taxDue = Math.max(0, grossTaxLiability - totalPrepaid);
   const taxRefund = Math.max(0, totalPrepaid - grossTaxLiability);
+
+  // Balance Sheet Totals
+  const bsFixedNet = Number(business.balanceSheet.fixedGrossBlock) - Number(business.balanceSheet.fixedDepreciation);
+  const bsInvest = Number(business.balanceSheet.investmentsST) + Number(business.balanceSheet.investmentsLT);
+  const bsCurrentAssets = Number(business.balanceSheet.currentBank) + Number(business.balanceSheet.currentCash) + Number(business.balanceSheet.currentStock) + Number(business.balanceSheet.currentReceivables) + Number(business.balanceSheet.currentLoansGiven) + Number(business.balanceSheet.currentOther);
+  const bsTotalAssets = bsFixedNet + bsInvest + bsCurrentAssets;
+
+  const bsEquity = Number(business.balanceSheet.equityCapital) + Number(business.balanceSheet.equityReserves);
+  const bsNonCurrentLiab = Number(business.balanceSheet.nonCurrentSecured) + Number(business.balanceSheet.nonCurrentUnsecured) + Number(business.balanceSheet.nonCurrentAdvances);
+  const bsCurrentLiab = Number(business.balanceSheet.currentPayables) + Number(business.balanceSheet.currentProvisions) + Number(business.balanceSheet.currentOtherLiab);
+  const bsTotalLiab = bsEquity + bsNonCurrentLiab + bsCurrentLiab;
 
   const handleDownload = () => {
     setIsGenerating(true);
@@ -74,326 +93,314 @@ export default function TaxDocumentGenerator({ onClose }) {
     });
   };
 
-  const PageHeader = ({ title, showClientDetails }) => (
-    <>
-      <div className="flex justify-between items-start mb-6">
-        <div>
-          <h1 className="text-[28px] font-medium text-slate-800 tracking-tight">{title}</h1>
-        </div>
-        <div className="text-right">
-          <p className="text-base text-slate-600 font-medium tracking-wide">Financial Year 2025-26</p>
-          <p className="text-xs text-slate-400 mt-1 uppercase tracking-wider">Assessment Year 2026-27</p>
-        </div>
+  // --- REUSABLE COMPONENTS FOR PDF ---
+  const TitleHeader = ({ title }) => (
+    <div className="flex justify-between items-start mb-10 pb-4 border-b border-gray-200">
+      <h1 className="text-3xl font-bold text-gray-800 tracking-tight">{title}</h1>
+      <div className="text-right">
+        <p className="text-lg text-gray-700 font-semibold">Financial Year 2025-26</p>
+        <p className="text-xs text-gray-500 font-medium tracking-wide uppercase mt-1">Assessment Year 2026-27</p>
       </div>
-      
-      {showClientDetails && (
-        <div className="grid grid-cols-2 text-sm mb-8 border-y border-slate-200">
-          <div className="py-3 pr-4 border-r border-slate-200">
-            <span className="text-slate-500 font-medium inline-block w-24">Name</span>
-            <span className="text-slate-900 font-medium uppercase">{data.clientDetails.firstName} {data.clientDetails.lastName || ''}</span>
-          </div>
-          <div className="py-3 pl-4">
-            <span className="text-slate-500 font-medium inline-block w-24">PAN</span>
-            <span className="text-slate-900 font-medium uppercase">{data.clientDetails.pan || 'N/A'}</span>
-          </div>
-        </div>
-      )}
-    </>
-  );
-
-  const PageFooter = ({ pageNum, totalPages }) => (
-    <div className="absolute bottom-6 left-12 right-12 flex justify-between items-center text-[10px] text-slate-400 font-medium mt-auto">
-      <p>© 2025, Finaarthika Tax Engine. All rights reserved.</p>
-      <p>Page {pageNum} of {totalPages}</p>
     </div>
   );
 
-  const TableHeader = () => (
-    <thead>
-      <tr className="bg-[#f8f9fa] border-y border-slate-200">
-        <th className="py-3 px-4 text-left font-bold text-slate-700 text-sm w-3/5">Particulars</th>
-        <th className="py-3 px-4 text-right font-bold text-slate-700 text-sm w-1/5">Amount</th>
-        <th className="py-3 px-4 text-right font-bold text-slate-700 text-sm w-1/5">Total</th>
-      </tr>
-    </thead>
+  const SectionHeader = ({ title }) => (
+    <div className="mt-8 mb-4 border-b-2 border-gray-800 pb-1">
+      <h2 className="text-sm font-bold text-gray-800 tracking-wide uppercase">{title}</h2>
+    </div>
   );
 
-  const totalPages = data.incomes.hasBusiness ? 3 : 1;
+  const TableLayout = ({ children, header1 = "Particulars", header2 = "Amount", header3 = "Total" }) => (
+    <table className="w-full text-[13px] border-collapse mb-8 border border-gray-200">
+      <thead>
+        <tr className="bg-gray-50 border-b border-gray-200">
+          <th className="py-2.5 px-4 text-left font-bold text-gray-800 w-[60%] border-r border-gray-200">{header1}</th>
+          <th className="py-2.5 px-4 text-right font-bold text-gray-800 w-[20%] border-r border-gray-200">{header2}</th>
+          <th className="py-2.5 px-4 text-right font-bold text-gray-800 w-[20%]">{header3}</th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-gray-200">
+        {children}
+      </tbody>
+    </table>
+  );
+
+  const Tr = ({ label, amt, total, isBold = false, isSub = false, isHeader = false }) => (
+    <tr className={`${isHeader ? 'bg-gray-50' : ''}`}>
+      <td className={`py-2 px-4 border-r border-gray-200 ${isBold ? 'font-bold text-gray-800' : 'text-gray-700'} ${isSub ? 'pl-8 text-gray-600' : ''}`}>
+        {label}
+      </td>
+      <td className={`py-2 px-4 text-right border-r border-gray-200 ${isBold ? 'font-bold' : ''}`}>
+        {amt !== undefined && amt !== null ? `₹${formatCur(amt)}` : ''}
+      </td>
+      <td className={`py-2 px-4 text-right ${isBold || isHeader ? 'font-bold text-gray-900' : ''}`}>
+        {total !== undefined && total !== null ? `₹${formatCur(total)}` : ''}
+      </td>
+    </tr>
+  );
+
+  const TwoColTable = ({ children }) => (
+    <table className="w-full text-[13px] border-collapse mb-8 border border-gray-200">
+      <tbody className="divide-y divide-gray-200">
+        {children}
+      </tbody>
+    </table>
+  );
+
+  const TwoColTr = ({ label1, val1, label2, val2 }) => (
+    <tr>
+      <td className="py-2 px-4 border-r border-gray-200 bg-gray-50 font-semibold text-gray-700 w-1/4">{label1}</td>
+      <td className="py-2 px-4 border-r border-gray-200 text-gray-900 w-1/4 uppercase">{val1}</td>
+      <td className="py-2 px-4 border-r border-gray-200 bg-gray-50 font-semibold text-gray-700 w-1/4">{label2}</td>
+      <td className="py-2 px-4 text-gray-900 w-1/4 uppercase">{val2}</td>
+    </tr>
+  );
+
+  const PageFooter = ({ num, total }) => (
+    <div className="absolute bottom-8 left-12 right-12 flex justify-between items-center text-[10px] text-gray-400 pt-2 border-t border-gray-200">
+      <p>Disclaimer: This report is for informational purposes only and is not necessarily reflecting data reported in income tax return (ITR).</p>
+      <p className="font-semibold text-gray-500 whitespace-nowrap ml-4">Page {num} of {total}</p>
+    </div>
+  );
+
+  const totalPages = data.incomes.hasBusiness ? 5 : 3;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
       <div className="bg-[#121212] border border-gray-800 rounded-xl max-w-4xl w-full shadow-2xl relative my-8">
         
-        {/* Actions */}
-        <div className="sticky top-0 bg-[#121212] z-10 border-b border-gray-800 p-4 flex justify-between items-center rounded-t-xl">
+        {/* Actions Header */}
+        <div className="sticky top-0 bg-[#121212] z-10 border-b border-gray-800 p-4 flex justify-between items-center rounded-t-xl shadow-md">
           <h2 className="text-xl font-bold text-white">Document Preview</h2>
           <div className="flex gap-3">
             <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white transition-colors">
               Cancel
             </button>
             <button onClick={handleDownload} disabled={isGenerating} className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2">
-              {isGenerating ? 'Generating PDF...' : 'Download Premium PDF'}
+              {isGenerating ? 'Generating PDF...' : 'Download Detailed PDF'}
             </button>
           </div>
         </div>
 
         {/* PDF Container - A4 size strict rendering at 96 DPI: 794px x 1123px per page */}
         <div className="overflow-x-auto bg-gray-900 flex justify-center py-8">
-          <div ref={documentRef} className="flex flex-col bg-slate-200 gap-y-4" style={{ width: '794px' }}>
+          <div ref={documentRef} className="flex flex-col gap-y-4" style={{ width: '794px' }}>
             
-            {/* PAGE 1: Income Computation */}
-            <div className="bg-white w-[794px] h-[1123px] relative px-12 pt-12 pb-24 overflow-hidden">
-              <PageHeader title="Tax Computation" showClientDetails={true} />
+            {/* PAGE 1: Personal Details & Summary */}
+            <div className="bg-white w-[794px] h-[1123px] relative px-12 pt-12 pb-24 overflow-hidden shadow-xl">
+              <TitleHeader title="Tax Computation" />
               
-              <table className="w-full text-sm border-collapse">
-                <TableHeader />
-                <tbody className="divide-y divide-slate-100">
-                  {data.incomes.hasBusiness && (
-                    <>
-                      <tr>
-                        <td className="py-3 px-4 font-semibold text-slate-800">Income from Business (Annexure #1)</td>
-                        <td className="py-3 px-4 text-right"></td>
-                        <td className="py-3 px-4 text-right font-medium">{formatCur(taxableBusiness)}</td>
-                      </tr>
-                      <tr>
-                        <td className="py-2 px-4 pl-8 text-slate-600">Section 44AD Presumptive</td>
-                        <td className="py-2 px-4 text-right">{formatCur(taxableBusiness)}</td>
-                        <td className="py-2 px-4 text-right"></td>
-                      </tr>
-                    </>
-                  )}
-                  {data.incomes.hasCapitalGains && (
-                    <>
-                      <tr>
-                        <td className="py-3 px-4 font-semibold text-slate-800">Income from Capital Gains</td>
-                        <td className="py-3 px-4 text-right"></td>
-                        <td className="py-3 px-4 text-right font-medium">{formatCur(taxableStcg + taxableLtcg)}</td>
-                      </tr>
-                      {taxableStcg > 0 && <tr><td className="py-2 px-4 pl-8 text-slate-600">Short-Term Capital Gains u/s 111A</td><td className="py-2 px-4 text-right">{formatCur(taxableStcg)}</td><td className="py-2 px-4"></td></tr>}
-                      {taxableLtcg > 0 && <tr><td className="py-2 px-4 pl-8 text-slate-600">Long-Term Capital Gains u/s 112A</td><td className="py-2 px-4 text-right">{formatCur(taxableLtcg)}</td><td className="py-2 px-4"></td></tr>}
-                    </>
-                  )}
-                  {data.incomes.hasOtherSources && (
-                    <>
-                      <tr>
-                        <td className="py-3 px-4 font-semibold text-slate-800">Income from Other Sources (Annexure #2)</td>
-                        <td className="py-3 px-4 text-right"></td>
-                        <td className="py-3 px-4 text-right font-medium">{formatCur(grossOther)}</td>
-                      </tr>
-                    </>
-                  )}
-                  <tr className="bg-[#f8f9fa] border-y border-slate-200">
-                    <td className="py-3 px-4 font-bold text-slate-800">Gross Total Income</td>
-                    <td className="py-3 px-4 text-right"></td>
-                    <td className="py-3 px-4 text-right font-bold text-slate-900">₹{formatCur(grossTotalIncome)}</td>
+              <SectionHeader title="Personal Details" />
+              <TwoColTable>
+                <TwoColTr label1="Name" val1={`${data.clientDetails.firstName} ${data.clientDetails.lastName || ''}`} label2="PAN" val2={data.clientDetails.pan || 'N/A'} />
+                <TwoColTr label1="Date of Birth" val1="--" label2="Mobile Number" val2="--" />
+                <TwoColTr label1="Email" val1="--" label2="Residential Status" val2="Resident" />
+                <tr>
+                  <td className="py-2 px-4 border-r border-gray-200 bg-gray-50 font-semibold text-gray-700">Address</td>
+                  <td colSpan="3" className="py-2 px-4 text-gray-900">--</td>
+                </tr>
+              </TwoColTable>
+
+              <SectionHeader title="Income Tax Return Details" />
+              <TwoColTable>
+                <TwoColTr label1="Form" val1="ITR-3" label2="Type" val2="Original" />
+                <TwoColTr label1="Regime" val1="New" label2="Filing under section" val2="139(1)" />
+              </TwoColTable>
+
+              <SectionHeader title="Tax Computation Summary" />
+              <TableLayout header1="" header2="" header3="">
+                <Tr label="Gross Total Income" isBold={true} total={grossTotalIncome} />
+                <Tr label="Deductions" isBold={true} total={totalDeductions} />
+                <Tr label="Total Taxable Income" isBold={true} total={totalIncome} />
+                <Tr label="Gross Tax Liability" isBold={true} total={grossTaxLiability} />
+                <Tr label="Interest & Penalty" isBold={true} total={0} />
+                <Tr label="Total Taxes Paid" isBold={true} total={totalPrepaid} />
+                <tr className="bg-gray-100 border-t border-gray-300">
+                  <td colSpan="2" className="py-3 px-4 font-bold text-gray-900 text-base">Tax Dues / (Refund)</td>
+                  <td className="py-3 px-4 text-right font-bold text-gray-900 text-base">₹{formatCur(taxDue > 0 ? taxDue : -taxRefund)}</td>
+                </tr>
+              </TableLayout>
+
+              <PageFooter num={1} total={totalPages} />
+            </div>
+
+            {/* PAGE 2: Detailed Computation of Income */}
+            <div className="bg-white w-[794px] h-[1123px] relative px-12 pt-12 pb-24 overflow-hidden shadow-xl">
+              <h2 className="text-xl font-bold text-gray-800 mb-6">Computation of Income</h2>
+              
+              <TableLayout>
+                <Tr label="1. Total Head-wise Income" isHeader={true} total={grossTotalIncome + Number(data.bfla.businessLoss) + Number(data.bfla.stcgLoss) + Number(data.bfla.ltcgLoss)} />
+                <Tr label="a. Taxable Business & Profession Income" amt={grossBusiness} isSub={true} />
+                <Tr label="b. Taxable Capital Gains" amt={grossStcg + grossLtcg} isSub={true} />
+                <Tr label="c. Taxable Other Sources Income" amt={grossOther} isSub={true} />
+
+                <Tr label="2. Losses Adjusted" isHeader={true} total={Number(data.bfla.businessLoss) + Number(data.bfla.stcgLoss) + Number(data.bfla.ltcgLoss)} />
+                <Tr label="a. Brought Forward Business Loss" amt={data.bfla.businessLoss} isSub={true} />
+                <Tr label="b. Brought Forward STCG Loss" amt={data.bfla.stcgLoss} isSub={true} />
+                <Tr label="c. Brought Forward LTCG Loss" amt={data.bfla.ltcgLoss} isSub={true} />
+
+                <Tr label="3. Gross Total Income (1 - 2)" isHeader={true} total={grossTotalIncome} />
+                
+                <Tr label="4. Total Chapter VI-A Deductions" isHeader={true} total={totalDeductions} />
+                {data.deductions.sec80CCD2 > 0 && <Tr label="Section 80CCD(2)" amt={data.deductions.sec80CCD2} isSub={true} />}
+                {data.deductions.sec80CCH > 0 && <Tr label="Section 80CCH" amt={data.deductions.sec80CCH} isSub={true} />}
+
+                <Tr label="5. Total Taxable Income (3 - 4)" isHeader={true} total={totalIncome} />
+
+                <Tr label="6. Exempt Income u/s 10" isHeader={true} total={totalExemptIncome} />
+                {data.exemptIncome.agriculture > 0 && <Tr label="Agricultural Income" amt={data.exemptIncome.agriculture} isSub={true} />}
+                {data.exemptIncome.insuranceMaturity > 0 && <Tr label="Life Insurance Maturity" amt={data.exemptIncome.insuranceMaturity} isSub={true} />}
+                {exemptGifts > 0 && (
+                  <Tr 
+                    label={data.otherSources.gifts.exemptGiftNarration ? `Gifts on Specific Occasion (${data.otherSources.gifts.exemptGiftNarration})` : `Gifts on Specific Occasion`} 
+                    amt={exemptGifts} 
+                    isSub={true} 
+                  />
+                )}
+                {data.exemptIncome.ppfInterest > 0 && <Tr label="PPF Interest" amt={data.exemptIncome.ppfInterest} isSub={true} />}
+                {data.exemptIncome.otherExempt > 0 && <Tr label="Other Exempt Income" amt={data.exemptIncome.otherExempt} isSub={true} />}
+
+                <Tr label="7. Tax Payable" isHeader={true} total={totalTax} />
+                <Tr label="a. Tax Payable at Normal Rate" amt={normalTax} isSub={true} />
+                <Tr label="b. Tax Payable at Special Rate (111A STCG)" amt={taxUnder111A} isSub={true} />
+                <Tr label="c. Tax Payable at Special Rate (112A LTCG)" amt={taxUnder112A} isSub={true} />
+
+                <Tr label="8. Rebate u/s 87a" isHeader={true} total={rebate87a} />
+                
+                <Tr label="9. Tax Payable after Rebate (7 - 8)" isHeader={true} total={taxAfterRebate} />
+
+                <Tr label="10. Surcharge & Cess" isHeader={true} total={healthEduCess} />
+                <Tr label="a. Surcharge" amt={0} isSub={true} />
+                <Tr label="b. Health & Education Cess (4%)" amt={healthEduCess} isSub={true} />
+              </TableLayout>
+
+              <PageFooter num={2} total={totalPages} />
+            </div>
+
+            {/* PAGE 3: Accruals & Taxes Paid */}
+            <div className="bg-white w-[794px] h-[1123px] relative px-12 pt-12 pb-24 overflow-hidden shadow-xl">
+              <TableLayout>
+                <Tr label="11. Total Tax and Cess (9 + 10)" isHeader={true} total={grossTaxLiability} />
+                <Tr label="12. Relief u/s 89" isHeader={true} total={0} />
+                <Tr label="13. Interest & Penalty" isHeader={true} total={0} />
+                <Tr label="a. Late Filing Interest u/s 234A" amt={0} isSub={true} />
+                <Tr label="b. Default in Advance Tax u/s 234B" amt={0} isSub={true} />
+                <Tr label="c. Deferment of Advance Tax u/s 234C" amt={0} isSub={true} />
+                <Tr label="d. Late Filing Fees u/s 234F" amt={0} isSub={true} />
+                <Tr label="14. Total Tax Payable (11 - 12 + 13)" isHeader={true} total={grossTaxLiability} />
+                
+                <Tr label="15. Total Taxes Paid" isHeader={true} total={totalPrepaid} />
+                <Tr label="a. Advance Tax" amt={data.prepaidTaxes.advanceTax} isSub={true} />
+                <Tr label="b. TDS on Salary" amt={data.prepaidTaxes.tdsSalary} isSub={true} />
+                <Tr label="c. TDS on Other Income" amt={data.prepaidTaxes.tdsOther} isSub={true} />
+                <Tr label="d. TCS" amt={data.prepaidTaxes.tcs} isSub={true} />
+                
+                <tr className="bg-gray-100 border-y border-gray-300">
+                  <td colSpan="2" className="py-3 px-4 font-bold text-gray-900 text-base">16. Tax Dues / (Refund) (14 - 15)</td>
+                  <td className="py-3 px-4 text-right font-bold text-gray-900 text-base">₹{formatCur(taxDue > 0 ? taxDue : -taxRefund)}</td>
+                </tr>
+              </TableLayout>
+
+              <SectionHeader title="Quarterly Accrual Details (For Advance Tax)" />
+              <table className="w-full text-[11px] border-collapse mb-8 border border-gray-200">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    <th className="py-2 px-3 text-left font-bold text-gray-800 border-r border-gray-200">Income Source</th>
+                    <th className="py-2 px-3 text-right font-bold text-gray-800 border-r border-gray-200">Up to 15 Jun</th>
+                    <th className="py-2 px-3 text-right font-bold text-gray-800 border-r border-gray-200">16 Jun - 15 Sep</th>
+                    <th className="py-2 px-3 text-right font-bold text-gray-800 border-r border-gray-200">16 Sep - 15 Dec</th>
+                    <th className="py-2 px-3 text-right font-bold text-gray-800 border-r border-gray-200">16 Dec - 15 Mar</th>
+                    <th className="py-2 px-3 text-right font-bold text-gray-800">16 Mar - 31 Mar</th>
                   </tr>
-                  
-                  {totalDeductions > 0 && (
-                    <>
-                      <tr>
-                        <td className="py-3 px-4 font-semibold text-slate-800">Less: Deductions</td>
-                        <td className="py-3 px-4 text-right"></td>
-                        <td className="py-3 px-4 text-right font-medium">{formatCur(totalDeductions)}</td>
-                      </tr>
-                      {data.deductions.sec80CCD2 > 0 && <tr><td className="py-2 px-4 pl-8 text-slate-600">Sec 80CCD(2)</td><td className="py-2 px-4 text-right">{formatCur(data.deductions.sec80CCD2)}</td><td className="py-2 px-4"></td></tr>}
-                      {data.deductions.sec80CCH > 0 && <tr><td className="py-2 px-4 pl-8 text-slate-600">Sec 80CCH</td><td className="py-2 px-4 text-right">{formatCur(data.deductions.sec80CCH)}</td><td className="py-2 px-4"></td></tr>}
-                    </>
-                  )}
-
-                  <tr className="bg-[#f8f9fa] border-y border-slate-200">
-                    <td className="py-3 px-4 font-bold text-slate-800">Taxable Total Income</td>
-                    <td className="py-3 px-4 text-right"></td>
-                    <td className="py-3 px-4 text-right font-bold text-slate-900">₹{formatCur(totalIncome)}</td>
-                  </tr>
-
-                  <tr><td colSpan="3" className="py-6 border-none"></td></tr>
-
+                </thead>
+                <tbody className="divide-y divide-gray-200 text-gray-700">
                   <tr>
-                    <td className="py-3 px-4 font-semibold text-slate-800">Tax Payable</td>
-                    <td className="py-3 px-4 text-right"></td>
-                    <td className="py-3 px-4 text-right font-medium">{formatCur(taxUnder111A + taxUnder112A + normalTax)}</td>
+                    <td className="py-2 px-3 font-semibold border-r border-gray-200">STCG @ 20% (111A)</td>
+                    <td className="py-2 px-3 text-right border-r border-gray-200">₹{formatCur(data.capitalGains.stcg.q1)}</td>
+                    <td className="py-2 px-3 text-right border-r border-gray-200">₹{formatCur(data.capitalGains.stcg.q2)}</td>
+                    <td className="py-2 px-3 text-right border-r border-gray-200">₹{formatCur(data.capitalGains.stcg.q3)}</td>
+                    <td className="py-2 px-3 text-right border-r border-gray-200">₹{formatCur(data.capitalGains.stcg.q4)}</td>
+                    <td className="py-2 px-3 text-right">₹{formatCur(data.capitalGains.stcg.q5)}</td>
                   </tr>
-                  {normalTax > 0 && <tr><td className="py-2 px-4 pl-8 text-slate-600">Tax Payable at Normal Rate</td><td className="py-2 px-4 text-right">{formatCur(normalTax)}</td><td className="py-2 px-4"></td></tr>}
-                  {taxUnder111A > 0 && <tr><td className="py-2 px-4 pl-8 text-slate-600">Tax Payable at Special Rate (111A)</td><td className="py-2 px-4 text-right">{formatCur(taxUnder111A)}</td><td className="py-2 px-4"></td></tr>}
-                  {taxUnder112A > 0 && <tr><td className="py-2 px-4 pl-8 text-slate-600">Tax Payable at Special Rate (112A)</td><td className="py-2 px-4 text-right">{formatCur(taxUnder112A)}</td><td className="py-2 px-4"></td></tr>}
-                  
-                  {rebate87a > 0 && (
-                    <tr>
-                      <td className="py-3 px-4 font-semibold text-slate-800">Rebate u/s 87A</td>
-                      <td className="py-3 px-4 text-right"></td>
-                      <td className="py-3 px-4 text-right font-medium">{formatCur(rebate87a)}</td>
-                    </tr>
-                  )}
-
-                  <tr className="bg-[#f8f9fa] border-y border-slate-200">
-                    <td className="py-3 px-4 font-bold text-slate-800">Gross Tax Liability</td>
-                    <td className="py-3 px-4 text-right"></td>
-                    <td className="py-3 px-4 text-right font-bold text-slate-900">₹{formatCur(grossTaxLiability)}</td>
-                  </tr>
-
                   <tr>
-                    <td className="py-3 px-4 font-semibold text-slate-800">Less: Total Taxes Paid</td>
-                    <td className="py-3 px-4 text-right"></td>
-                    <td className="py-3 px-4 text-right font-medium">{formatCur(totalPrepaid)}</td>
+                    <td className="py-2 px-3 font-semibold border-r border-gray-200">LTCG @ 12.5% (112A)</td>
+                    <td className="py-2 px-3 text-right border-r border-gray-200">₹{formatCur(data.capitalGains.ltcg.q1)}</td>
+                    <td className="py-2 px-3 text-right border-r border-gray-200">₹{formatCur(data.capitalGains.ltcg.q2)}</td>
+                    <td className="py-2 px-3 text-right border-r border-gray-200">₹{formatCur(data.capitalGains.ltcg.q3)}</td>
+                    <td className="py-2 px-3 text-right border-r border-gray-200">₹{formatCur(data.capitalGains.ltcg.q4)}</td>
+                    <td className="py-2 px-3 text-right">₹{formatCur(data.capitalGains.ltcg.q5)}</td>
                   </tr>
-                  {data.prepaidTaxes.tdsSalary > 0 && <tr><td className="py-2 px-4 pl-8 text-slate-600">TDS Salary</td><td className="py-2 px-4 text-right">{formatCur(data.prepaidTaxes.tdsSalary)}</td><td className="py-2 px-4"></td></tr>}
-                  {data.prepaidTaxes.tdsOther > 0 && <tr><td className="py-2 px-4 pl-8 text-slate-600">TDS Other</td><td className="py-2 px-4 text-right">{formatCur(data.prepaidTaxes.tdsOther)}</td><td className="py-2 px-4"></td></tr>}
-                  {data.prepaidTaxes.advanceTax > 0 && <tr><td className="py-2 px-4 pl-8 text-slate-600">Advance Tax</td><td className="py-2 px-4 text-right">{formatCur(data.prepaidTaxes.advanceTax)}</td><td className="py-2 px-4"></td></tr>}
-                  {data.prepaidTaxes.tcs > 0 && <tr><td className="py-2 px-4 pl-8 text-slate-600">TCS</td><td className="py-2 px-4 text-right">{formatCur(data.prepaidTaxes.tcs)}</td><td className="py-2 px-4"></td></tr>}
-
-                  <tr className="bg-[#f8f9fa] border-y border-slate-200">
-                    <td className="py-3 px-4 font-bold text-slate-800">{taxRefund > 0 ? 'Refund Due' : 'Tax Dues'}</td>
-                    <td className="py-3 px-4 text-right"></td>
-                    <td className="py-3 px-4 text-right font-bold text-slate-900">₹{formatCur(taxRefund > 0 ? taxRefund : taxDue)}</td>
+                  <tr>
+                    <td className="py-2 px-3 font-semibold border-r border-gray-200">Dividend Income</td>
+                    <td className="py-2 px-3 text-right border-r border-gray-200">₹{formatCur(data.otherSources.dividend.q1)}</td>
+                    <td className="py-2 px-3 text-right border-r border-gray-200">₹{formatCur(data.otherSources.dividend.q2)}</td>
+                    <td className="py-2 px-3 text-right border-r border-gray-200">₹{formatCur(data.otherSources.dividend.q3)}</td>
+                    <td className="py-2 px-3 text-right border-r border-gray-200">₹{formatCur(data.otherSources.dividend.q4)}</td>
+                    <td className="py-2 px-3 text-right">₹{formatCur(data.otherSources.dividend.q5)}</td>
                   </tr>
                 </tbody>
               </table>
 
-              <PageFooter pageNum={1} totalPages={totalPages} />
+              <PageFooter num={3} total={totalPages} />
             </div>
 
-            {/* PAGE 2: Balance Sheet */}
+            {/* PAGE 4: Balance Sheet (Equity & Liab) */}
             {data.incomes.hasBusiness && (
-              <div className="bg-white w-[794px] h-[1123px] relative px-12 pt-12 pb-24 overflow-hidden">
-                <PageHeader title="Balance Sheet" showClientDetails={false} />
+              <div className="bg-white w-[794px] h-[1123px] relative px-12 pt-12 pb-24 overflow-hidden shadow-xl">
+                <TitleHeader title="Balance Sheet" />
+                <p className="text-sm font-semibold text-gray-800 mb-4">Balance Sheet as of 31st March 2026</p>
                 
-                <p className="text-sm font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-200">Balance Sheet as of 31st March 2026</p>
-                <table className="w-full text-sm border-collapse">
-                  <TableHeader />
-                  <tbody className="divide-y divide-slate-100">
-                    <tr className="bg-[#f8f9fa]"><td colSpan="3" className="py-3 px-4 font-bold text-slate-800 border-y border-slate-200">Equity & Liabilities</td></tr>
-                    
-                    <tr><td className="py-3 px-4 font-semibold text-slate-800">Equity</td><td className="py-3 px-4 text-right"></td><td className="py-3 px-4 text-right font-medium">₹{formatCur(Number(business.balanceSheet.equityCapital) + Number(business.balanceSheet.equityReserves))}</td></tr>
-                    <tr><td className="py-2 px-4 pl-8 text-slate-600">Proprietor's Capital</td><td className="py-2 px-4 text-right">{formatCur(business.balanceSheet.equityCapital)}</td><td className="py-2 px-4"></td></tr>
-                    <tr><td className="py-2 px-4 pl-8 text-slate-600">Reserves & Surplus</td><td className="py-2 px-4 text-right">{formatCur(business.balanceSheet.equityReserves)}</td><td className="py-2 px-4"></td></tr>
+                <TableLayout>
+                  <Tr label="Equity & Liabilities" isHeader={true} total={bsTotalLiab} />
+                  
+                  <Tr label="Equity" isHeader={true} total={bsEquity} />
+                  <Tr label="Proprietor's Capital" amt={business.balanceSheet.equityCapital} isSub={true} />
+                  <Tr label="Reserves & Surplus" amt={business.balanceSheet.equityReserves} isSub={true} />
 
-                    <tr><td className="py-3 px-4 font-semibold text-slate-800">Non-Current Liabilities</td><td className="py-3 px-4 text-right"></td><td className="py-3 px-4 text-right font-medium">₹{formatCur(Number(business.balanceSheet.nonCurrentSecured) + Number(business.balanceSheet.nonCurrentUnsecured) + Number(business.balanceSheet.nonCurrentAdvances))}</td></tr>
-                    <tr><td className="py-2 px-4 pl-8 text-slate-600">Secured Loans</td><td className="py-2 px-4 text-right">{formatCur(business.balanceSheet.nonCurrentSecured)}</td><td className="py-2 px-4"></td></tr>
-                    <tr><td className="py-2 px-4 pl-8 text-slate-600">Unsecured Loans</td><td className="py-2 px-4 text-right">{formatCur(business.balanceSheet.nonCurrentUnsecured)}</td><td className="py-2 px-4"></td></tr>
-                    <tr><td className="py-2 px-4 pl-8 text-slate-600">Advances</td><td className="py-2 px-4 text-right">{formatCur(business.balanceSheet.nonCurrentAdvances)}</td><td className="py-2 px-4"></td></tr>
+                  <Tr label="Non-Current Liabilities" isHeader={true} total={bsNonCurrentLiab} />
+                  <Tr label="Secured Loans" amt={business.balanceSheet.nonCurrentSecured} isSub={true} />
+                  <Tr label="Unsecured Loans" amt={business.balanceSheet.nonCurrentUnsecured} isSub={true} />
+                  <Tr label="Advances" amt={business.balanceSheet.nonCurrentAdvances} isSub={true} />
 
-                    <tr><td className="py-3 px-4 font-semibold text-slate-800">Current Liabilities</td><td className="py-3 px-4 text-right"></td><td className="py-3 px-4 text-right font-medium">₹{formatCur(Number(business.balanceSheet.currentPayables) + Number(business.balanceSheet.currentProvisions) + Number(business.balanceSheet.currentOtherLiab))}</td></tr>
-                    <tr><td className="py-2 px-4 pl-8 text-slate-600">Payables</td><td className="py-2 px-4 text-right">{formatCur(business.balanceSheet.currentPayables)}</td><td className="py-2 px-4"></td></tr>
-                    <tr><td className="py-2 px-4 pl-8 text-slate-600">Provisions for Expenses</td><td className="py-2 px-4 text-right">{formatCur(business.balanceSheet.currentProvisions)}</td><td className="py-2 px-4"></td></tr>
-                    <tr><td className="py-2 px-4 pl-8 text-slate-600">Other Current Liabilities</td><td className="py-2 px-4 text-right">{formatCur(business.balanceSheet.currentOtherLiab)}</td><td className="py-2 px-4"></td></tr>
-                    
-                    {(() => {
-                      const totalLiabilities = Number(business.balanceSheet.equityCapital) + Number(business.balanceSheet.equityReserves) +
-                        Number(business.balanceSheet.nonCurrentSecured) + Number(business.balanceSheet.nonCurrentUnsecured) + Number(business.balanceSheet.nonCurrentAdvances) +
-                        Number(business.balanceSheet.currentPayables) + Number(business.balanceSheet.currentProvisions) + Number(business.balanceSheet.currentOtherLiab);
-                      return (
-                        <tr className="bg-[#f8f9fa] border-y border-slate-200">
-                          <td className="py-3 px-4 font-bold text-slate-800">Total Equity & Liabilities</td>
-                          <td className="py-3 px-4 text-right"></td>
-                          <td className="py-3 px-4 text-right font-bold text-slate-900">₹{formatCur(totalLiabilities)}</td>
-                        </tr>
-                      );
-                    })()}
-                  </tbody>
-                </table>
-                <PageFooter pageNum={2} totalPages={totalPages} />
+                  <Tr label="Current Liabilities" isHeader={true} total={bsCurrentLiab} />
+                  <Tr label="Payables" amt={business.balanceSheet.currentPayables} isSub={true} />
+                  <Tr label="Provisions for Expenses" amt={business.balanceSheet.currentProvisions} isSub={true} />
+                  <Tr label="Other Current Liabilities" amt={business.balanceSheet.currentOtherLiab} isSub={true} />
+                  
+                  <Tr label="Total Equity & Liabilities" isHeader={true} total={bsTotalLiab} />
+                </TableLayout>
+
+                <PageFooter num={4} total={totalPages} />
               </div>
             )}
 
-            {/* PAGE 3: Balance Sheet (Assets) & Annexures */}
+            {/* PAGE 5: Balance Sheet (Assets) */}
             {data.incomes.hasBusiness && (
-              <div className="bg-white w-[794px] h-[1123px] relative px-12 pt-12 pb-24 overflow-hidden">
-                <PageHeader title="Balance Sheet (Cont.)" showClientDetails={false} />
+              <div className="bg-white w-[794px] h-[1123px] relative px-12 pt-12 pb-24 overflow-hidden shadow-xl">
+                <h2 className="text-xl font-bold text-gray-800 mb-6 mt-4">Balance Sheet (Cont.)</h2>
                 
-                <table className="w-full text-sm border-collapse mb-10">
-                  <TableHeader />
-                  <tbody className="divide-y divide-slate-100">
-                    <tr className="bg-[#f8f9fa]"><td colSpan="3" className="py-3 px-4 font-bold text-slate-800 border-y border-slate-200">Assets</td></tr>
-                    
-                    <tr><td className="py-3 px-4 font-semibold text-slate-800">Fixed Assets</td><td className="py-3 px-4 text-right"></td><td className="py-3 px-4 text-right font-medium">₹{formatCur(Number(business.balanceSheet.fixedGrossBlock) - Number(business.balanceSheet.fixedDepreciation))}</td></tr>
-                    <tr><td className="py-2 px-4 pl-8 text-slate-600">Net Block</td><td className="py-2 px-4 text-right">{formatCur(Number(business.balanceSheet.fixedGrossBlock) - Number(business.balanceSheet.fixedDepreciation))}</td><td className="py-2 px-4"></td></tr>
+                <TableLayout>
+                  <Tr label="Assets" isHeader={true} total={bsTotalAssets} />
+                  
+                  <Tr label="Fixed Assets" isHeader={true} total={bsFixedNet} />
+                  <Tr label="Net Block (Gross Block - Depreciation)" amt={bsFixedNet} isSub={true} />
 
-                    <tr><td className="py-3 px-4 font-semibold text-slate-800">Investments</td><td className="py-3 px-4 text-right"></td><td className="py-3 px-4 text-right font-medium">₹{formatCur(Number(business.balanceSheet.investmentsST) + Number(business.balanceSheet.investmentsLT))}</td></tr>
-                    <tr><td className="py-2 px-4 pl-8 text-slate-600">Short Term Investments</td><td className="py-2 px-4 text-right">{formatCur(business.balanceSheet.investmentsST)}</td><td className="py-2 px-4"></td></tr>
-                    <tr><td className="py-2 px-4 pl-8 text-slate-600">Long Term Investments</td><td className="py-2 px-4 text-right">{formatCur(business.balanceSheet.investmentsLT)}</td><td className="py-2 px-4"></td></tr>
+                  <Tr label="Investments" isHeader={true} total={bsInvest} />
+                  <Tr label="Short Term Investments" amt={business.balanceSheet.investmentsST} isSub={true} />
+                  <Tr label="Long Term Investments" amt={business.balanceSheet.investmentsLT} isSub={true} />
 
-                    <tr><td className="py-3 px-4 font-semibold text-slate-800">Current Assets</td><td className="py-3 px-4 text-right"></td><td className="py-3 px-4 text-right font-medium">₹{formatCur(Number(business.balanceSheet.currentBank) + Number(business.balanceSheet.currentCash) + Number(business.balanceSheet.currentStock) + Number(business.balanceSheet.currentReceivables) + Number(business.balanceSheet.currentLoansGiven) + Number(business.balanceSheet.currentOther))}</td></tr>
-                    <tr><td className="py-2 px-4 pl-8 text-slate-600">Bank Balance</td><td className="py-2 px-4 text-right">{formatCur(business.balanceSheet.currentBank)}</td><td className="py-2 px-4"></td></tr>
-                    <tr><td className="py-2 px-4 pl-8 text-slate-600">Cash Balance</td><td className="py-2 px-4 text-right">{formatCur(business.balanceSheet.currentCash)}</td><td className="py-2 px-4"></td></tr>
-                    <tr><td className="py-2 px-4 pl-8 text-slate-600">Closing Stock</td><td className="py-2 px-4 text-right">{formatCur(business.balanceSheet.currentStock)}</td><td className="py-2 px-4"></td></tr>
-                    <tr><td className="py-2 px-4 pl-8 text-slate-600">Receivables</td><td className="py-2 px-4 text-right">{formatCur(business.balanceSheet.currentReceivables)}</td><td className="py-2 px-4"></td></tr>
-                    <tr><td className="py-2 px-4 pl-8 text-slate-600">Loans and Advances</td><td className="py-2 px-4 text-right">{formatCur(business.balanceSheet.currentLoansGiven)}</td><td className="py-2 px-4"></td></tr>
-                    <tr><td className="py-2 px-4 pl-8 text-slate-600">Other Current Assets</td><td className="py-2 px-4 text-right">{formatCur(business.balanceSheet.currentOther)}</td><td className="py-2 px-4"></td></tr>
-                    
-                    {(() => {
-                      const totalAssets = (Number(business.balanceSheet.fixedGrossBlock) - Number(business.balanceSheet.fixedDepreciation)) +
-                        Number(business.balanceSheet.investmentsST) + Number(business.balanceSheet.investmentsLT) +
-                        Number(business.balanceSheet.currentBank) + Number(business.balanceSheet.currentCash) + Number(business.balanceSheet.currentStock) +
-                        Number(business.balanceSheet.currentReceivables) + Number(business.balanceSheet.currentLoansGiven) + Number(business.balanceSheet.currentOther);
-                      return (
-                        <tr className="bg-[#f8f9fa] border-y border-slate-200">
-                          <td className="py-3 px-4 font-bold text-slate-800">Total Assets</td>
-                          <td className="py-3 px-4 text-right"></td>
-                          <td className="py-3 px-4 text-right font-bold text-slate-900">₹{formatCur(totalAssets)}</td>
-                        </tr>
-                      );
-                    })()}
-                  </tbody>
-                </table>
-                
-                {data.incomes.hasOtherSources && (
-                  <>
-                    <h3 className="text-base font-medium text-slate-800 mb-2">Income from Other Sources (Annexure #2)</h3>
-                    <table className="w-full text-sm border-collapse mb-10">
-                      <TableHeader />
-                      <tbody className="divide-y divide-slate-100">
-                        {data.otherSources.savingsInterest > 0 && <tr><td className="py-2 px-4 text-slate-700">Saving Bank Interest</td><td className="py-2 px-4 text-right">{formatCur(data.otherSources.savingsInterest)}</td><td className="py-2 px-4"></td></tr>}
-                        {data.otherSources.fdInterest > 0 && <tr><td className="py-2 px-4 text-slate-700">Interest on Fixed Deposit</td><td className="py-2 px-4 text-right">{formatCur(data.otherSources.fdInterest)}</td><td className="py-2 px-4"></td></tr>}
-                        {dividendSum > 0 && <tr><td className="py-2 px-4 text-slate-700">Dividend Income</td><td className="py-2 px-4 text-right">{formatCur(dividendSum)}</td><td className="py-2 px-4"></td></tr>}
-                        {taxableGifts > 0 && <tr><td className="py-2 px-4 text-slate-700">Taxable Gifts</td><td className="py-2 px-4 text-right">{formatCur(taxableGifts)}</td><td className="py-2 px-4"></td></tr>}
-                        {data.otherSources.anyOtherIncome > 0 && (
-                          <tr>
-                            <td className="py-2 px-4 text-slate-700">
-                              Other Taxable Income
-                              {data.otherSources.anyOtherIncomeNarration && <span className="block text-xs text-slate-500">Note: {data.otherSources.anyOtherIncomeNarration}</span>}
-                            </td>
-                            <td className="py-2 px-4 text-right">{formatCur(data.otherSources.anyOtherIncome)}</td>
-                            <td className="py-2 px-4"></td>
-                          </tr>
-                        )}
-                        <tr className="bg-[#f8f9fa] border-y border-slate-200">
-                          <td className="py-3 px-4 font-bold text-slate-800">Total Taxable Income</td>
-                          <td className="py-3 px-4 text-right"></td>
-                          <td className="py-3 px-4 text-right font-bold text-slate-900">₹{formatCur(grossOther)}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </>
-                )}
+                  <Tr label="Current Assets" isHeader={true} total={bsCurrentAssets} />
+                  <Tr label="Bank Balance" amt={business.balanceSheet.currentBank} isSub={true} />
+                  <Tr label="Cash Balance" amt={business.balanceSheet.currentCash} isSub={true} />
+                  <Tr label="Closing Stock" amt={business.balanceSheet.currentStock} isSub={true} />
+                  <Tr label="Receivables" amt={business.balanceSheet.currentReceivables} isSub={true} />
+                  <Tr label="Loans and Advances" amt={business.balanceSheet.currentLoansGiven} isSub={true} />
+                  <Tr label="Other Current Assets" amt={business.balanceSheet.currentOther} isSub={true} />
+                  
+                  <Tr label="Total Assets" isHeader={true} total={bsTotalAssets} />
+                </TableLayout>
 
-                {data.incomes.hasExemptIncome && (
-                  <>
-                    <h3 className="text-base font-medium text-slate-800 mb-2">Exempt Income (Annexure #3)</h3>
-                    <table className="w-full text-sm border-collapse mb-10">
-                      <TableHeader />
-                      <tbody className="divide-y divide-slate-100">
-                        {data.exemptIncome.agriculture > 0 && <tr><td className="py-2 px-4 text-slate-700">Agricultural income</td><td className="py-2 px-4 text-right">{formatCur(data.exemptIncome.agriculture)}</td><td className="py-2 px-4"></td></tr>}
-                        {data.exemptIncome.insuranceMaturity > 0 && <tr><td className="py-2 px-4 text-slate-700">Insurance Maturity</td><td className="py-2 px-4 text-right">{formatCur(data.exemptIncome.insuranceMaturity)}</td><td className="py-2 px-4"></td></tr>}
-                        {data.otherSources.gifts.isExemptOccasion && totalGifts > 0 && (
-                          <tr>
-                            <td className="py-2 px-4 text-slate-700">
-                              Gifts Received on Specific Occasion
-                              {data.otherSources.gifts.exemptGiftNarration && <span className="block text-xs text-slate-500">Occasion: {data.otherSources.gifts.exemptGiftNarration}</span>}
-                            </td>
-                            <td className="py-2 px-4 text-right">{formatCur(totalGifts)}</td><td className="py-2 px-4"></td>
-                          </tr>
-                        )}
-                        <tr className="bg-[#f8f9fa] border-y border-slate-200">
-                          <td className="py-3 px-4 font-bold text-slate-800">Total Exempt Income</td>
-                          <td className="py-3 px-4 text-right"></td>
-                          <td className="py-3 px-4 text-right font-bold text-slate-900">₹{formatCur(data.exemptIncome.agriculture + data.exemptIncome.insuranceMaturity + (data.otherSources.gifts.isExemptOccasion ? totalGifts : 0))}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </>
-                )}
-                
-                <PageFooter pageNum={3} totalPages={totalPages} />
+                <PageFooter num={5} total={totalPages} />
               </div>
             )}
           </div>
