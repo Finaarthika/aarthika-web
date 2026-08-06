@@ -52,7 +52,7 @@ const TaxInput = ({ label, value, onChange, placeholder, prefix, note, required,
 };
 
 export default function BusinessTradingDetails() {
-  const { taxData, updateNestedTaxData } = useTaxation();
+  const { taxData, updateNestedTaxData, updateTaxData } = useTaxation();
   const navigate = useNavigate();
   const { business } = taxData;
   const balanceSheet = business.balanceSheet;
@@ -100,7 +100,7 @@ export default function BusinessTradingDetails() {
             label="Gross turnover through bank" 
             required 
             value={business.turnoverBank} 
-            onChange={(e) => updateNestedTaxData('business', '', 'turnoverBank', e.target.value === '' ? '' : Number(e.target.value))} 
+            onChange={(e) => updateTaxData('business', 'turnoverBank', e.target.value === '' ? '' : Number(e.target.value))} 
             prefix="₹" 
           />
           <TaxInput 
@@ -108,14 +108,14 @@ export default function BusinessTradingDetails() {
             required 
             note="Must be at least 6%"
             value={business.profitBank} 
-            onChange={(e) => updateNestedTaxData('business', '', 'profitBank', e.target.value === '' ? '' : Number(e.target.value))} 
+            onChange={(e) => updateTaxData('business', 'profitBank', e.target.value === '' ? '' : Number(e.target.value))} 
             prefix="₹" 
           />
           <TaxInput 
             label="Gross turnover through cash" 
             required 
             value={business.turnoverCash} 
-            onChange={(e) => updateNestedTaxData('business', '', 'turnoverCash', e.target.value === '' ? '' : Number(e.target.value))} 
+            onChange={(e) => updateTaxData('business', 'turnoverCash', e.target.value === '' ? '' : Number(e.target.value))} 
             prefix="₹" 
           />
           <TaxInput 
@@ -123,7 +123,7 @@ export default function BusinessTradingDetails() {
             required 
             note="Must be at least 8%"
             value={business.profitCash} 
-            onChange={(e) => updateNestedTaxData('business', '', 'profitCash', e.target.value === '' ? '' : Number(e.target.value))} 
+            onChange={(e) => updateTaxData('business', 'profitCash', e.target.value === '' ? '' : Number(e.target.value))} 
             prefix="₹" 
           />
         </div>
@@ -144,13 +144,13 @@ export default function BusinessTradingDetails() {
             <span className="font-bold text-[15px] text-slate-800">Financial Particulars (as on 31st March)</span>
             <div className="flex items-center rounded-full border border-gray-300 overflow-hidden">
               <button 
-                onClick={() => updateNestedTaxData('business', '', 'hasFinancialParticulars', false)}
+                onClick={() => updateTaxData('business', 'hasFinancialParticulars', false)}
                 className={`px-6 py-1.5 text-[13px] font-bold ${!business.hasFinancialParticulars ? 'bg-white text-slate-700' : 'bg-gray-100 text-gray-500'}`}
               >
                 No
               </button>
               <button 
-                onClick={() => updateNestedTaxData('business', '', 'hasFinancialParticulars', true)}
+                onClick={() => updateTaxData('business', 'hasFinancialParticulars', true)}
                 className={`px-6 py-1.5 text-[13px] font-bold ${business.hasFinancialParticulars ? 'bg-green-700 text-white' : 'bg-gray-100 text-gray-500'}`}
               >
                 Yes

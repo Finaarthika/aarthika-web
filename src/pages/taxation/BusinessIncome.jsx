@@ -66,8 +66,8 @@ export default function BusinessIncome() {
   const navigate = useNavigate();
   const { business } = taxData;
 
-  const setIncomeType = (type) => updateNestedTaxData('business', '', 'businessIncomeType', type);
-  const setScheme = (scheme) => updateNestedTaxData('business', '', 'presumptiveType', scheme);
+  const setIncomeType = (type) => updateTaxData('business', 'businessIncomeType', type);
+  const setScheme = (scheme) => updateTaxData('business', 'presumptiveType', scheme);
 
   return (
     <div className="max-w-5xl mx-auto py-4">
@@ -127,7 +127,7 @@ export default function BusinessIncome() {
             <label className="text-[11px] text-gray-500 mb-1 flex items-center gap-1">Business Category <span className="text-red-500">*</span></label>
             <select 
               value={business.businessCategory}
-              onChange={(e) => updateNestedTaxData('business', '', 'businessCategory', e.target.value)}
+              onChange={(e) => updateTaxData('business', 'businessCategory', e.target.value)}
               className="w-full border border-gray-300 rounded-[4px] px-3 py-2 text-[14px] text-slate-800 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
             >
               <option value="">Please Select</option>
@@ -140,7 +140,7 @@ export default function BusinessIncome() {
             <label className="text-[11px] text-gray-500 mb-1 flex items-center gap-1">Nature of Business <span className="text-red-500">*</span></label>
             <select 
               value={business.businessNatureCode}
-              onChange={(e) => updateNestedTaxData('business', '', 'businessNatureCode', e.target.value)}
+              onChange={(e) => updateTaxData('business', 'businessNatureCode', e.target.value)}
               className="w-full border border-gray-300 rounded-[4px] px-3 py-2 text-[14px] text-slate-800 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
             >
               <option value="">Please Select</option>
@@ -148,20 +148,20 @@ export default function BusinessIncome() {
               <option value="09001">Retail sale of garments</option>
             </select>
           </div>
-          <TaxInput label="Name of the Business *" value={business.businessName} onChange={(e) => updateNestedTaxData('business', '', 'businessName', e.target.value)} />
-          <TaxInput label="Description (Optional)" value={business.businessDescription} onChange={(e) => updateNestedTaxData('business', '', 'businessDescription', e.target.value)} />
+          <TaxInput label="Name of the Business *" value={business.businessName} onChange={(e) => updateTaxData('business', 'businessName', e.target.value)} />
+          <TaxInput label="Description (Optional)" value={business.businessDescription} onChange={(e) => updateTaxData('business', 'businessDescription', e.target.value)} />
         </div>
 
         <div className="mb-6">
           <h4 className="text-[14px] font-bold text-slate-800 mb-4">Turnover / Gross Receipt reported for GST</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <TaxInput label="GSTIN" value={business.gstin} onChange={(e) => updateNestedTaxData('business', '', 'gstin', e.target.value)} uppercase />
-            <TaxInput label="Turnover / Gross receipt as per the GST return filed" value={business.gstTurnover} onChange={(e) => updateNestedTaxData('business', '', 'gstTurnover', e.target.value)} />
+            <TaxInput label="GSTIN" value={business.gstin} onChange={(e) => updateTaxData('business', 'gstin', e.target.value)} uppercase />
+            <TaxInput label="Turnover / Gross receipt as per the GST return filed" value={business.gstTurnover} onChange={(e) => updateTaxData('business', 'gstTurnover', e.target.value)} />
           </div>
         </div>
 
         <div className="flex justify-end mb-6">
-          <button className="bg-[#0f2e4c] hover:bg-slate-800 text-white font-semibold py-2 px-6 rounded-full text-[13px] flex items-center gap-1.5 transition-colors">
+          <button onClick={() => navigate('/taxation/business-trading-details')} className="bg-[#0f2e4c] hover:bg-slate-800 text-white font-semibold py-2 px-6 rounded-full text-[13px] flex items-center gap-1.5 transition-colors">
             + Add Business Income
           </button>
         </div>
