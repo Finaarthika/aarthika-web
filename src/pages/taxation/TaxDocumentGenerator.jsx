@@ -142,31 +142,34 @@ export default function TaxDocumentGenerator({ onClose }) {
                   <tr><td colSpan="4" className={`${boldHeader}`}>Personal Information</td></tr>
                   <tr>
                     <td className={`${boldHeader} w-1/4`}>Name</td>
-                    <td colSpan="3" className={`${cellStyle}`}>{data.clientDetails.firstName} {data.clientDetails.lastName}</td>
+                    <td colSpan="3" className={`${cellStyle}`}>{[data.clientDetails.firstName, data.clientDetails.middleName, data.clientDetails.lastName].filter(Boolean).join(' ') || '--'}</td>
                   </tr>
                   <tr>
                     <td className={`${boldHeader}`}>Permanent Address</td>
-                    <td colSpan="3" className={`${cellStyle}`}>--</td>
+                    <td colSpan="3" className={`${cellStyle}`}>
+                      {[data.clientDetails.flatDoor, data.clientDetails.building, data.clientDetails.road, data.clientDetails.area].filter(Boolean).join(', ') || '--'}
+                      {data.clientDetails.pincode ? ` - ${data.clientDetails.pincode}` : ''}
+                    </td>
                   </tr>
                   <tr>
                     <td className={`${boldHeader}`}>Father's Name</td>
-                    <td colSpan="3" className={`${cellStyle}`}>--</td>
+                    <td colSpan="3" className={`${cellStyle}`}>{data.clientDetails.fatherName || '--'}</td>
                   </tr>
                   <tr>
                     <td className={`${boldHeader}`}>PAN</td>
                     <td className={`${cellStyle} w-1/4 uppercase`}>{data.clientDetails.pan || 'N/A'}</td>
                     <td className={`${boldHeader} w-1/4`}>Date of Birth</td>
-                    <td className={`${cellStyle} w-1/4`}>--</td>
+                    <td className={`${cellStyle} w-1/4`}>{data.clientDetails.dob || '--'}</td>
                   </tr>
                   <tr>
                     <td className={`${boldHeader}`}>E-Mail</td>
-                    <td className={`${cellStyle}`}>--</td>
+                    <td className={`${cellStyle}`}>{data.clientDetails.email || '--'}</td>
                     <td className={`${boldHeader}`}>Financial Year</td>
                     <td className={`${cellStyle}`}>01-04-2025 to 31-03-2026</td>
                   </tr>
                   <tr>
                     <td className={`${boldHeader}`}>Mobile</td>
-                    <td className={`${cellStyle}`}>--</td>
+                    <td className={`${cellStyle}`}>{data.clientDetails.mobile || '--'}</td>
                     <td className={`${boldHeader}`}>Assessment Year</td>
                     <td className={`${cellStyle}`}>01-04-2026 to 31-03-2027</td>
                   </tr>
