@@ -131,8 +131,8 @@ export default function TaxDocumentGenerator({ onClose }) {
 
         {/* PDF Container - Exact scaling 794x1123 */}
         <div className="overflow-x-auto bg-gray-900 flex justify-center py-8">
-          <div ref={documentRef} className="flex flex-col text-black bg-white mx-auto" style={{ width: '210mm', minHeight: '297mm', fontFamily: 'Arial, Helvetica, sans-serif' }}>
-            <div className="p-8">
+          <div ref={documentRef} className="flex flex-col text-black bg-white mx-auto" style={{ width: '180mm', minHeight: '267mm', fontFamily: 'Arial, Helvetica, sans-serif' }}>
+            <div className="p-0">
               <HeaderLogo />
               <TitleHeader title="Detailed Computation as per New Tax Regime (ITR-4)" />
               
