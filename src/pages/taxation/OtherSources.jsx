@@ -84,6 +84,41 @@ const TaxInput = ({ label, value, onChange, placeholder, prefix, note, required,
   );
 };
 
+const TaxInputText = ({ label, value, onChange, placeholder }) => (
+  <div className="flex flex-col">
+    <label className="text-xs text-gray-500 mb-1">{label}</label>
+    <input
+      type="text"
+      value={value || ''}
+      onChange={onChange}
+      placeholder={placeholder}
+      className="w-full border border-gray-300 rounded-md px-3 py-2 text-[14px] text-slate-800 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
+    />
+  </div>
+);
+
+const YesNoToggle = ({ value, onChange, label }) => (
+  <div className="flex flex-col mb-6">
+    <span className="text-[14px] text-slate-700 mb-3">{label}</span>
+    <div className="flex gap-4">
+      <label className="flex items-center gap-2 cursor-pointer" onClick={() => onChange(true)}>
+        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${value ? 'border-green-600' : 'border-gray-400'}`}>
+          {value && <div className="w-2 h-2 rounded-full bg-green-600" />}
+        </div>
+        <span className="text-[14px] font-semibold text-slate-700">Yes</span>
+        <input type="radio" className="hidden" checked={value} readOnly />
+      </label>
+      <label className="flex items-center gap-2 cursor-pointer" onClick={() => onChange(false)}>
+        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${!value ? 'border-green-600' : 'border-gray-400'}`}>
+          {!value && <div className="w-2 h-2 rounded-full bg-green-600" />}
+        </div>
+        <span className="text-[14px] font-semibold text-slate-700">No</span>
+        <input type="radio" className="hidden" checked={!value} readOnly />
+      </label>
+    </div>
+  </div>
+);
+
 export default function OtherSources() {
   const { taxData, updateTaxData, updateNestedTaxData } = useTaxation();
   const navigate = useNavigate();

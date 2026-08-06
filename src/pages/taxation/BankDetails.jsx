@@ -84,6 +84,19 @@ const TaxInput = ({ label, value, onChange, placeholder, prefix, note, required,
   );
 };
 
+const TaxSelect = ({ label, value, onChange, required, options }) => (
+  <div className="flex flex-col">
+    <label className="text-xs text-gray-500 mb-1">{label}{required && <span className="text-red-500 ml-0.5">*</span>}</label>
+    <select
+      value={value || ''}
+      onChange={onChange}
+      className="w-full border border-gray-300 rounded-md px-3 py-2 text-[14px] text-slate-800 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 bg-white"
+    >
+      {options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+    </select>
+  </div>
+);
+
 export default function BankDetails() {
   const { taxData, updateArrayData, setTaxData } = useTaxation();
   const navigate = useNavigate();
