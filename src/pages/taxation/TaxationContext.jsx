@@ -9,13 +9,25 @@ export const TaxationProvider = ({ children }) => {
     clientDetails: {
       pan: '',
       firstName: '',
+      middleName: '',
       lastName: '',
+      fatherName: '',
+      mobile: '',
+      email: '',
+      gender: 'Male',
+      dob: '',
       assessmentYear: '2026-27', // AY for FY 2025-26
       pincode: '',
       flatDoor: '',
       building: '',
       road: '',
       area: '',
+      employerCategory: 'private',
+      aadhaar: '',
+      aadhaarEnrollment: '',
+      foreignAssets: false,
+      isDirector: false,
+      unlistedShares: false,
     },
     bankAccounts: [
       { id: 1, bankName: '', ifsc: '', accountNumber: '', type: 'Savings', isRefund: true }

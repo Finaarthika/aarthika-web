@@ -81,10 +81,7 @@ export default function CapitalGains() {
       </div>
 
       <div className="flex justify-between items-center mt-8">
-        <button 
-          onClick={() => navigate(taxData.incomes.hasBusiness ? '/taxation/business' : '/taxation/bank-accounts')} 
-          className="px-6 py-2.5 rounded border border-green-700 text-green-700 font-semibold hover:bg-green-50 flex items-center gap-2"
-        >
+        <button onClick={() => navigate('/taxation/basic-details-2')} className="px-6 py-2.5 rounded border border-green-700 text-green-700 font-semibold hover:bg-green-50 flex items-center gap-2">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
           Back
         </button>
@@ -93,10 +90,7 @@ export default function CapitalGains() {
             GET CA ASSISTED
           </button>
           <button 
-            onClick={() => {
-              if (taxData.incomes.hasOtherSources) navigate('/taxation/other-sources');
-              else navigate('/taxation/exempt-income');
-            }}
+            onClick={() => navigate('/taxation/business')}
             className="bg-[#1b7a43] hover:bg-green-700 text-white font-semibold py-2.5 px-8 rounded flex items-center gap-2 transition-colors"
           >
             CONTINUE

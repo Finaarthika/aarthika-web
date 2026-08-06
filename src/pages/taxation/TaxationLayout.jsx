@@ -11,6 +11,10 @@ import TaxesPaid from './TaxesPaid';
 import LossAdjustments from './LossAdjustments';
 import Computation from './Computation';
 import BankAccounts from './BankAccounts';
+import BasicDetails from './BasicDetails';
+import BasicDetails2 from './BasicDetails2';
+import BankDetails from './BankDetails';
+import ExtraDetails from './ExtraDetails';
 
 const TaxationLayout = () => {
   const { taxData } = useTaxation();
@@ -18,17 +22,21 @@ const TaxationLayout = () => {
   const location = useLocation();
   const currentPath = location.pathname;
 
-  // Build sequential nav items
+  // ALL tabs always visible - matching Tax2Win's exact tab order
   const navItems = [
     { label: 'Sources of Income', path: '/taxation' },
-    { label: 'Basic Details', path: '/taxation/bank-accounts' },
-    ...(taxData.incomes.hasBusiness ? [{ label: 'Business Income', path: '/taxation/business' }] : []),
-    ...(taxData.incomes.hasCapitalGains ? [{ label: 'Capital Gain Income', path: '/taxation/capital-gains' }] : []),
-    ...(taxData.incomes.hasOtherSources ? [{ label: 'Other Sources Income', path: '/taxation/other-sources' }] : []),
-    ...(taxData.incomes.hasExemptIncome ? [{ label: 'Exempt Income', path: '/taxation/exempt-income' }] : []),
-    ...(taxData.incomes.hasDeductions ? [{ label: 'Deductions', path: '/taxation/deductions' }] : []),
-    ...(taxData.incomes.hasPrepaidTaxes ? [{ label: 'Prepaid Taxes', path: '/taxation/taxes-paid' }] : []),
+    { label: 'Financial Details', path: '/taxation/bank-accounts' },
+    { label: 'Basic Details', path: '/taxation/basic-details' },
+    { label: 'Basic Details 2', path: '/taxation/basic-details-2' },
+    { label: 'Capital Gain Income', path: '/taxation/capital-gains' },
+    { label: 'Business Income', path: '/taxation/business' },
+    { label: 'Other Sources Income', path: '/taxation/other-sources' },
+    { label: 'Exempt Income', path: '/taxation/exempt-income' },
+    { label: 'Deductions', path: '/taxation/deductions' },
+    { label: 'Bank Details', path: '/taxation/bank-details' },
+    { label: 'Prepaid Taxes', path: '/taxation/taxes-paid' },
     { label: 'Loss Adjustments', path: '/taxation/adjustments' },
+    { label: 'Extra Details', path: '/taxation/extra-details' },
     { label: 'Computation', path: '/taxation/computation' },
   ];
 
@@ -93,13 +101,17 @@ const TaxationLayout = () => {
         <Routes>
           <Route path="/" element={<Onboarding />} />
           <Route path="/bank-accounts" element={<BankAccounts />} />
+          <Route path="/basic-details" element={<BasicDetails />} />
+          <Route path="/basic-details-2" element={<BasicDetails2 />} />
           <Route path="/business" element={<BusinessIncome />} />
           <Route path="/capital-gains" element={<CapitalGains />} />
           <Route path="/other-sources" element={<OtherSources />} />
           <Route path="/exempt-income" element={<ExemptIncome />} />
           <Route path="/deductions" element={<Deductions />} />
+          <Route path="/bank-details" element={<BankDetails />} />
           <Route path="/taxes-paid" element={<TaxesPaid />} />
           <Route path="/adjustments" element={<LossAdjustments />} />
+          <Route path="/extra-details" element={<ExtraDetails />} />
           <Route path="/computation" element={<Computation />} />
         </Routes>
       </main>
