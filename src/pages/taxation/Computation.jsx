@@ -80,9 +80,12 @@ export default function Computation() {
     let totalTaxBase = taxOnNormalIncome + taxOnStcg + taxOnLtcg;
 
     // 87A Rebate logic (New Budget: 0 tax up to 12 Lakhs income)
+    // CRITICAL: Rebate is ONLY applicable if Total Income <= 12 Lakhs
+    // AND it ONLY covers tax on "Normal" income, NOT special rate incomes like STCG/LTCG.
     let rebate87A = 0;
     if (totalIncome <= 1200000) {
-      rebate87A = totalTaxBase; 
+      // It can only cover the normal tax portion
+      rebate87A = taxOnNormalIncome; 
     }
 
     const taxAfterRebate = Math.max(0, totalTaxBase - rebate87A);
