@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTaxation } from './TaxationContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -56,6 +56,9 @@ export default function BasicDetails() {
   const navigate = useNavigate();
   const bankAccounts = taxData.bankAccounts || [];
 
+  const [regime, setRegime] = useState('new');
+  const [sameAddress, setSameAddress] = useState(true);
+
   const handleClientChange = (e) => {
     updateTaxData('clientDetails', e.target.name, e.target.value);
   };
@@ -99,6 +102,8 @@ export default function BasicDetails() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <TaxSelect 
             label="Financial Year" 
+            value={taxData.clientDetails.assessmentYear}
+            onChange={(e) => updateTaxData('clientDetails', 'assessmentYear', e.target.value)}
             required 
             options={[{value: '2025-26', label: '2025-2026'}, {value: '2024-25', label: '2024-2025'}]}
           />
@@ -122,14 +127,15 @@ export default function BasicDetails() {
             <h4 className="text-[15px] font-bold text-slate-800">Select Your Tax Regime <span className="text-green-600 font-normal italic text-[13px] ml-1">Learn More</span></h4>
           </div>
           <div className="flex gap-6 mt-4 md:mt-0">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <div className="w-4 h-4 rounded-full border border-green-600 flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-green-600" />
+            <label className="flex items-center gap-2 cursor-pointer" onClick={() => setRegime('new')}>
+              <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${regime === 'new' ? 'border-green-600' : 'border-gray-400'}`}>
+                {regime === 'new' && <div className="w-2 h-2 rounded-full bg-green-600" />}
               </div>
               <span className="text-[14px] font-semibold text-slate-700">New Regime <span className="text-green-600 italic text-[12px] font-normal">(Recommended)</span></span>
             </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <div className="w-4 h-4 rounded-full border border-gray-400 flex items-center justify-center">
+            <label className="flex items-center gap-2 cursor-pointer" onClick={() => setRegime('old')}>
+              <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${regime === 'old' ? 'border-green-600' : 'border-gray-400'}`}>
+                {regime === 'old' && <div className="w-2 h-2 rounded-full bg-green-600" />}
               </div>
               <span className="text-[14px] font-semibold text-slate-700">Old Regime</span>
             </label>
@@ -147,20 +153,49 @@ export default function BasicDetails() {
         <h3 className="text-lg font-bold text-slate-800 mb-6">Permanent Address</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="col-span-1 md:col-span-2 md:w-1/2">
-            <TaxInput label="Pincode" required />
+            <TaxInput 
+              label="Pincode" 
+              value={taxData.clientDetails.pincode}
+              onChange={(e) => updateTaxData('clientDetails', 'pincode', e.target.value)}
+              required 
+            />
             <p className="text-[11px] font-bold text-green-600 mt-1">KISHANGANJ, BIHAR, India ✎</p>
           </div>
-          <TaxInput label="Flat / Door / Building" required />
-          <TaxInput label="Building / Village" />
-          <TaxInput label="Road" />
-          <TaxInput label="Area" required />
+          <TaxInput 
+            label="Flat / Door / Building" 
+            value={taxData.clientDetails.flatDoor}
+            onChange={(e) => updateTaxData('clientDetails', 'flatDoor', e.target.value)}
+            required 
+          />
+          <TaxInput 
+            label="Building / Village" 
+            value={taxData.clientDetails.building}
+            onChange={(e) => updateTaxData('clientDetails', 'building', e.target.value)}
+          />
+          <TaxInput 
+            label="Road" 
+            value={taxData.clientDetails.road}
+            onChange={(e) => updateTaxData('clientDetails', 'road', e.target.value)}
+          />
+          <TaxInput 
+            label="Area" 
+            value={taxData.clientDetails.area}
+            onChange={(e) => updateTaxData('clientDetails', 'area', e.target.value)}
+            required 
+          />
         </div>
         
         <div className="border-t border-gray-200 pt-6 flex justify-between items-center">
           <span className="text-[14px] text-slate-700">Is your residential address same as your permanent address?</span>
           <div className="flex gap-3">
-            <button className="px-6 py-1.5 rounded-full bg-[#1b7a43] text-white text-sm font-semibold">Yes</button>
-            <button className="px-6 py-1.5 rounded-full border border-gray-300 text-slate-600 text-sm font-semibold hover:bg-gray-50">No</button>
+            <button 
+              onClick={() => setSameAddress(true)}
+              className={`px-6 py-1.5 rounded-full text-sm font-semibold ${sameAddress ? 'bg-[#1b7a43] text-white' : 'border border-gray-300 text-slate-600 hover:bg-gray-50'}`}
+            >Yes</button>
+            <button 
+              onClick={() => setSameAddress(false)}
+              className={`px-6 py-1.5 rounded-full text-sm font-semibold ${!sameAddress ? 'bg-[#1b7a43] text-white' : 'border border-gray-300 text-slate-600 hover:bg-gray-50'}`}
+            >No</button>
           </div>
         </div>
 

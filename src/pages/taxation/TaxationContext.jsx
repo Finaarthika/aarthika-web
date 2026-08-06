@@ -11,6 +11,11 @@ export const TaxationProvider = ({ children }) => {
       firstName: '',
       lastName: '',
       assessmentYear: '2026-27', // AY for FY 2025-26
+      pincode: '',
+      flatDoor: '',
+      building: '',
+      road: '',
+      area: '',
     },
     bankAccounts: [
       { id: 1, bankName: '', ifsc: '', accountNumber: '', type: 'Savings', isRefund: true }

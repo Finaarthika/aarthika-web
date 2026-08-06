@@ -120,11 +120,11 @@ export default function TaxesPaid() {
                         <div className="relative">
                           <span className="absolute left-2 top-1.5 text-gray-500 text-[13px]">₹</span>
                           <input
-                            type="number"
-                            placeholder="0"
+                            type="text"
+                            inputMode="numeric"
                             className="w-full border border-gray-300 rounded-md text-[13px] text-slate-800 py-1.5 pl-6 pr-2 focus:ring-1 focus:ring-green-600 outline-none"
-                            value={row.grossAmount || ''}
-                            onChange={(e) => handleChange(row.id, 'grossAmount', Number(e.target.value))}
+                            value={row.grossAmount === '' || row.grossAmount === 0 || row.grossAmount === undefined || row.grossAmount === null ? '' : row.grossAmount}
+                            onChange={(e) => handleChange(row.id, 'grossAmount', e.target.value === '' ? '' : Number(e.target.value))}
                           />
                         </div>
                       </td>
@@ -132,11 +132,11 @@ export default function TaxesPaid() {
                         <div className="relative">
                           <span className="absolute left-2 top-1.5 text-green-600 font-bold text-[13px]">₹</span>
                           <input
-                            type="number"
-                            placeholder="0"
+                            type="text"
+                            inputMode="numeric"
                             className="w-full border border-green-300 rounded-md text-[13px] text-green-700 font-semibold py-1.5 pl-6 pr-2 focus:ring-1 focus:ring-green-600 outline-none bg-green-50/30"
-                            value={row.taxDeducted || ''}
-                            onChange={(e) => handleChange(row.id, 'taxDeducted', Number(e.target.value))}
+                            value={row.taxDeducted === '' || row.taxDeducted === 0 || row.taxDeducted === undefined || row.taxDeducted === null ? '' : row.taxDeducted}
+                            onChange={(e) => handleChange(row.id, 'taxDeducted', e.target.value === '' ? '' : Number(e.target.value))}
                           />
                         </div>
                       </td>

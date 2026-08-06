@@ -8,8 +8,9 @@ const TaxInput = ({ label, value, onChange, placeholder, prefix }) => (
     <div className="relative">
       {prefix && <span className="absolute left-3 top-2 text-gray-500 text-[14px]">{prefix}</span>}
       <input
-        type="number"
-        value={value === 0 ? '' : value}
+        type="text"
+        inputMode="numeric"
+        value={value === '' || value === 0 || value === undefined || value === null ? '' : value}
         onChange={onChange}
         placeholder={placeholder}
         className={`w-full border border-gray-300 rounded-md py-2 text-[14px] text-slate-800 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 ${prefix ? 'pl-7 pr-3' : 'px-3'}`}
@@ -145,42 +146,42 @@ export default function BusinessIncome() {
             <h4 className="text-md font-bold text-slate-700 pb-2 mb-4 border-b border-gray-200">ASSETS</h4>
             <div className="space-y-4 mb-6">
               <h5 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Fixed Assets</h5>
-              <TaxInput label="Gross Block" value={balanceSheet.fixedGrossBlock} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'fixedGrossBlock', Number(e.target.value))} prefix="₹" />
-              <TaxInput label="Depreciation" value={balanceSheet.fixedDepreciation} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'fixedDepreciation', Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Gross Block" value={balanceSheet.fixedGrossBlock} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'fixedGrossBlock', e.target.value === '' ? '' : Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Depreciation" value={balanceSheet.fixedDepreciation} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'fixedDepreciation', e.target.value === '' ? '' : Number(e.target.value))} prefix="₹" />
             </div>
             <div className="space-y-4 mb-6">
               <h5 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Investments</h5>
-              <TaxInput label="Short Term Investments" value={balanceSheet.investmentsST} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'investmentsST', Number(e.target.value))} prefix="₹" />
-              <TaxInput label="Long Term Investments" value={balanceSheet.investmentsLT} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'investmentsLT', Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Short Term Investments" value={balanceSheet.investmentsST} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'investmentsST', e.target.value === '' ? '' : Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Long Term Investments" value={balanceSheet.investmentsLT} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'investmentsLT', e.target.value === '' ? '' : Number(e.target.value))} prefix="₹" />
             </div>
             <div className="space-y-4 mb-6">
               <h5 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Current Assets</h5>
-              <TaxInput label="Bank Balance" value={balanceSheet.currentBank} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentBank', Number(e.target.value))} prefix="₹" />
-              <TaxInput label="Cash Balance" value={balanceSheet.currentCash} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentCash', Number(e.target.value))} prefix="₹" />
-              <TaxInput label="Closing Stock" value={balanceSheet.currentStock} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentStock', Number(e.target.value))} prefix="₹" />
-              <TaxInput label="Receivables (Debtors)" value={balanceSheet.currentReceivables} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentReceivables', Number(e.target.value))} prefix="₹" />
-              <TaxInput label="Loans Given" value={balanceSheet.currentLoansGiven} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentLoansGiven', Number(e.target.value))} prefix="₹" />
-              <TaxInput label="Other Assets" value={balanceSheet.currentOther} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentOther', Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Bank Balance" value={balanceSheet.currentBank} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentBank', e.target.value === '' ? '' : Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Cash Balance" value={balanceSheet.currentCash} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentCash', e.target.value === '' ? '' : Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Closing Stock" value={balanceSheet.currentStock} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentStock', e.target.value === '' ? '' : Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Receivables (Debtors)" value={balanceSheet.currentReceivables} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentReceivables', e.target.value === '' ? '' : Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Loans Given" value={balanceSheet.currentLoansGiven} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentLoansGiven', e.target.value === '' ? '' : Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Other Assets" value={balanceSheet.currentOther} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentOther', e.target.value === '' ? '' : Number(e.target.value))} prefix="₹" />
             </div>
           </div>
           <div>
             <h4 className="text-md font-bold text-slate-700 pb-2 mb-4 border-b border-gray-200">LIABILITIES</h4>
             <div className="space-y-4 mb-6">
               <h5 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Equity</h5>
-              <TaxInput label="Proprietor's Capital" value={balanceSheet.equityCapital} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'equityCapital', Number(e.target.value))} prefix="₹" />
-              <TaxInput label="Reserves & Surplus" value={balanceSheet.equityReserves} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'equityReserves', Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Proprietor's Capital" value={balanceSheet.equityCapital} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'equityCapital', e.target.value === '' ? '' : Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Reserves & Surplus" value={balanceSheet.equityReserves} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'equityReserves', e.target.value === '' ? '' : Number(e.target.value))} prefix="₹" />
             </div>
             <div className="space-y-4 mb-6">
               <h5 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Non-Current Liabilities</h5>
-              <TaxInput label="Secured Loans" value={balanceSheet.nonCurrentSecured} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'nonCurrentSecured', Number(e.target.value))} prefix="₹" />
-              <TaxInput label="Unsecured Loans" value={balanceSheet.nonCurrentUnsecured} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'nonCurrentUnsecured', Number(e.target.value))} prefix="₹" />
-              <TaxInput label="Advances" value={balanceSheet.nonCurrentAdvances} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'nonCurrentAdvances', Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Secured Loans" value={balanceSheet.nonCurrentSecured} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'nonCurrentSecured', e.target.value === '' ? '' : Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Unsecured Loans" value={balanceSheet.nonCurrentUnsecured} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'nonCurrentUnsecured', e.target.value === '' ? '' : Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Advances" value={balanceSheet.nonCurrentAdvances} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'nonCurrentAdvances', e.target.value === '' ? '' : Number(e.target.value))} prefix="₹" />
             </div>
             <div className="space-y-4 mb-6">
               <h5 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Current Liabilities</h5>
-              <TaxInput label="Payables (Creditors)" value={balanceSheet.currentPayables} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentPayables', Number(e.target.value))} prefix="₹" />
-              <TaxInput label="Provisions" value={balanceSheet.currentProvisions} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentProvisions', Number(e.target.value))} prefix="₹" />
-              <TaxInput label="Other Liabilities" value={balanceSheet.currentOtherLiab} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentOtherLiab', Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Payables (Creditors)" value={balanceSheet.currentPayables} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentPayables', e.target.value === '' ? '' : Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Provisions" value={balanceSheet.currentProvisions} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentProvisions', e.target.value === '' ? '' : Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Other Liabilities" value={balanceSheet.currentOtherLiab} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentOtherLiab', e.target.value === '' ? '' : Number(e.target.value))} prefix="₹" />
             </div>
           </div>
         </div>

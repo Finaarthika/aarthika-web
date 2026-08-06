@@ -8,10 +8,11 @@ const TaxInput = ({ label, value, onChange, placeholder, prefix, note }) => (
     <div className="relative">
       {prefix && <span className="absolute left-3 top-2 text-gray-500 text-[14px]">{prefix}</span>}
       <input
-        type="number"
-        value={value === 0 ? '' : value}
+        type="text"
+        inputMode="numeric"
+        value={value === '' || value === 0 || value === undefined || value === null ? '' : value}
         onChange={onChange}
-        placeholder={placeholder}
+        placeholder={placeholder || ''}
         className={`w-full border border-gray-300 rounded-md py-2 text-[14px] text-slate-800 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 ${prefix ? 'pl-7 pr-3' : 'px-3'}`}
       />
     </div>
@@ -36,19 +37,19 @@ const YesNoToggle = ({ value, onChange, label }) => (
   <div className="flex flex-col mb-6">
     <span className="text-[14px] text-slate-700 mb-3">{label}</span>
     <div className="flex gap-4">
-      <label className="flex items-center gap-2 cursor-pointer">
+      <label className="flex items-center gap-2 cursor-pointer" onClick={() => onChange(true)}>
         <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${value ? 'border-green-600' : 'border-gray-400'}`}>
           {value && <div className="w-2 h-2 rounded-full bg-green-600" />}
         </div>
         <span className="text-[14px] font-semibold text-slate-700">Yes</span>
-        <input type="radio" className="hidden" checked={value} onChange={() => onChange(true)} />
+        <input type="radio" className="hidden" checked={value} readOnly />
       </label>
-      <label className="flex items-center gap-2 cursor-pointer">
+      <label className="flex items-center gap-2 cursor-pointer" onClick={() => onChange(false)}>
         <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${!value ? 'border-green-600' : 'border-gray-400'}`}>
           {!value && <div className="w-2 h-2 rounded-full bg-green-600" />}
         </div>
         <span className="text-[14px] font-semibold text-slate-700">No</span>
-        <input type="radio" className="hidden" checked={!value} onChange={() => onChange(false)} />
+        <input type="radio" className="hidden" checked={!value} readOnly />
       </label>
     </div>
   </div>

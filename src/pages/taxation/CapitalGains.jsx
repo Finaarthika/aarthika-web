@@ -2,19 +2,21 @@ import React from 'react';
 import { useTaxation } from './TaxationContext';
 import { useNavigate } from 'react-router-dom';
 
-const TaxInput = ({ label, value, onChange, placeholder, prefix }) => (
+const TaxInput = ({ label, value, onChange, placeholder, prefix, note }) => (
   <div className="flex flex-col">
     <label className="text-xs text-gray-500 mb-1">{label}</label>
     <div className="relative">
       {prefix && <span className="absolute left-3 top-2 text-gray-500 text-[14px]">{prefix}</span>}
       <input
-        type="number"
-        value={value === 0 ? '' : value}
+        type="text"
+        inputMode="numeric"
+        value={value === '' || value === 0 || value === undefined || value === null ? '' : value}
         onChange={onChange}
-        placeholder={placeholder}
+        placeholder={placeholder || ''}
         className={`w-full border border-gray-300 rounded-md py-2 text-[14px] text-slate-800 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 ${prefix ? 'pl-7 pr-3' : 'px-3'}`}
       />
     </div>
+    {note && <p className="text-[11px] text-gray-400 mt-1">{note}</p>}
   </div>
 );
 

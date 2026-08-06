@@ -4,13 +4,13 @@ import { useNavigate } from 'react-router-dom';
 
 const YesNoRadio = ({ value, onChange }) => (
   <div className="flex items-center gap-4">
-    <label className="flex items-center gap-2 cursor-pointer">
+    <label className="flex items-center gap-2 cursor-pointer" onClick={() => onChange(true)}>
       <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${value ? 'border-green-600' : 'border-gray-400'}`}>
         {value && <div className="w-2 h-2 rounded-full bg-green-600" />}
       </div>
       <span className="text-[13px] font-semibold text-slate-700">Yes</span>
     </label>
-    <label className="flex items-center gap-2 cursor-pointer">
+    <label className="flex items-center gap-2 cursor-pointer" onClick={() => onChange(false)}>
       <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${!value ? 'border-green-600' : 'border-gray-400'}`}>
         {!value && <div className="w-2 h-2 rounded-full bg-green-600" />}
       </div>
