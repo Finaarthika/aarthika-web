@@ -2,29 +2,30 @@ import React from 'react';
 import { useTaxation } from './TaxationContext';
 import { useNavigate } from 'react-router-dom';
 
-const Toggle = ({ label, value, onChange }) => (
-  <div className="flex items-center justify-between p-4 bg-[#121212] rounded-lg border border-gray-800 hover:border-gray-700 transition-colors">
-    <span className="text-gray-200 font-medium">{label}</span>
-    <div className="flex bg-[#1a1a1a] rounded-full p-1 border border-gray-800">
-      <button
-        type="button"
-        onClick={() => onChange(true)}
-        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
-          value ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'
-        }`}
-      >
-        Yes
-      </button>
-      <button
-        type="button"
-        onClick={() => onChange(false)}
-        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
-          !value ? 'bg-gray-700 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'
-        }`}
-      >
-        No
-      </button>
+const YesNoRadio = ({ value, onChange }) => (
+  <div className="flex items-center gap-4">
+    <label className="flex items-center gap-2 cursor-pointer">
+      <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${value ? 'border-green-600' : 'border-gray-400'}`}>
+        {value && <div className="w-2 h-2 rounded-full bg-green-600" />}
+      </div>
+      <span className="text-[13px] font-semibold text-slate-700">Yes</span>
+    </label>
+    <label className="flex items-center gap-2 cursor-pointer">
+      <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${!value ? 'border-green-600' : 'border-gray-400'}`}>
+        {!value && <div className="w-2 h-2 rounded-full bg-green-600" />}
+      </div>
+      <span className="text-[13px] font-semibold text-slate-700">No</span>
+    </label>
+    <div className="w-4 h-4 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-[10px] font-bold italic ml-2 cursor-help" title="Information">
+      i
     </div>
+  </div>
+);
+
+const IncomeRow = ({ label, value, onChange, isLast }) => (
+  <div className={`flex items-center justify-between py-5 ${!isLast ? 'border-b border-gray-100' : ''}`}>
+    <span className="text-[15px] font-bold text-slate-800">{label}</span>
+    <YesNoRadio value={value} onChange={onChange} />
   </div>
 );
 
@@ -32,139 +33,105 @@ export default function Onboarding() {
   const { taxData, updateTaxData } = useTaxation();
   const navigate = useNavigate();
 
-  const handleClientChange = (e) => {
-    updateTaxData('clientDetails', e.target.name, e.target.value);
-  };
-
   const handleIncomeChange = (key, value) => {
     updateTaxData('incomes', key, value);
   };
 
   return (
-    <div className="max-w-3xl mx-auto py-8">
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-white mb-2">Client Profile</h2>
-        <p className="text-gray-400">Let's start by setting up the basic details and income sources for this client.</p>
+    <div className="max-w-4xl mx-auto py-8">
+      <div className="text-center mb-8">
+        <h1 className="text-[28px] font-bold text-slate-800 mb-2">ITR Filing Online - File Your Income Tax Return with Tax2Clone</h1>
+        <p className="text-[15px] text-gray-500 font-medium">India's Most Trusted Platform for ITR e-Filing - Revised ITR, Belated Return, Updated Return</p>
       </div>
 
-      <div className="space-y-8">
-        {/* Client Details Section */}
-        <div className="bg-[#1a1a1a] p-6 rounded-xl border border-gray-800">
-          <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
-            <span className="w-8 h-8 rounded-full bg-blue-600/20 text-blue-500 flex items-center justify-center text-sm">1</span>
-            Basic Information
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-2">PAN Number</label>
-              <input
-                type="text"
-                name="pan"
-                value={taxData.clientDetails.pan}
-                onChange={handleClientChange}
-                placeholder="ABCDE1234F"
-                className="w-full bg-[#121212] border border-gray-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 uppercase transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-2">Assessment Year</label>
-              <select
-                name="assessmentYear"
-                value={taxData.clientDetails.assessmentYear}
-                onChange={handleClientChange}
-                className="w-full bg-[#121212] border border-gray-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
-              >
-                <option value="2026-27">2026-27 (FY 2025-26)</option>
-                <option value="2025-26">2025-26 (FY 2024-25)</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-2">First Name</label>
-              <input
-                type="text"
-                name="firstName"
-                value={taxData.clientDetails.firstName}
-                onChange={handleClientChange}
-                placeholder="John"
-                className="w-full bg-[#121212] border border-gray-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-2">Last Name</label>
-              <input
-                type="text"
-                name="lastName"
-                value={taxData.clientDetails.lastName}
-                onChange={handleClientChange}
-                placeholder="Doe"
-                className="w-full bg-[#121212] border border-gray-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
-              />
-            </div>
-          </div>
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
+        <div className="px-8 py-2">
+          <IncomeRow 
+            label={<span>Salary/ Pension <span className="font-normal">Income</span></span>} 
+            value={false} 
+            onChange={() => {}} 
+          />
+          <IncomeRow 
+            label={<span>Capital Gains/ Losses (Shares, F&O, Mutual Funds, Property)</span>} 
+            value={taxData.incomes.hasCapitalGains} 
+            onChange={(val) => handleIncomeChange('hasCapitalGains', val)} 
+          />
+          <IncomeRow 
+            label={<span>Business/ Profession <span className="font-normal">Income</span></span>} 
+            value={taxData.incomes.hasBusiness} 
+            onChange={(val) => handleIncomeChange('hasBusiness', val)} 
+          />
+          <IncomeRow 
+            label={<span>House Property (Home Loan/ Rental Income, etc) <span className="font-normal">Income</span></span>} 
+            value={false} 
+            onChange={() => {}} 
+          />
+          <IncomeRow 
+            label={<span>Other Sources <span className="font-normal">Income</span> (Interest, Dividend, Gifts)</span>} 
+            value={taxData.incomes.hasOtherSources} 
+            onChange={(val) => handleIncomeChange('hasOtherSources', val)} 
+          />
+          <IncomeRow 
+            label={<span>Exempt <span className="font-normal">Income</span> (Agriculture, PPF, etc.)</span>} 
+            value={taxData.incomes.hasExemptIncome} 
+            onChange={(val) => handleIncomeChange('hasExemptIncome', val)} 
+          />
+          <IncomeRow 
+            label={<span>Claim Deductions <span className="font-normal">(Sec 80CCD, 80CCH)</span></span>} 
+            value={taxData.incomes.hasDeductions} 
+            onChange={(val) => handleIncomeChange('hasDeductions', val)} 
+          />
+          <IncomeRow 
+            label={<span>Taxes Already Paid <span className="font-normal">(TDS, TCS, Advance Tax)</span></span>} 
+            value={taxData.incomes.hasPrepaidTaxes} 
+            onChange={(val) => handleIncomeChange('hasPrepaidTaxes', val)} 
+            isLast={true}
+          />
         </div>
+      </div>
 
-        {/* Income Sources Section */}
-        <div className="bg-[#1a1a1a] p-6 rounded-xl border border-gray-800">
-          <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
-            <span className="w-8 h-8 rounded-full bg-blue-600/20 text-blue-500 flex items-center justify-center text-sm">2</span>
-            Income Sources
-          </h3>
-          <p className="text-sm text-gray-400 mb-6">Select all applicable income sources. This will customize the required forms in the sidebar.</p>
-          
-          <div className="space-y-4">
-            <Toggle 
-              label="Business/Profession (Presumptive 44AD)" 
-              value={taxData.incomes.hasBusiness} 
-              onChange={(val) => handleIncomeChange('hasBusiness', val)} 
-            />
-            <Toggle 
-              label="Capital Gains/Losses (Shares, MFs)" 
-              value={taxData.incomes.hasCapitalGains} 
-              onChange={(val) => handleIncomeChange('hasCapitalGains', val)} 
-            />
-            <Toggle 
-              label="Other Sources (Interest, Dividend, Gifts)" 
-              value={taxData.incomes.hasOtherSources} 
-              onChange={(val) => handleIncomeChange('hasOtherSources', val)} 
-            />
-            <Toggle 
-              label="Exempt Income (Agriculture, PPF, etc.)" 
-              value={taxData.incomes.hasExemptIncome} 
-              onChange={(val) => handleIncomeChange('hasExemptIncome', val)} 
-            />
-          </div>
-        </div>
+      <div className="flex justify-center mb-12">
+        <button 
+          onClick={() => navigate('/taxation/bank-accounts')}
+          className="bg-[#1b7a43] hover:bg-green-700 text-white font-semibold py-3 px-12 rounded flex items-center gap-2 transition-colors"
+        >
+          CONTINUE
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+        </button>
+      </div>
 
-        {/* Adjustments & Deductions Section */}
-        <div className="bg-[#1a1a1a] p-6 rounded-xl border border-gray-800">
-          <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
-            <span className="w-8 h-8 rounded-full bg-blue-600/20 text-blue-500 flex items-center justify-center text-sm">3</span>
-            Deductions & Taxes Paid
-          </h3>
-          <div className="space-y-4">
-            <Toggle 
-              label="Claim Deductions (Sec 80CCD(2), 80CCH)" 
-              value={taxData.incomes.hasDeductions} 
-              onChange={(val) => handleIncomeChange('hasDeductions', val)} 
-            />
-            <Toggle 
-              label="Taxes Already Paid (TDS, TCS, Advance Tax)" 
-              value={taxData.incomes.hasPrepaidTaxes} 
-              onChange={(val) => handleIncomeChange('hasPrepaidTaxes', val)} 
-            />
-          </div>
+      {/* Trust Badges */}
+      <div className="flex justify-center items-center gap-12 text-sm font-semibold text-slate-700 mb-12">
+        <div className="flex items-center gap-2">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
+          4.8 Google Rating
         </div>
-
-        <div className="flex justify-end">
-          <button 
-            onClick={() => navigate('/taxation/business')}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition-colors flex items-center gap-2"
-          >
-            Save & Continue
-            <span>&rarr;</span>
-          </button>
+        <div className="flex items-center gap-2">
+          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          3+ Million Satisfied Customers
         </div>
+        <div className="flex items-center gap-2">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          2500 Cr. Tax Saved
+        </div>
+      </div>
+      
+      <div className="bg-[#5c85b5] rounded-xl p-6 flex justify-between items-center text-white">
+         <div className="flex items-center gap-4">
+           <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+           <div>
+             <h3 className="font-bold text-lg">Looking for a dedicated CA to handle your taxes?</h3>
+             <p className="text-sm opacity-90 flex gap-4 mt-1">
+                <span>✓ Post Filing Notice Assistance</span>
+                <span>✓ Reliable and Secure</span>
+                <span>✓ Lowest Filing Fees</span>
+             </p>
+           </div>
+         </div>
+         <button className="bg-white text-slate-800 font-bold px-6 py-2.5 rounded-full hover:bg-gray-100 transition-colors flex items-center gap-2">
+           Connect with Experts
+           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+         </button>
       </div>
     </div>
   );

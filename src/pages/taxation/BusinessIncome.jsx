@@ -1,51 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTaxation } from './TaxationContext';
 import { useNavigate } from 'react-router-dom';
 
-const Toggle = ({ label, value, onChange }) => (
-  <div className="flex items-center justify-between p-4 bg-[#121212] rounded-lg border border-gray-800 hover:border-gray-700 transition-colors">
-    <span className="text-gray-200 font-medium">{label}</span>
-    <div className="flex bg-[#1a1a1a] rounded-full p-1 border border-gray-800">
-      <button
-        type="button"
-        onClick={() => onChange(true)}
-        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
-          value ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'
-        }`}
-      >
-        Yes
-      </button>
-      <button
-        type="button"
-        onClick={() => onChange(false)}
-        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
-          !value ? 'bg-gray-700 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'
-        }`}
-      >
-        No
-      </button>
+const TaxInput = ({ label, value, onChange, placeholder, prefix }) => (
+  <div className="flex flex-col">
+    <label className="text-xs text-gray-500 mb-1">{label}</label>
+    <div className="relative">
+      {prefix && <span className="absolute left-3 top-2 text-gray-500 text-[14px]">{prefix}</span>}
+      <input
+        type="number"
+        value={value === 0 ? '' : value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className={`w-full border border-gray-300 rounded-md py-2 text-[14px] text-slate-800 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 ${prefix ? 'pl-7 pr-3' : 'px-3'}`}
+      />
     </div>
   </div>
 );
 
-const InputField = ({ label, value, onChange, type = "number", prefix = "₹", requiredMsg }) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-400 mb-2 flex justify-between">
-      {label}
-      {requiredMsg && <span className="text-red-400 text-xs">{requiredMsg}</span>}
-    </label>
-    <div className="relative">
-      {prefix && (
-        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-          <span className="text-gray-500 font-medium">{prefix}</span>
-        </div>
-      )}
-      <input
-        type={type}
-        value={value}
-        onChange={onChange}
-        className={`w-full bg-[#121212] border border-gray-800 rounded-lg py-2.5 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors ${prefix ? 'pl-10 pr-4' : 'px-4'}`}
-      />
+const RadioCard = ({ title, desc, selected, onClick }) => (
+  <div 
+    onClick={onClick}
+    className={`p-4 border rounded-xl cursor-pointer transition-all ${selected ? 'border-green-600 bg-green-50/30' : 'border-gray-200 hover:border-green-400'}`}
+  >
+    <div className="flex items-start gap-3">
+      <div className={`w-4 h-4 mt-0.5 rounded-full border flex-shrink-0 flex items-center justify-center ${selected ? 'border-green-600' : 'border-gray-400'}`}>
+        {selected && <div className="w-2 h-2 rounded-full bg-green-600" />}
+      </div>
+      <div>
+        <h4 className="text-[14px] font-semibold text-slate-800">{title}</h4>
+        <p className="text-[12px] text-gray-500 leading-tight mt-1">{desc}</p>
+      </div>
     </div>
   </div>
 );
@@ -54,307 +39,172 @@ export default function BusinessIncome() {
   const { taxData, updateTaxData, updateNestedTaxData } = useTaxation();
   const navigate = useNavigate();
   const { business } = taxData;
-  const { balanceSheet } = business;
-
-  const handleBusinessChange = (e) => {
-    updateTaxData('business', e.target.name, e.target.type === 'number' ? e.target.value === '' ? '' : Number(e.target.value) : e.target.value);
-  };
-
-  const handleBalanceSheetChange = (e) => {
-    updateNestedTaxData('business', 'balanceSheet', e.target.name, e.target.value === '' ? '' : Number(e.target.value));
-  };
-
-  // Auto-calculate minimum profits
-  const minBankProfit = Math.ceil(business.turnoverBank * 0.06);
-  const minCashProfit = Math.ceil(business.turnoverCash * 0.08);
-
-  const bankProfitError = business.profitBank < minBankProfit && business.turnoverBank > 0 
-    ? `Min 6% required: ₹${minBankProfit}` 
-    : null;
-    
-  const cashProfitError = business.profitCash < minCashProfit && business.turnoverCash > 0
-    ? `Min 8% required: ₹${minCashProfit}`
-    : null;
-
-  const totalTurnover = Number(business.turnoverBank) + Number(business.turnoverCash);
-  const totalProfit = Number(business.profitBank) + Number(business.profitCash);
-  const profitPercentage = totalTurnover > 0 ? ((totalProfit / totalTurnover) * 100).toFixed(2) : 0;
-
-  const cashPercentage = totalTurnover > 0 ? (Number(business.turnoverCash) / totalTurnover) * 100 : 0;
-  
-  // 44AD Strict Limits Validation
-  let presumptiveError = null;
-  if (cashPercentage > 5 && totalTurnover > 20000000) {
-    presumptiveError = "Turnover exceeds ₹2 Crore limit (since cash receipts > 5%). You are not eligible for Presumptive Taxation u/s 44AD. Tax Audit is mandatory.";
-  } else if (totalTurnover > 30000000) {
-    presumptiveError = "Turnover exceeds ₹3 Crore limit. You are not eligible for Presumptive Taxation u/s 44AD. Tax Audit is mandatory.";
-  }
+  const balanceSheet = business.balanceSheet;
+  const [scheme, setScheme] = useState('44AD');
 
   return (
-    <div className="max-w-4xl mx-auto py-8 pb-20">
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-white mb-2">Business & Profession (44AD)</h2>
-        <p className="text-gray-400">Provide details for presumptive taxation under Section 44AD.</p>
+    <div className="max-w-5xl mx-auto py-4">
+      <div className="text-center mb-8">
+        <h1 className="text-[22px] font-bold text-slate-800 mb-1 uppercase tracking-wide">Enter Your Business, Professional, Freelancing Income Details</h1>
       </div>
 
-      <div className="space-y-8">
-        {/* Basic Details */}
-        <div className="bg-[#1a1a1a] p-6 rounded-xl border border-gray-800">
-          <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
-            <span className="w-8 h-8 rounded-full bg-blue-600/20 text-blue-500 flex items-center justify-center text-sm">1</span>
-            Basic Details
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="col-span-1 md:col-span-2">
-              <Toggle 
-                label="Is the business registered under GST?" 
-                value={business.isRegisteredGST} 
-                onChange={(val) => updateTaxData('business', 'isRegisteredGST', val)} 
-              />
-            </div>
-            {business.isRegisteredGST && (
-              <>
-                <InputField 
-                  label="GSTIN" 
-                  type="text" 
-                  prefix=""
-                  value={business.gstin} 
-                  onChange={(e) => updateTaxData('business', 'gstin', e.target.value)} 
-                />
-                <InputField 
-                  label="Turnover as per GST Return (GSTR-3B)" 
-                  type="number" 
-                  prefix="₹"
-                  value={business.gstTurnover || ''} 
-                  onChange={(e) => updateTaxData('business', 'gstTurnover', e.target.value === '' ? '' : Number(e.target.value))} 
-                />
-              </>
-            )}
-            <div className="col-span-1 md:col-span-2">
-              <InputField 
-                label="Name of Business" 
-                type="text" 
-                prefix=""
-                value={business.businessName} 
-                onChange={(e) => updateTaxData('business', 'businessName', e.target.value)} 
-              />
-            </div>
-            <div className="col-span-1 md:col-span-2">
-              <label className="block text-sm font-medium text-gray-400 mb-2">Business Nature Code (For ITR)</label>
-              <select
-                className="w-full bg-[#121212] border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
-                value={business.businessNatureCode}
-                onChange={(e) => updateTaxData('business', 'businessNatureCode', e.target.value)}
-              >
-                <option value="09005">09005 - Retail Sale of Other Products</option>
-                <option value="09028">09028 - Retail sale of other goods</option>
-                <option value="14001">14001 - Software development</option>
-                <option value="16013">16013 - Legal profession</option>
-                <option value="16019">16019 - Other professional services</option>
-                <option value="21008">21008 - Other services n.e.c</option>
-              </select>
-            </div>
+      <div className="bg-white rounded-2xl shadow-sm p-8 mb-8 border border-gray-100">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="bg-[#1b7a43] text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-sm">1</div>
+          <h3 className="font-bold text-lg text-slate-800">Business Income</h3>
+        </div>
+
+        <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 flex justify-between items-center mb-6">
+          <span className="text-[14px] font-bold text-slate-800">Select Business Income Type</span>
+          <div className="flex gap-6">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <div className="w-4 h-4 rounded-full border border-green-600 flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-green-600" />
+              </div>
+              <span className="text-[14px] font-semibold text-green-700">Presumptive Income</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <div className="w-4 h-4 rounded-full border border-gray-400 flex items-center justify-center"></div>
+              <span className="text-[14px] font-semibold text-slate-700">Normal Business Income</span>
+            </label>
           </div>
         </div>
 
-        {/* Turnover & Profit */}
-        <div className="bg-[#1a1a1a] p-6 rounded-xl border border-gray-800">
-          <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
-            <span className="w-8 h-8 rounded-full bg-blue-600/20 text-blue-500 flex items-center justify-center text-sm">2</span>
-            Gross Receipts & Profit
-          </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <RadioCard 
+            title="Presumptive Scheme u/s 44AD" 
+            desc="For businesses such as manufacturing, real estate, retail, agriculture, mills etc."
+            selected={scheme === '44AD'}
+            onClick={() => setScheme('44AD')}
+          />
+          <RadioCard 
+            title="Presumptive Scheme u/s 44ADA" 
+            desc="For professionals such as doctors, lawyers, designers, engineers, architects etc."
+            selected={scheme === '44ADA'}
+            onClick={() => setScheme('44ADA')}
+          />
+          <RadioCard 
+            title="Presumptive Scheme u/s 44AE" 
+            desc="For businesses including leasing, renting or transporting goods carriages."
+            selected={scheme === '44AE'}
+            onClick={() => setScheme('44AE')}
+          />
+        </div>
 
-          {presumptiveError && (
-            <div className="mb-6 p-4 bg-red-900/20 border border-red-500/50 rounded-lg flex items-start gap-3">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <div>
-                <h4 className="text-red-400 font-bold">Eligibility Alert</h4>
-                <p className="text-red-300 text-sm mt-1">{presumptiveError}</p>
-              </div>
-            </div>
-          )}
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
-            <div className="space-y-6">
-              <h4 className="text-md font-medium text-gray-300 pb-2 border-b border-gray-800">Digital / Bank Mode</h4>
-              <InputField 
-                label="Gross Receipts (Bank)" 
-                value={business.turnoverBank} 
-                onChange={(e) => updateTaxData('business', 'turnoverBank', e.target.value === '' ? '' : Number(e.target.value))} 
-              />
-              <InputField 
-                label="Declared Profit (Bank)" 
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <TaxInput label="Business Category *" placeholder="Please Select" />
+          <TaxInput label="Nature of Business *" placeholder="Please Select" />
+          <TaxInput label="Name of the Business *" />
+          <TaxInput label="Description (Optional)" />
+        </div>
+
+        <h4 className="text-[15px] font-bold text-slate-800 mb-4">Turnover & Profit Details</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="p-5 border border-gray-200 rounded-xl bg-gray-50/50">
+            <h5 className="font-semibold text-slate-700 mb-4 flex items-center gap-2">
+              <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+              Digital / Bank Receipts
+            </h5>
+            <div className="space-y-4">
+              <TaxInput label="Gross Digital Receipts" prefix="₹" />
+              <TaxInput 
+                label={`Presumptive Profit (Min ${scheme === '44ADA' ? '50%' : '6%'})`} 
                 value={business.profitBank} 
-                onChange={(e) => updateTaxData('business', 'profitBank', e.target.value === '' ? '' : Number(e.target.value))} 
-                requiredMsg={bankProfitError}
+                onChange={(e) => updateNestedTaxData('business', 'profitBank', e.target.value === '' ? '' : Number(e.target.value))}
+                prefix="₹" 
               />
             </div>
-            
-            <div className="space-y-6">
-              <h4 className="text-md font-medium text-gray-300 pb-2 border-b border-gray-800">Cash / Other Mode</h4>
-              <InputField 
-                label="Gross Receipts (Cash)" 
-                value={business.turnoverCash} 
-                onChange={(e) => updateTaxData('business', 'turnoverCash', e.target.value === '' ? '' : Number(e.target.value))} 
-              />
-              <InputField 
-                label="Declared Profit (Cash)" 
+          </div>
+          <div className="p-5 border border-gray-200 rounded-xl bg-gray-50/50">
+            <h5 className="font-semibold text-slate-700 mb-4 flex items-center gap-2">
+              <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+              Cash Receipts
+            </h5>
+            <div className="space-y-4">
+              <TaxInput label="Gross Cash Receipts" prefix="₹" />
+              <TaxInput 
+                label={`Presumptive Profit (Min ${scheme === '44ADA' ? '50%' : '8%'})`} 
                 value={business.profitCash} 
-                onChange={(e) => updateTaxData('business', 'profitCash', e.target.value === '' ? '' : Number(e.target.value))} 
-                requiredMsg={cashProfitError}
+                onChange={(e) => updateNestedTaxData('business', 'profitCash', e.target.value === '' ? '' : Number(e.target.value))}
+                prefix="₹" 
               />
             </div>
           </div>
+        </div>
+      </div>
 
-          <div className="mt-8 p-4 bg-[#121212] rounded-lg border border-gray-800 flex justify-between items-center">
-            <div>
-              <p className="text-gray-400 text-sm">Total Turnover</p>
-              <p className="text-xl font-bold text-white">₹{totalTurnover.toLocaleString('en-IN')}</p>
+      <div className="bg-white rounded-2xl shadow-sm p-8 mb-8 border border-gray-100">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="bg-[#1b7a43] text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-sm">2</div>
+          <h3 className="font-bold text-lg text-slate-800">Balance Sheet (Optional)</h3>
+        </div>
+        <p className="text-sm text-gray-500 mb-6">Required if total gross receipts exceed ₹50 Lakhs (44ADA) or ₹2 Crores (44AD).</p>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          <div>
+            <h4 className="text-md font-bold text-slate-700 pb-2 mb-4 border-b border-gray-200">ASSETS</h4>
+            <div className="space-y-4 mb-6">
+              <h5 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Fixed Assets</h5>
+              <TaxInput label="Gross Block" value={balanceSheet.fixedGrossBlock} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'fixedGrossBlock', Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Depreciation" value={balanceSheet.fixedDepreciation} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'fixedDepreciation', Number(e.target.value))} prefix="₹" />
             </div>
-            <div className="text-right">
-              <p className="text-gray-400 text-sm">Total Profit ({profitPercentage}%)</p>
-              <p className={`text-xl font-bold ${bankProfitError || cashProfitError ? 'text-red-400' : 'text-green-400'}`}>
-                ₹{totalProfit.toLocaleString('en-IN')}
-              </p>
+            <div className="space-y-4 mb-6">
+              <h5 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Investments</h5>
+              <TaxInput label="Short Term Investments" value={balanceSheet.investmentsST} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'investmentsST', Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Long Term Investments" value={balanceSheet.investmentsLT} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'investmentsLT', Number(e.target.value))} prefix="₹" />
+            </div>
+            <div className="space-y-4 mb-6">
+              <h5 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Current Assets</h5>
+              <TaxInput label="Bank Balance" value={balanceSheet.currentBank} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentBank', Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Cash Balance" value={balanceSheet.currentCash} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentCash', Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Closing Stock" value={balanceSheet.currentStock} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentStock', Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Receivables (Debtors)" value={balanceSheet.currentReceivables} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentReceivables', Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Loans Given" value={balanceSheet.currentLoansGiven} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentLoansGiven', Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Other Assets" value={balanceSheet.currentOther} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentOther', Number(e.target.value))} prefix="₹" />
+            </div>
+          </div>
+          <div>
+            <h4 className="text-md font-bold text-slate-700 pb-2 mb-4 border-b border-gray-200">LIABILITIES</h4>
+            <div className="space-y-4 mb-6">
+              <h5 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Equity</h5>
+              <TaxInput label="Proprietor's Capital" value={balanceSheet.equityCapital} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'equityCapital', Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Reserves & Surplus" value={balanceSheet.equityReserves} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'equityReserves', Number(e.target.value))} prefix="₹" />
+            </div>
+            <div className="space-y-4 mb-6">
+              <h5 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Non-Current Liabilities</h5>
+              <TaxInput label="Secured Loans" value={balanceSheet.nonCurrentSecured} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'nonCurrentSecured', Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Unsecured Loans" value={balanceSheet.nonCurrentUnsecured} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'nonCurrentUnsecured', Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Advances" value={balanceSheet.nonCurrentAdvances} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'nonCurrentAdvances', Number(e.target.value))} prefix="₹" />
+            </div>
+            <div className="space-y-4 mb-6">
+              <h5 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Current Liabilities</h5>
+              <TaxInput label="Payables (Creditors)" value={balanceSheet.currentPayables} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentPayables', Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Provisions" value={balanceSheet.currentProvisions} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentProvisions', Number(e.target.value))} prefix="₹" />
+              <TaxInput label="Other Liabilities" value={balanceSheet.currentOtherLiab} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentOtherLiab', Number(e.target.value))} prefix="₹" />
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Balance Sheet Items */}
-        <div className="bg-[#1a1a1a] p-6 rounded-xl border border-gray-800">
-          <div className="mb-6 flex justify-between items-end">
-             <h3 className="text-xl font-semibold text-white flex items-center gap-2">
-              <span className="w-8 h-8 rounded-full bg-blue-600/20 text-blue-500 flex items-center justify-center text-sm">3</span>
-              Balance Sheet Items
-            </h3>
-            <p className="text-sm text-gray-500">As of 31st March 2026</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
-            {/* Assets */}
-            <div>
-              <h4 className="text-md font-bold text-blue-400 pb-2 mb-4 border-b border-gray-800">ASSETS</h4>
-              
-              <div className="space-y-4 mb-6">
-                <h5 className="text-sm font-semibold text-gray-500 uppercase">Fixed Assets</h5>
-                <InputField label="Gross Block" value={balanceSheet.fixedGrossBlock} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'fixedGrossBlock', e.target.value === '' ? '' : Number(e.target.value))} />
-                <InputField label="Depreciation" value={balanceSheet.fixedDepreciation} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'fixedDepreciation', e.target.value === '' ? '' : Number(e.target.value))} />
-                <div className="flex justify-between text-sm py-2 px-4 bg-[#121212] rounded">
-                  <span className="text-gray-400">Net Block:</span>
-                  <span className="text-white font-medium">₹{(Number(balanceSheet.fixedGrossBlock) - Number(balanceSheet.fixedDepreciation)).toLocaleString('en-IN')}</span>
-                </div>
-              </div>
-
-              <div className="space-y-4 mb-6">
-                <h5 className="text-sm font-semibold text-gray-500 uppercase">Investments</h5>
-                <InputField label="Short Term Investments" value={balanceSheet.investmentsST} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'investmentsST', e.target.value === '' ? '' : Number(e.target.value))} />
-                <InputField label="Long Term Investments" value={balanceSheet.investmentsLT} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'investmentsLT', e.target.value === '' ? '' : Number(e.target.value))} />
-              </div>
-
-              <div className="space-y-4 mb-6">
-                <h5 className="text-sm font-semibold text-gray-500 uppercase">Current Assets</h5>
-                <InputField label="Bank Balance" value={balanceSheet.currentBank} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentBank', e.target.value === '' ? '' : Number(e.target.value))} />
-                <InputField label="Cash Balance" value={balanceSheet.currentCash} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentCash', e.target.value === '' ? '' : Number(e.target.value))} />
-                <InputField label="Stock in Trade / Inventory" value={balanceSheet.currentStock} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentStock', e.target.value === '' ? '' : Number(e.target.value))} />
-                <InputField label="Sundry Debtors / Receivables" value={balanceSheet.currentReceivables} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentReceivables', e.target.value === '' ? '' : Number(e.target.value))} />
-                <InputField label="Loans & Advances Given" value={balanceSheet.currentLoansGiven} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentLoansGiven', e.target.value === '' ? '' : Number(e.target.value))} />
-                <InputField label="Other Current Assets" value={balanceSheet.currentOther} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentOther', e.target.value === '' ? '' : Number(e.target.value))} />
-              </div>
-            </div>
-            
-            {/* Liabilities */}
-            <div>
-              <h4 className="text-md font-bold text-red-400 pb-2 mb-4 border-b border-gray-800">LIABILITIES</h4>
-              
-              <div className="space-y-4 mb-6">
-                <h5 className="text-sm font-semibold text-gray-500 uppercase">Equity</h5>
-                <InputField label="Proprietor's Capital" value={balanceSheet.equityCapital} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'equityCapital', e.target.value === '' ? '' : Number(e.target.value))} />
-                <InputField label="Reserves & Surplus" value={balanceSheet.equityReserves} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'equityReserves', e.target.value === '' ? '' : Number(e.target.value))} />
-              </div>
-
-              <div className="space-y-4 mb-6">
-                <h5 className="text-sm font-semibold text-gray-500 uppercase">Non-Current Liabilities</h5>
-                <InputField label="Secured Loans" value={balanceSheet.nonCurrentSecured} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'nonCurrentSecured', e.target.value === '' ? '' : Number(e.target.value))} />
-                <InputField label="Unsecured Loans" value={balanceSheet.nonCurrentUnsecured} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'nonCurrentUnsecured', e.target.value === '' ? '' : Number(e.target.value))} />
-                <InputField label="Advances" value={balanceSheet.nonCurrentAdvances} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'nonCurrentAdvances', e.target.value === '' ? '' : Number(e.target.value))} />
-              </div>
-
-              <div className="space-y-4 mb-6">
-                <h5 className="text-sm font-semibold text-gray-500 uppercase">Current Liabilities</h5>
-                <InputField label="Sundry Creditors / Payables" value={balanceSheet.currentPayables} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentPayables', e.target.value === '' ? '' : Number(e.target.value))} />
-                <InputField label="Provisions for Expenses" value={balanceSheet.currentProvisions} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentProvisions', e.target.value === '' ? '' : Number(e.target.value))} />
-                <InputField label="Other Current Liabilities" value={balanceSheet.currentOtherLiab} onChange={(e) => updateNestedTaxData('business', 'balanceSheet', 'currentOtherLiab', e.target.value === '' ? '' : Number(e.target.value))} />
-              </div>
-            </div>
-          </div>
-
-          {/* Balancing Figure Alert */}
-          {(() => {
-            const totalAssets = (Number(balanceSheet.fixedGrossBlock) - Number(balanceSheet.fixedDepreciation)) +
-              Number(balanceSheet.investmentsST) + Number(balanceSheet.investmentsLT) +
-              Number(balanceSheet.currentBank) + Number(balanceSheet.currentCash) + Number(balanceSheet.currentStock) +
-              Number(balanceSheet.currentReceivables) + Number(balanceSheet.currentLoansGiven) + Number(balanceSheet.currentOther);
-              
-            const totalLiabilities = Number(balanceSheet.equityCapital) + Number(balanceSheet.equityReserves) +
-              Number(balanceSheet.nonCurrentSecured) + Number(balanceSheet.nonCurrentUnsecured) + Number(balanceSheet.nonCurrentAdvances) +
-              Number(balanceSheet.currentPayables) + Number(balanceSheet.currentProvisions) + Number(balanceSheet.currentOtherLiab);
-              
-            const difference = Math.abs(totalAssets - totalLiabilities);
-            
-            if (difference > 0) {
-              return (
-                <div className="mt-8 p-4 bg-orange-900/20 border border-orange-500/50 rounded-lg flex items-center justify-between">
-                  <div>
-                    <h4 className="text-orange-400 font-bold flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                      Balance Sheet Mismatch
-                    </h4>
-                    <p className="text-orange-300/80 text-sm mt-1">Total Assets (₹{totalAssets.toLocaleString('en-IN')}) and Total Liabilities (₹{totalLiabilities.toLocaleString('en-IN')}) do not match.</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-orange-400/80 text-xs font-semibold uppercase tracking-wider mb-1">Balancing Figure</p>
-                    <p className="text-2xl font-bold text-orange-400">₹{difference.toLocaleString('en-IN')}</p>
-                  </div>
-                </div>
-              );
-            }
-            return (
-              <div className="mt-8 p-4 bg-emerald-900/20 border border-emerald-500/50 rounded-lg flex items-center justify-between">
-                <div>
-                  <h4 className="text-emerald-400 font-bold flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    Balance Sheet Tally Matched
-                  </h4>
-                  <p className="text-emerald-300/80 text-sm mt-1">Total Assets (₹{totalAssets.toLocaleString('en-IN')}) exactly match Total Liabilities.</p>
-                </div>
-              </div>
-            );
-          })()}
-        </div>
-
-        <div className="flex justify-between">
-          <button 
-            onClick={() => navigate('/taxation')}
-            className="text-gray-400 hover:text-white font-medium py-3 px-6 transition-colors"
-          >
-            &larr; Back
+      <div className="flex justify-between items-center mt-8">
+        <button onClick={() => navigate('/taxation/bank-accounts')} className="px-6 py-2.5 rounded border border-green-700 text-green-700 font-semibold hover:bg-green-50 flex items-center gap-2">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+          Back
+        </button>
+        <div className="flex gap-4">
+          <button className="bg-[#0f2e4c] hover:bg-slate-800 text-white font-semibold py-2.5 px-8 rounded transition-colors">
+            GET CA ASSISTED
           </button>
           <button 
             onClick={() => {
               if (taxData.incomes.hasCapitalGains) navigate('/taxation/capital-gains');
               else if (taxData.incomes.hasOtherSources) navigate('/taxation/other-sources');
-              else navigate('/taxation/adjustments');
+              else navigate('/taxation/exempt-income');
             }}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition-colors flex items-center gap-2"
+            className="bg-[#1b7a43] hover:bg-green-700 text-white font-semibold py-2.5 px-8 rounded flex items-center gap-2 transition-colors"
           >
-            Save & Continue
-            <span>&rarr;</span>
+            CONTINUE
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
           </button>
         </div>
       </div>

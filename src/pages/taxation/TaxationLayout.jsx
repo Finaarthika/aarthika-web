@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Onboarding from './Onboarding';
 import { TaxationProvider, useTaxation } from './TaxationContext';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
@@ -12,109 +12,111 @@ import LossAdjustments from './LossAdjustments';
 import Computation from './Computation';
 import BankAccounts from './BankAccounts';
 
-// Placeholder components for routing
-// All routes imported
-
-const SidebarItem = ({ icon, label, path, isActive, onClick }) => (
-  <button 
-    onClick={() => onClick(path)}
-    className={`w-full flex items-center gap-3 px-6 py-3 text-sm font-medium transition-colors duration-200 ${
-      isActive 
-        ? 'bg-blue-600/10 text-blue-500 border-r-4 border-blue-500' 
-        : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-    }`}
-  >
-    {icon}
-    {label}
-  </button>
-);
-
 const TaxationLayout = () => {
   const { taxData } = useTaxation();
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname;
 
-  // Dynamically build nav items based on selected incomes
+  // Build sequential nav items
   const navItems = [
-    { label: 'Client Profile', path: '/taxation', show: true },
-    { label: 'Bank Accounts', path: '/taxation/bank-accounts', show: true },
-    { label: 'Business & Profession', path: '/taxation/business', show: taxData.incomes.hasBusiness },
-    { label: 'Capital Gains', path: '/taxation/capital-gains', show: taxData.incomes.hasCapitalGains },
-    { label: 'Other Sources', path: '/taxation/other-sources', show: taxData.incomes.hasOtherSources },
-    { label: 'Exempt Income', path: '/taxation/exempt-income', show: taxData.incomes.hasExemptIncome },
-    { label: 'Deductions (80CCD, 80CCH)', path: '/taxation/deductions', show: taxData.incomes.hasDeductions },
-    { label: 'Prepaid Taxes', path: '/taxation/taxes-paid', show: taxData.incomes.hasPrepaidTaxes },
-    { label: 'Loss Adjustments', path: '/taxation/adjustments', show: true }, // Always show for BFLA
-    { label: 'Computation & Docs', path: '/taxation/computation', show: true },
-  ].filter(item => item.show);
+    { label: 'Sources of Income', path: '/taxation' },
+    { label: 'Basic Details', path: '/taxation/bank-accounts' },
+    ...(taxData.incomes.hasBusiness ? [{ label: 'Business Income', path: '/taxation/business' }] : []),
+    ...(taxData.incomes.hasCapitalGains ? [{ label: 'Capital Gain Income', path: '/taxation/capital-gains' }] : []),
+    ...(taxData.incomes.hasOtherSources ? [{ label: 'Other Sources Income', path: '/taxation/other-sources' }] : []),
+    ...(taxData.incomes.hasExemptIncome ? [{ label: 'Exempt Income', path: '/taxation/exempt-income' }] : []),
+    ...(taxData.incomes.hasDeductions ? [{ label: 'Deductions', path: '/taxation/deductions' }] : []),
+    ...(taxData.incomes.hasPrepaidTaxes ? [{ label: 'Prepaid Taxes', path: '/taxation/taxes-paid' }] : []),
+    { label: 'Loss Adjustments', path: '/taxation/adjustments' },
+    { label: 'Computation', path: '/taxation/computation' },
+  ];
+
+  const currentIndex = navItems.findIndex(item => item.path === currentPath || (item.path !== '/taxation' && currentPath.startsWith(item.path)));
 
   return (
-    <div className="flex h-screen bg-[#0a0a0a] overflow-hidden font-sans">
-      {/* Sidebar */}
-      <aside className="w-64 bg-[#121212] border-r border-gray-800 flex flex-col shrink-0">
-        <div className="h-16 flex items-center px-6 border-b border-gray-800">
-          <h1 className="text-xl font-bold text-white tracking-wide">
-            <span className="text-blue-500">Tax</span>Studio
-          </h1>
+    <div className="min-h-screen bg-[#eaf1f1] font-sans flex flex-col relative pb-24">
+      {/* Top Header */}
+      <header className="bg-white border-b border-gray-200 px-8 py-3 flex justify-between items-center shadow-sm z-10">
+        <div className="flex items-center gap-2">
+          <svg className="w-8 h-8 text-green-600" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-5-5 1.41-1.41L11 14.17l7.59-7.59L20 8l-9 9z" />
+          </svg>
+          <span className="text-xl font-bold text-slate-800 tracking-tight">Tax2<span className="text-green-600">Clone</span></span>
         </div>
-        
-        <nav className="flex-1 overflow-y-auto py-6 flex flex-col gap-1">
-          <div className="px-6 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-            Preparation
-          </div>
-          {navItems.map((item) => (
-            <SidebarItem 
-              key={item.path}
-              label={item.label}
-              path={item.path}
-              isActive={currentPath === item.path || (item.path !== '/taxation' && currentPath.startsWith(item.path))}
-              onClick={navigate}
-            />
-          ))}
-        </nav>
+        <button onClick={() => navigate('/')} className="px-4 py-2 bg-green-50 text-green-700 rounded-full text-sm font-semibold hover:bg-green-100 flex items-center gap-2">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+          Profile
+        </button>
+      </header>
 
-        <div className="p-4 border-t border-gray-800">
-          <button 
-            onClick={() => navigate('/')}
-            className="w-full py-2 text-sm text-gray-400 hover:text-white transition-colors"
-          >
-            &larr; Back to Main Site
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        <header className="h-16 bg-[#121212] border-b border-gray-800 flex items-center justify-between px-8 shrink-0">
-           <h2 className="text-lg font-medium text-gray-200">
-             {navItems.find(item => item.path === currentPath)?.label || 'Taxation'}
-           </h2>
-           <div className="flex items-center gap-4">
-              <div className="text-sm text-gray-400">AY 2026-27</div>
-              <div className="h-8 w-8 rounded-full bg-blue-600/20 text-blue-500 flex items-center justify-center font-bold">
-                C
+      {/* Stepper Navigation */}
+      <div className="w-full bg-[#eaf1f1] border-b border-gray-300 py-3 overflow-x-auto custom-scrollbar sticky top-0 z-10 shadow-sm">
+        <div className="max-w-6xl mx-auto flex items-center gap-2 px-4 w-max">
+          {navItems.map((item, index) => {
+            const isCompleted = index < currentIndex;
+            const isActive = index === currentIndex;
+            return (
+              <div key={item.path} className="flex items-center">
+                <button
+                  onClick={() => navigate(item.path)}
+                  className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold transition-all whitespace-nowrap ${
+                    isActive 
+                      ? 'bg-white text-green-700 shadow-sm border border-green-200'
+                      : isCompleted
+                        ? 'bg-transparent text-green-700'
+                        : 'bg-transparent text-gray-500 hover:bg-white/50'
+                  }`}
+                >
+                  {isCompleted ? (
+                    <svg className="w-4 h-4 text-green-600" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  ) : (
+                    <span className={`w-5 h-5 flex items-center justify-center rounded-full text-[11px] ${isActive ? 'bg-green-700 text-white' : 'bg-gray-300 text-white'}`}>
+                      {index + 1}
+                    </span>
+                  )}
+                  {item.label}
+                </button>
+                {index < navItems.length - 1 && (
+                  <svg className="w-4 h-4 text-gray-400 mx-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                )}
               </div>
-           </div>
-        </header>
-        
-        <div className="flex-1 p-6">
-          <div className="max-w-5xl mx-auto bg-[#1a1a1a] rounded-xl border border-gray-800 min-h-[500px] shadow-2xl">
-            <Routes>
-              <Route path="/" element={<Onboarding />} />
-              <Route path="/bank-accounts" element={<BankAccounts />} />
-              <Route path="/business" element={<BusinessIncome />} />
-              <Route path="/capital-gains" element={<CapitalGains />} />
-              <Route path="/other-sources" element={<OtherSources />} />
-              <Route path="/exempt-income" element={<ExemptIncome />} />
-              <Route path="/deductions" element={<Deductions />} />
-              <Route path="/taxes-paid" element={<TaxesPaid />} />
-              <Route path="/adjustments" element={<LossAdjustments />} />
-              <Route path="/computation" element={<Computation />} />
-            </Routes>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Main Form Content */}
+      <main className="flex-1 w-full max-w-5xl mx-auto px-4 py-8 relative">
+        <Routes>
+          <Route path="/" element={<Onboarding />} />
+          <Route path="/bank-accounts" element={<BankAccounts />} />
+          <Route path="/business" element={<BusinessIncome />} />
+          <Route path="/capital-gains" element={<CapitalGains />} />
+          <Route path="/other-sources" element={<OtherSources />} />
+          <Route path="/exempt-income" element={<ExemptIncome />} />
+          <Route path="/deductions" element={<Deductions />} />
+          <Route path="/taxes-paid" element={<TaxesPaid />} />
+          <Route path="/adjustments" element={<LossAdjustments />} />
+          <Route path="/computation" element={<Computation />} />
+        </Routes>
+      </main>
+
+      {/* Footer */}
+      <footer className="fixed bottom-0 w-full bg-[#1b7a43] text-white py-3 px-8 flex justify-between items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-20">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 font-semibold">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+            +91 91166 84439
+          </div>
+          <div className="flex items-center gap-2 font-semibold">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+            support@tax2clone.in
           </div>
         </div>
-      </main>
+      </footer>
     </div>
   );
 };
