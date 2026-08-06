@@ -81,13 +81,26 @@ export default function TaxDocumentGenerator({ onClose }) {
     setIsGenerating(true);
     const element = documentRef.current;
     const opt = {
-      margin: 0,
+      margin: [15, 15, 15, 15],
       filename: `Detailed_Computation_${data.clientDetails.pan || 'Client'}.pdf`,
       image: { type: 'jpeg', quality: 1 },
-      html2canvas: { scale: 2, useCORS: true, letterRendering: true, windowWidth: 794 },
-      jsPDF: { unit: 'px', format: [794, 1123], orientation: 'portrait' }
+      html2canvas: { scale: 4, useCORS: true, letterRendering: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'], avoid: 'tr, h2, .avoid-break' }
     };
-    html2pdf().set(opt).from(element).save().then(() => {
+    
+    html2pdf().set(opt).from(element).toPdf().get('pdf').then((pdf) => {
+      const totalPages = pdf.internal.getNumberOfPages();
+      const dateStr = new Date().toLocaleString();
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(9);
+        pdf.setTextColor(128, 128, 128);
+        pdf.text('Aarthika.in', 15, pdf.internal.pageSize.getHeight() - 8);
+        pdf.text('Page ' + i + ' of ' + totalPages, pdf.internal.pageSize.getWidth() / 2, pdf.internal.pageSize.getHeight() - 8, { align: 'center' });
+        pdf.text(dateStr, pdf.internal.pageSize.getWidth() - 15, pdf.internal.pageSize.getHeight() - 8, { align: 'right' });
+      }
+    }).save().then(() => {
       setIsGenerating(false);
       onClose();
     });
@@ -266,24 +279,7 @@ export default function TaxDocumentGenerator({ onClose }) {
                     <td className={`${cellStyle}`}></td>
                     <td className={`${boldHeader} text-right`}>{formatCur(totalTax)}</td>
                   </tr>
-                </tbody>
-              </table>
-
-              
-            </div>
-
-            <div className="html2pdf__page-break"></div>
-            <div className="mt-8">
-              
-              <table className={`w-full ${tableBorder}`}>
-                <thead>
-                  <tr>
-                    <th className={`${mainHeader} text-center`}>Description</th>
-                    <th className={`${mainHeader} text-center w-[20%]`}>Amount</th>
-                    <th className={`${mainHeader} text-center w-[20%]`}>Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
+                
                   <tr>
                     <td className={`${cellStyle}`}>Less: Rebate u/s 87A</td>
                     <td className={`${cellStyle}`}></td>
@@ -398,8 +394,7 @@ export default function TaxDocumentGenerator({ onClose }) {
               
             </div>
 
-            <div className="html2pdf__page-break"></div>
-            <div className="mt-8">
+            <div className="mt-12 pt-8 border-t border-gray-300">
               
               <h2 className="text-center text-[22px] font-normal mb-2">Statement of Taxes Paid</h2>
               <p className="text-center text-[13px] mb-4">Details of Tax Deducted at Source on Income Other than Salary<br/>As per Form 16A issued by Deductor(s)</p>
@@ -548,8 +543,7 @@ export default function TaxDocumentGenerator({ onClose }) {
               
             </div>
 
-            <div className="html2pdf__page-break"></div>
-            <div className="mt-8">
+            <div className="mt-12 pt-8 border-t border-gray-300">
               
               <h2 className="text-center text-[22px] font-normal mb-4">Exempt Income</h2>
               <h3 className="text-center text-lg mb-4">(Annexure #3)</h3>
