@@ -406,7 +406,7 @@ export default function TaxDocumentGenerator({ onClose }) {
               <h2 className="text-center text-[22px] font-normal mb-2">Statement of Taxes Paid</h2>
               <p className="text-center text-[13px] mb-4">Details of Tax Deducted at Source on Income Other than Salary<br/>As per Form 16A issued by Deductor(s)</p>
               
-              <table className={`w-full ${tableBorder} mb-12`}>
+              <table style={tableStyle}>
                 <thead>
                   <tr>
                     <th style={{...mainHeader, textAlign: 'center'}}>Name of Deductor</th>
@@ -445,7 +445,7 @@ export default function TaxDocumentGenerator({ onClose }) {
               <p className="text-center text-[13px] mb-6">Note: For detailed calculations refer to</p>
               <h3 className="text-center text-lg mb-2">Annexure #1: Section 44AD (Income from Presumptive)</h3>
               
-              <table className={`w-full ${tableBorder} mb-12`}>
+              <table style={tableStyle}>
                 <thead>
                   <tr>
                     <th style={{...mainHeader, textAlign: 'center'}}>Business Name</th>
@@ -465,7 +465,7 @@ export default function TaxDocumentGenerator({ onClose }) {
               {business.hasFinancialParticulars && (
                 <>
                   <h3 className="text-center text-lg mt-6 mb-2 font-semibold text-slate-700">Balance Sheet (as on 31st March)</h3>
-                  <table className={`w-full ${tableBorder} mb-12`}>
+                  <table style={tableStyle}>
                     <thead>
                       <tr>
                         <th style={{...mainHeader, textAlign: 'center', width: '50%'}}>Assets</th>
