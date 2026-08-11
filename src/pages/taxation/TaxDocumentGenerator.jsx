@@ -77,15 +77,14 @@ export default function TaxDocumentGenerator({ onClose }) {
   const taxDue = Math.max(0, grossTaxLiability - totalPrepaid);
   const taxRefund = Math.max(0, totalPrepaid - grossTaxLiability);
 
-  const handleDownload = useReactToPrint({
+  const handlePrint = useReactToPrint({
     contentRef: documentRef,
     documentTitle: `Detailed_Computation_${data.clientDetails.pan || 'Client'}`,
-    onBeforePrint: () => setIsGenerating(true),
-    onAfterPrint: () => {
-      setIsGenerating(false);
-      onClose();
-    }
   });
+
+  const handleDownload = () => {
+    handlePrint();
+  };
 
   // Tax2Win Strict Styling
   const tableBorder = "border border-gray-300 border-collapse shadow-sm";
