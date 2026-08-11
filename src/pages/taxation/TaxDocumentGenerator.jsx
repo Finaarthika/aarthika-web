@@ -124,7 +124,7 @@ export default function TaxDocumentGenerator({ onClose }) {
 
         {/* PDF Container - Exact scaling 794x1123 */}
         <div className="overflow-x-auto bg-gray-900 flex justify-center py-8">
-          <div ref={documentRef} className="flex flex-col text-black bg-white mx-auto print:mx-0 print:bg-white" style={{ width: '180mm', minHeight: '267mm', fontFamily: 'Arial, Helvetica, sans-serif' }}>
+          <div ref={documentRef} className="block text-black bg-white mx-auto print:mx-0 print:w-full print:bg-white" style={{ width: '180mm', fontFamily: 'Arial, Helvetica, sans-serif' }}>
             <style type="text/css" media="print">
               {`
                 @page {
@@ -132,10 +132,14 @@ export default function TaxDocumentGenerator({ onClose }) {
                   margin: 15mm;
                 }
                 body {
-                  -webkit-print-color-adjust: exact;
-                  print-color-adjust: exact;
+                  -webkit-print-color-adjust: exact !important;
+                  print-color-adjust: exact !important;
                   background-color: white !important;
+                  color: black !important;
                   margin: 0;
+                  visibility: visible !important;
+                  opacity: 1 !important;
+                  display: block !important;
                 }
                 .html2pdf__page-break {
                   page-break-before: always;
