@@ -87,20 +87,20 @@ export default function TaxDocumentGenerator({ onClose }) {
   };
 
   // Tax2Win Strict Styling
-  const tableBorder = "border border-gray-300 border-collapse shadow-sm";
-  const cellStyle = "p-2 border border-gray-300 text-[13px] text-gray-700";
-  const boldHeader = "p-2 font-bold bg-slate-50 text-slate-800 text-[13px] border border-gray-300";
-  const mainHeader = "p-2 font-bold bg-[#0f2e4c] text-white text-[13px] border border-[#0f2e4c]";
+  const tableStyle = { width: '100%', borderCollapse: 'collapse', marginBottom: '32px' };
+  const cellStyle = { padding: '6px 8px', border: '1px solid #000', fontSize: '13px', color: '#000' };
+  const boldHeader = { padding: '6px 8px', fontWeight: 'bold', backgroundColor: '#fff', color: '#000', fontSize: '13px', border: '1px solid #000' };
+  const mainHeader = { padding: '6px 8px', fontWeight: 'bold', backgroundColor: '#fff', color: '#000', fontSize: '13px', border: '1px solid #000' };
   
   const HeaderLogo = () => (
-    <div className="flex justify-between items-center mb-8 border-b pb-4">
-      <img src={aarthikaLogo} alt="Aarthika" className="h-10 object-contain" />
-      <div className="text-[13px] font-semibold text-gray-600">ITR #2845613</div>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', borderBottom: '1px solid #000', paddingBottom: '16px' }}>
+      <img src={aarthikaLogo} alt="Aarthika" style={{ height: '40px', objectFit: 'contain' }} />
+      <div style={{ fontSize: '13px', fontWeight: '600', color: '#000' }}>ITR #2845613</div>
     </div>
   );
 
   const TitleHeader = ({ title }) => (
-    <h1 className="text-center text-xl font-normal mb-8">{title}</h1>
+    <h1 style={{ textAlign: 'center', fontSize: '20px', fontWeight: 'bold', marginBottom: '32px', marginTop: '32px' }}>{title}</h1>
   );
 
   
@@ -156,243 +156,243 @@ export default function TaxDocumentGenerator({ onClose }) {
               <HeaderLogo />
               <TitleHeader title="Detailed Computation as per New Tax Regime (ITR-4)" />
               
-              <h2 className="text-center text-[22px] font-normal mb-6">Basic Details</h2>
-              <table className={`w-full ${tableBorder} mb-8`}>
+              <h2 style={{ textAlign: 'center', fontSize: '22px', fontWeight: 'normal', marginBottom: '24px', marginTop: '40px' }}>Basic Details</h2>
+              <table style={tableStyle}>
                 <tbody>
-                  <tr><td colSpan="4" className={`${boldHeader}`}>Personal Information</td></tr>
+                  <tr><td colSpan="4" style={boldHeader}>Personal Information</td></tr>
                   <tr>
-                    <td className={`${boldHeader} w-1/4`}>Name</td>
-                    <td colSpan="3" className={`${cellStyle}`}>{[data.clientDetails.firstName, data.clientDetails.middleName, data.clientDetails.lastName].filter(Boolean).join(' ') || '--'}</td>
+                    <td style={{...boldHeader, width: '25%'}}>Name</td>
+                    <td colSpan="3" style={cellStyle}>{[data.clientDetails.firstName, data.clientDetails.middleName, data.clientDetails.lastName].filter(Boolean).join(' ') || '--'}</td>
                   </tr>
                   <tr>
-                    <td className={`${boldHeader}`}>Permanent Address</td>
-                    <td colSpan="3" className={`${cellStyle}`}>
+                    <td style={boldHeader}>Permanent Address</td>
+                    <td colSpan="3" style={cellStyle}>
                       {[data.clientDetails.flatDoor, data.clientDetails.building, data.clientDetails.road, data.clientDetails.area].filter(Boolean).join(', ') || '--'}
                       {data.clientDetails.pincode ? ` - ${data.clientDetails.pincode}` : ''}
                     </td>
                   </tr>
                   <tr>
-                    <td className={`${boldHeader}`}>Father's Name</td>
-                    <td colSpan="3" className={`${cellStyle}`}>{data.clientDetails.fatherName || '--'}</td>
+                    <td style={boldHeader}>Father's Name</td>
+                    <td colSpan="3" style={cellStyle}>{data.clientDetails.fatherName || '--'}</td>
                   </tr>
                   <tr>
-                    <td className={`${boldHeader}`}>PAN</td>
-                    <td className={`${cellStyle} w-1/4 uppercase`}>{data.clientDetails.pan || 'N/A'}</td>
-                    <td className={`${boldHeader} w-1/4`}>Date of Birth</td>
-                    <td className={`${cellStyle} w-1/4`}>{data.clientDetails.dob || '--'}</td>
+                    <td style={boldHeader}>PAN</td>
+                    <td style={{...cellStyle, width: '25%', textTransform: 'uppercase'}}>{data.clientDetails.pan || 'N/A'}</td>
+                    <td style={{...boldHeader, width: '25%'}}>Date of Birth</td>
+                    <td style={{...cellStyle, width: '25%'}}>{data.clientDetails.dob || '--'}</td>
                   </tr>
                   <tr>
-                    <td className={`${boldHeader}`}>E-Mail</td>
-                    <td className={`${cellStyle}`}>{data.clientDetails.email || '--'}</td>
-                    <td className={`${boldHeader}`}>Financial Year</td>
-                    <td className={`${cellStyle}`}>01-04-2025 to 31-03-2026</td>
+                    <td style={boldHeader}>E-Mail</td>
+                    <td style={cellStyle}>{data.clientDetails.email || '--'}</td>
+                    <td style={boldHeader}>Financial Year</td>
+                    <td style={cellStyle}>01-04-2025 to 31-03-2026</td>
                   </tr>
                   <tr>
-                    <td className={`${boldHeader}`}>Mobile</td>
-                    <td className={`${cellStyle}`}>{data.clientDetails.mobile || '--'}</td>
-                    <td className={`${boldHeader}`}>Assessment Year</td>
-                    <td className={`${cellStyle}`}>01-04-2026 to 31-03-2027</td>
+                    <td style={boldHeader}>Mobile</td>
+                    <td style={cellStyle}>{data.clientDetails.mobile || '--'}</td>
+                    <td style={boldHeader}>Assessment Year</td>
+                    <td style={cellStyle}>01-04-2026 to 31-03-2027</td>
                   </tr>
                   <tr>
-                    <td className={`${boldHeader}`}>Residential Status</td>
-                    <td className={`${cellStyle}`}>Resident</td>
-                    <td className={`${boldHeader}`}>Status</td>
-                    <td className={`${cellStyle}`}>Individual</td>
+                    <td style={boldHeader}>Residential Status</td>
+                    <td style={cellStyle}>Resident</td>
+                    <td style={boldHeader}>Status</td>
+                    <td style={cellStyle}>Individual</td>
                   </tr>
                   <tr>
-                    <td className={`${boldHeader}`}>Return Type</td>
-                    <td className={`${cellStyle}`}>Original Return</td>
-                    <td className={`${boldHeader}`}>Regime</td>
-                    <td className={`${cellStyle}`}>New Tax Regime</td>
+                    <td style={boldHeader}>Return Type</td>
+                    <td style={cellStyle}>Original Return</td>
+                    <td style={boldHeader}>Regime</td>
+                    <td style={cellStyle}>New Tax Regime</td>
                   </tr>
                   <tr>
-                    <td className={`${boldHeader}`}>Return Filed Section</td>
-                    <td className={`${cellStyle}`}>On Or Before Due Date 139(1)</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${cellStyle}`}></td>
+                    <td style={boldHeader}>Return Filed Section</td>
+                    <td style={cellStyle}>On Or Before Due Date 139(1)</td>
+                    <td style={cellStyle}></td>
+                    <td style={cellStyle}></td>
                   </tr>
                 </tbody>
               </table>
 
-              <h2 className="text-center text-[22px] font-normal mb-6 mt-12">Computation of Income</h2>
-              <table className={`w-full ${tableBorder}`}>
+              <h2 style={{ textAlign: 'center', fontSize: '22px', fontWeight: 'normal', marginBottom: '24px', marginTop: '48px' }}>Computation of Income</h2>
+              <table style={tableStyle}>
                 <thead>
                   <tr>
-                    <th className={`${mainHeader} text-center`}>Description</th>
-                    <th className={`${mainHeader} text-center w-[20%]`}>Amount</th>
-                    <th className={`${mainHeader} text-center w-[20%]`}>Amount</th>
+                    <th style={{...mainHeader, textAlign: 'center'}}>Description</th>
+                    <th style={{...mainHeader, textAlign: 'center', width: '20%'}}>Amount</th>
+                    <th style={{...mainHeader, textAlign: 'center', width: '20%'}}>Amount</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className={`${boldHeader}`}>Income from Salary</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${boldHeader} text-right`}>0.00</td>
+                    <td style={boldHeader}>Income from Salary</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...boldHeader, textAlign: 'right'}}>0.00</td>
                   </tr>
                   <tr>
-                    <td className={`${boldHeader}`}>Income from Business (Annexure #1)</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${boldHeader} text-right`}>{formatCur(grossBusiness)}</td>
+                    <td style={boldHeader}>Income from Business (Annexure #1)</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...boldHeader, textAlign: 'right'}}>{formatCur(grossBusiness)}</td>
                   </tr>
                   <tr>
-                    <td className={`${boldHeader} pl-8`}>Income from Presumptive (Annexure #1)</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${cellStyle}`}></td>
+                    <td style={{...boldHeader, paddingLeft: '32px'}}>Income from Presumptive (Annexure #1)</td>
+                    <td style={cellStyle}></td>
+                    <td style={cellStyle}></td>
                   </tr>
                   <tr>
-                    <td className={`${cellStyle} pl-12`}>Section 44AD (Annexure #1)</td>
-                    <td className={`${cellStyle} text-right`}>{formatCur(grossBusiness)}</td>
-                    <td className={`${cellStyle}`}></td>
+                    <td style={{...cellStyle, paddingLeft: '48px'}}>Section 44AD (Annexure #1)</td>
+                    <td style={{...cellStyle, textAlign: 'right'}}>{formatCur(grossBusiness)}</td>
+                    <td style={cellStyle}></td>
                   </tr>
                   {(grossStcg > 0 || grossLtcg > 0) && (
                     <tr>
-                      <td className={`${boldHeader}`}>Income from Capital Gains</td>
-                      <td className={`${cellStyle}`}></td>
-                      <td className={`${boldHeader} text-right`}>{formatCur(grossStcg + grossLtcg)}</td>
+                      <td style={boldHeader}>Income from Capital Gains</td>
+                      <td style={cellStyle}></td>
+                      <td style={{...boldHeader, textAlign: 'right'}}>{formatCur(grossStcg + grossLtcg)}</td>
                     </tr>
                   )}
                   <tr>
-                    <td className={`${boldHeader}`}>Income from House Property</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${boldHeader} text-right`}>0.00</td>
+                    <td style={boldHeader}>Income from House Property</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...boldHeader, textAlign: 'right'}}>0.00</td>
                   </tr>
                   <tr>
-                    <td className={`${boldHeader}`}>Income from Other Sources (Annexure #2)</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${boldHeader} text-right`}>{formatCur(grossOther)}</td>
+                    <td style={boldHeader}>Income from Other Sources (Annexure #2)</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...boldHeader, textAlign: 'right'}}>{formatCur(grossOther)}</td>
                   </tr>
                   <tr>
-                    <td className={`${boldHeader}`}>Gross Total Income</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${boldHeader} text-right`}>{formatCur(grossTotalIncome)}</td>
+                    <td style={boldHeader}>Gross Total Income</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...boldHeader, textAlign: 'right'}}>{formatCur(grossTotalIncome)}</td>
                   </tr>
                   <tr>
-                    <td className={`${boldHeader}`}>Gross Total Income including LTCG u/s 112A</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${boldHeader} text-right`}>{formatCur(grossTotalIncome)}</td>
+                    <td style={boldHeader}>Gross Total Income including LTCG u/s 112A</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...boldHeader, textAlign: 'right'}}>{formatCur(grossTotalIncome)}</td>
                   </tr>
                   <tr>
-                    <td className={`${boldHeader}`}>Less: Deductions</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${boldHeader} text-right`}>{formatCur(totalDeductions)}</td>
+                    <td style={boldHeader}>Less: Deductions</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...boldHeader, textAlign: 'right'}}>{formatCur(totalDeductions)}</td>
                   </tr>
                   <tr>
-                    <td className={`${boldHeader}`}>Taxable Total Income</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${boldHeader} text-right`}>{formatCur(totalIncome)}</td>
+                    <td style={boldHeader}>Taxable Total Income</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...boldHeader, textAlign: 'right'}}>{formatCur(totalIncome)}</td>
                   </tr>
                   <tr>
-                    <td className={`${boldHeader}`}>Tax Payable on Total Income</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${boldHeader} text-right`}>{formatCur(totalTax)}</td>
+                    <td style={boldHeader}>Tax Payable on Total Income</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...boldHeader, textAlign: 'right'}}>{formatCur(totalTax)}</td>
                   </tr>
                 
                   <tr>
-                    <td className={`${cellStyle}`}>Less: Rebate u/s 87A</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${cellStyle} text-right`}>{formatCur(rebate87a)}</td>
+                    <td style={cellStyle}>Less: Rebate u/s 87A</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...cellStyle, textAlign: 'right'}}>{formatCur(rebate87a)}</td>
                   </tr>
                   <tr>
-                    <td className={`${boldHeader}`}>Tax Payable After Rebate</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${boldHeader} text-right`}>{formatCur(taxAfterRebate)}</td>
+                    <td style={boldHeader}>Tax Payable After Rebate</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...boldHeader, textAlign: 'right'}}>{formatCur(taxAfterRebate)}</td>
                   </tr>
                   <tr>
-                    <td className={`${cellStyle} pl-8`}>Add: Surcharge</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${cellStyle} text-right`}>0.00</td>
+                    <td style={{...cellStyle, paddingLeft: '32px'}}>Add: Surcharge</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...cellStyle, textAlign: 'right'}}>0.00</td>
                   </tr>
                   <tr>
-                    <td className={`${cellStyle} pl-8`}>Add: Health & Education Cess</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${cellStyle} text-right`}>{formatCur(healthEduCess)}</td>
+                    <td style={{...cellStyle, paddingLeft: '32px'}}>Add: Health & Education Cess</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...cellStyle, textAlign: 'right'}}>{formatCur(healthEduCess)}</td>
                   </tr>
                   <tr>
-                    <td className={`${boldHeader}`}>Gross Tax Liability</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${boldHeader} text-right`}>{formatCur(grossTaxLiability)}</td>
+                    <td style={boldHeader}>Gross Tax Liability</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...boldHeader, textAlign: 'right'}}>{formatCur(grossTaxLiability)}</td>
                   </tr>
                   <tr>
-                    <td className={`${boldHeader}`}>Balance Tax After Relief</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${boldHeader} text-right`}>{formatCur(grossTaxLiability)}</td>
+                    <td style={boldHeader}>Balance Tax After Relief</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...boldHeader, textAlign: 'right'}}>{formatCur(grossTaxLiability)}</td>
                   </tr>
                   <tr>
-                    <td className={`${cellStyle}`}>Less: Total Advance Tax Paid</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${cellStyle} text-right`}>{formatCur(data.prepaidTaxes.advanceTax)}</td>
+                    <td style={cellStyle}>Less: Total Advance Tax Paid</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...cellStyle, textAlign: 'right'}}>{formatCur(data.prepaidTaxes.advanceTax)}</td>
                   </tr>
                   <tr>
-                    <td className={`${cellStyle}`}>Less: Total Self Assessment Tax Paid</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${cellStyle} text-right`}>0.00</td>
+                    <td style={cellStyle}>Less: Total Self Assessment Tax Paid</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...cellStyle, textAlign: 'right'}}>0.00</td>
                   </tr>
                   <tr>
-                    <td className={`${cellStyle}`}>Less: Total TDS Claimed</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${cellStyle} text-right`}>{formatCur(Number(data.prepaidTaxes.tdsSalary) + Number(data.prepaidTaxes.tdsOther))}</td>
+                    <td style={cellStyle}>Less: Total TDS Claimed</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...cellStyle, textAlign: 'right'}}>{formatCur(Number(data.prepaidTaxes.tdsSalary) + Number(data.prepaidTaxes.tdsOther))}</td>
                   </tr>
                   <tr>
-                    <td className={`${cellStyle}`}>Less: Tax Collected at Source</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${cellStyle} text-right`}>{formatCur(data.prepaidTaxes.tcs)}</td>
+                    <td style={cellStyle}>Less: Tax Collected at Source</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...cellStyle, textAlign: 'right'}}>{formatCur(data.prepaidTaxes.tcs)}</td>
                   </tr>
                   <tr>
-                    <td className={`${cellStyle}`}>Add: Interest u/s 234A</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${cellStyle} text-right`}>0.00</td>
+                    <td style={cellStyle}>Add: Interest u/s 234A</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...cellStyle, textAlign: 'right'}}>0.00</td>
                   </tr>
                   <tr>
-                    <td className={`${cellStyle}`}>Add: Interest u/s 234B</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${cellStyle} text-right`}>0.00</td>
+                    <td style={cellStyle}>Add: Interest u/s 234B</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...cellStyle, textAlign: 'right'}}>0.00</td>
                   </tr>
                   <tr>
-                    <td className={`${cellStyle}`}>Add: Interest u/s 234C</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${cellStyle} text-right`}>0.00</td>
+                    <td style={cellStyle}>Add: Interest u/s 234C</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...cellStyle, textAlign: 'right'}}>0.00</td>
                   </tr>
                   <tr>
-                    <td className={`${cellStyle}`}>Add: Late Filing Fees u/s 234F</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${cellStyle} text-right`}>0.00</td>
+                    <td style={cellStyle}>Add: Late Filing Fees u/s 234F</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...cellStyle, textAlign: 'right'}}>0.00</td>
                   </tr>
                   <tr>
-                    <td className={`${boldHeader}`}>{taxDue > 0 ? 'Tax Payable' : 'Refund Due'}</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${boldHeader} text-right`}>{formatCur(taxDue > 0 ? taxDue : taxRefund)}</td>
+                    <td style={boldHeader}>{taxDue > 0 ? 'Tax Payable' : 'Refund Due'}</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...boldHeader, textAlign: 'right'}}>{formatCur(taxDue > 0 ? taxDue : taxRefund)}</td>
                   </tr>
                   <tr>
-                    <td className={`${cellStyle}`}>Exempt Income (Only for reporting purposes)(Annexure #3)</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${cellStyle} text-right`}>{formatCur(totalExemptIncome)}</td>
+                    <td style={cellStyle}>Exempt Income (Only for reporting purposes)(Annexure #3)</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...cellStyle, textAlign: 'right'}}>{formatCur(totalExemptIncome)}</td>
                   </tr>
                 </tbody>
               </table>
 
               <h2 className="text-center text-[22px] font-normal mb-6 mt-16">Details of Bank Accounts</h2>
-              <table className={`w-full ${tableBorder}`}>
+              <table style={tableStyle}>
                 <thead>
                   <tr>
-                    <th className={`${mainHeader} text-center`}>Bank Name</th>
-                    <th className={`${mainHeader} text-center`}>IFSC Code</th>
-                    <th className={`${mainHeader} text-center`}>Account Number</th>
-                    <th className={`${mainHeader} text-center`}>Account Type</th>
-                    <th className={`${mainHeader} text-center`}>Selected for Refund?</th>
+                    <th style={{...mainHeader, textAlign: 'center'}}>Bank Name</th>
+                    <th style={{...mainHeader, textAlign: 'center'}}>IFSC Code</th>
+                    <th style={{...mainHeader, textAlign: 'center'}}>Account Number</th>
+                    <th style={{...mainHeader, textAlign: 'center'}}>Account Type</th>
+                    <th style={{...mainHeader, textAlign: 'center'}}>Selected for Refund?</th>
                   </tr>
                 </thead>
                 <tbody>
                   {bankAccounts.length > 0 ? bankAccounts.map((b, i) => (
                     <tr key={i}>
-                      <td className={`${cellStyle} text-center`}>{b.bankName || '--'}</td>
-                      <td className={`${cellStyle} text-center`}>{b.ifsc || '--'}</td>
-                      <td className={`${cellStyle} text-center`}>{b.accountNumber || '--'}</td>
-                      <td className={`${cellStyle} text-center`}>{b.type || '--'}</td>
-                      <td className={`${cellStyle} text-center`}>{b.isRefund ? 'Yes' : 'No'}</td>
+                      <td style={{...cellStyle, textAlign: 'center'}}>{b.bankName || '--'}</td>
+                      <td style={{...cellStyle, textAlign: 'center'}}>{b.ifsc || '--'}</td>
+                      <td style={{...cellStyle, textAlign: 'center'}}>{b.accountNumber || '--'}</td>
+                      <td style={{...cellStyle, textAlign: 'center'}}>{b.type || '--'}</td>
+                      <td style={{...cellStyle, textAlign: 'center'}}>{b.isRefund ? 'Yes' : 'No'}</td>
                     </tr>
                   )) : (
                     <tr>
-                      <td colSpan="5" className={`${cellStyle} text-center`}>No Bank Accounts</td>
+                      <td colSpan="5" style={{...cellStyle, textAlign: 'center'}}>No Bank Accounts</td>
                     </tr>
                   )}
                 </tbody>
@@ -409,34 +409,34 @@ export default function TaxDocumentGenerator({ onClose }) {
               <table className={`w-full ${tableBorder} mb-12`}>
                 <thead>
                   <tr>
-                    <th className={`${mainHeader} text-center`}>Name of Deductor</th>
-                    <th className={`${mainHeader} text-center`}>TAN of the Deductor</th>
-                    <th className={`${mainHeader} text-center`}>Deducted Year</th>
-                    <th className={`${mainHeader} text-center`}>Gross amount on which TDS deducted</th>
-                    <th className={`${mainHeader} text-center`}>Tax Deducted</th>
-                    <th className={`${mainHeader} text-center`}>Head of Income</th>
+                    <th style={{...mainHeader, textAlign: 'center'}}>Name of Deductor</th>
+                    <th style={{...mainHeader, textAlign: 'center'}}>TAN of the Deductor</th>
+                    <th style={{...mainHeader, textAlign: 'center'}}>Deducted Year</th>
+                    <th style={{...mainHeader, textAlign: 'center'}}>Gross amount on which TDS deducted</th>
+                    <th style={{...mainHeader, textAlign: 'center'}}>Tax Deducted</th>
+                    <th style={{...mainHeader, textAlign: 'center'}}>Head of Income</th>
                   </tr>
                 </thead>
                 <tbody>
                   {taxDeductors.length > 0 ? taxDeductors.map((t, i) => (
                     <tr key={i}>
-                      <td className={`${cellStyle}`}>{t.deductorName || '--'}</td>
-                      <td className={`${cellStyle}`}>{t.tan || '--'}</td>
-                      <td className={`${cellStyle} text-center`}>2025</td>
-                      <td className={`${cellStyle} text-right`}>{formatCur(t.grossAmount)}</td>
-                      <td className={`${cellStyle} text-right`}>{formatCur(t.taxDeducted)}</td>
-                      <td className={`${cellStyle} text-center`}>{t.headOfIncome || 'Income from Other Source'}</td>
+                      <td style={cellStyle}>{t.deductorName || '--'}</td>
+                      <td style={cellStyle}>{t.tan || '--'}</td>
+                      <td style={{...cellStyle, textAlign: 'center'}}>2025</td>
+                      <td style={{...cellStyle, textAlign: 'right'}}>{formatCur(t.grossAmount)}</td>
+                      <td style={{...cellStyle, textAlign: 'right'}}>{formatCur(t.taxDeducted)}</td>
+                      <td style={{...cellStyle, textAlign: 'center'}}>{t.headOfIncome || 'Income from Other Source'}</td>
                     </tr>
                   )) : (
                     <tr>
-                      <td colSpan="6" className={`${cellStyle} text-center`}>No Deductors</td>
+                      <td colSpan="6" style={{...cellStyle, textAlign: 'center'}}>No Deductors</td>
                     </tr>
                   )}
                   <tr>
-                    <td colSpan="3" className={`${boldHeader} text-right`}>Total</td>
-                    <td className={`${boldHeader} text-right`}>{formatCur(taxDeductors.reduce((sum, d) => sum + Number(d.grossAmount), 0))}</td>
-                    <td className={`${boldHeader} text-right`}>{formatCur(taxDeductors.reduce((sum, d) => sum + Number(d.taxDeducted), 0))}</td>
-                    <td className={`${cellStyle}`}></td>
+                    <td colSpan="3" style={{...boldHeader, textAlign: 'right'}}>Total</td>
+                    <td style={{...boldHeader, textAlign: 'right'}}>{formatCur(taxDeductors.reduce((sum, d) => sum + Number(d.grossAmount), 0))}</td>
+                    <td style={{...boldHeader, textAlign: 'right'}}>{formatCur(taxDeductors.reduce((sum, d) => sum + Number(d.taxDeducted), 0))}</td>
+                    <td style={cellStyle}></td>
                   </tr>
                 </tbody>
               </table>
@@ -448,16 +448,16 @@ export default function TaxDocumentGenerator({ onClose }) {
               <table className={`w-full ${tableBorder} mb-12`}>
                 <thead>
                   <tr>
-                    <th className={`${mainHeader} text-center`}>Business Name</th>
-                    <th className={`${mainHeader} text-center`}>Turnover</th>
-                    <th className={`${mainHeader} text-center`}>Profit</th>
+                    <th style={{...mainHeader, textAlign: 'center'}}>Business Name</th>
+                    <th style={{...mainHeader, textAlign: 'center'}}>Turnover</th>
+                    <th style={{...mainHeader, textAlign: 'center'}}>Profit</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className={`${cellStyle} text-center`}>{business.businessName || 'Retail Sale of Other Products'}</td>
-                    <td className={`${cellStyle} text-right`}>{formatCur(Number(business.turnoverBank) + Number(business.turnoverCash))}</td>
-                    <td className={`${cellStyle} text-right`}>{formatCur(grossBusiness)}</td>
+                    <td style={{...cellStyle, textAlign: 'center'}}>{business.businessName || 'Retail Sale of Other Products'}</td>
+                    <td style={{...cellStyle, textAlign: 'right'}}>{formatCur(Number(business.turnoverBank) + Number(business.turnoverCash))}</td>
+                    <td style={{...cellStyle, textAlign: 'right'}}>{formatCur(grossBusiness)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -468,8 +468,8 @@ export default function TaxDocumentGenerator({ onClose }) {
                   <table className={`w-full ${tableBorder} mb-12`}>
                     <thead>
                       <tr>
-                        <th className={`${mainHeader} text-center w-1/2`}>Assets</th>
-                        <th className={`${mainHeader} text-center w-1/2`}>Capital and Liabilities</th>
+                        <th style={{...mainHeader, textAlign: 'center', width: '50%'}}>Assets</th>
+                        <th style={{...mainHeader, textAlign: 'center', width: '50%'}}>Capital and Liabilities</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -477,28 +477,28 @@ export default function TaxDocumentGenerator({ onClose }) {
                         <td className="p-0 align-top border-r border-gray-300">
                           <table className="w-full">
                             <tbody>
-                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Fixed Assets</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.fixedGrossBlock)}</td></tr>
-                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Stock-in-Trade</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.currentStock)}</td></tr>
-                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Balance with Banks</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.currentBank)}</td></tr>
-                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Cash Balance</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.currentCash)}</td></tr>
-                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Sundry Debtors</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.currentReceivables)}</td></tr>
-                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Loans and Advances</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.currentLoansGiven)}</td></tr>
-                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Investments</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.investmentsST)}</td></tr>
-                              <tr><td className={`${cellStyle} border-0`}>Other Assets</td><td className={`${cellStyle} border-0 text-right`}>{formatCur(business.balanceSheet?.currentOther)}</td></tr>
+                              <tr><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none'}}>Fixed Assets</td><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none', textAlign: 'right'}}>{formatCur(business.balanceSheet?.fixedGrossBlock)}</td></tr>
+                              <tr><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none'}}>Stock-in-Trade</td><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none', textAlign: 'right'}}>{formatCur(business.balanceSheet?.currentStock)}</td></tr>
+                              <tr><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none'}}>Balance with Banks</td><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none', textAlign: 'right'}}>{formatCur(business.balanceSheet?.currentBank)}</td></tr>
+                              <tr><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none'}}>Cash Balance</td><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none', textAlign: 'right'}}>{formatCur(business.balanceSheet?.currentCash)}</td></tr>
+                              <tr><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none'}}>Sundry Debtors</td><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none', textAlign: 'right'}}>{formatCur(business.balanceSheet?.currentReceivables)}</td></tr>
+                              <tr><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none'}}>Loans and Advances</td><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none', textAlign: 'right'}}>{formatCur(business.balanceSheet?.currentLoansGiven)}</td></tr>
+                              <tr><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none'}}>Investments</td><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none', textAlign: 'right'}}>{formatCur(business.balanceSheet?.investmentsST)}</td></tr>
+                              <tr><td style={{...cellStyle, border: 'none'}}>Other Assets</td><td style={{...cellStyle, border: 'none', textAlign: 'right'}}>{formatCur(business.balanceSheet?.currentOther)}</td></tr>
                             </tbody>
                           </table>
                         </td>
                         <td className="p-0 align-top">
                           <table className="w-full">
                             <tbody>
-                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Proprietor's Capital</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.equityCapital)}</td></tr>
-                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Reserves & Surplus</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.equityReserves)}</td></tr>
-                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Sundry Creditors</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.currentPayables)}</td></tr>
-                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Secured Loans</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.nonCurrentSecured)}</td></tr>
-                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Unsecured Loans</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.nonCurrentUnsecured)}</td></tr>
-                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Provisions</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.currentProvisions)}</td></tr>
-                              <tr><td className={`${cellStyle} border-0 border-b border-gray-200`}>Advances</td><td className={`${cellStyle} border-0 border-b border-gray-200 text-right`}>{formatCur(business.balanceSheet?.nonCurrentAdvances)}</td></tr>
-                              <tr><td className={`${cellStyle} border-0`}>Other Liabilities</td><td className={`${cellStyle} border-0 text-right`}>{formatCur(business.balanceSheet?.currentOtherLiab)}</td></tr>
+                              <tr><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none'}}>Proprietor's Capital</td><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none', textAlign: 'right'}}>{formatCur(business.balanceSheet?.equityCapital)}</td></tr>
+                              <tr><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none'}}>Reserves & Surplus</td><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none', textAlign: 'right'}}>{formatCur(business.balanceSheet?.equityReserves)}</td></tr>
+                              <tr><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none'}}>Sundry Creditors</td><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none', textAlign: 'right'}}>{formatCur(business.balanceSheet?.currentPayables)}</td></tr>
+                              <tr><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none'}}>Secured Loans</td><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none', textAlign: 'right'}}>{formatCur(business.balanceSheet?.nonCurrentSecured)}</td></tr>
+                              <tr><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none'}}>Unsecured Loans</td><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none', textAlign: 'right'}}>{formatCur(business.balanceSheet?.nonCurrentUnsecured)}</td></tr>
+                              <tr><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none'}}>Provisions</td><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none', textAlign: 'right'}}>{formatCur(business.balanceSheet?.currentProvisions)}</td></tr>
+                              <tr><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none'}}>Advances</td><td style={{...cellStyle, borderBottom: '1px solid #e5e7eb', borderTop: 'none', borderLeft: 'none', borderRight: 'none', textAlign: 'right'}}>{formatCur(business.balanceSheet?.nonCurrentAdvances)}</td></tr>
+                              <tr><td style={{...cellStyle, border: 'none'}}>Other Liabilities</td><td style={{...cellStyle, border: 'none', textAlign: 'right'}}>{formatCur(business.balanceSheet?.currentOtherLiab)}</td></tr>
                             </tbody>
                           </table>
                         </td>
@@ -512,37 +512,37 @@ export default function TaxDocumentGenerator({ onClose }) {
               <h2 className="text-center text-[22px] font-normal mb-4">Income from Other Sources</h2>
               <h3 className="text-center text-lg mb-4">(Annexure #2)</h3>
               
-              <table className={`w-full ${tableBorder}`}>
+              <table style={tableStyle}>
                 <thead>
                   <tr>
-                    <th className={`${mainHeader} text-center`}>Particulars</th>
-                    <th className={`${mainHeader} text-center w-[20%]`}>Amount</th>
-                    <th className={`${mainHeader} text-center w-[20%]`}>Amount</th>
+                    <th style={{...mainHeader, textAlign: 'center'}}>Particulars</th>
+                    <th style={{...mainHeader, textAlign: 'center', width: '20%'}}>Amount</th>
+                    <th style={{...mainHeader, textAlign: 'center', width: '20%'}}>Amount</th>
                   </tr>
                 </thead>
                 <tbody>
                   {Number(data.otherSources.savingsInterest) > 0 && (
-                    <tr><td className={`${cellStyle}`}>Saving Bank Interest</td><td className={`${cellStyle}`}></td><td className={`${cellStyle} text-right`}>{formatCur(data.otherSources.savingsInterest)}</td></tr>
+                    <tr><td style={cellStyle}>Saving Bank Interest</td><td style={cellStyle}></td><td style={{...cellStyle, textAlign: 'right'}}>{formatCur(data.otherSources.savingsInterest)}</td></tr>
                   )}
                   {Number(data.otherSources.fdInterest) > 0 && (
-                    <tr><td className={`${cellStyle}`}>Interest on Fixed Deposit</td><td className={`${cellStyle}`}></td><td className={`${cellStyle} text-right`}>{formatCur(data.otherSources.fdInterest)}</td></tr>
+                    <tr><td style={cellStyle}>Interest on Fixed Deposit</td><td style={cellStyle}></td><td style={{...cellStyle, textAlign: 'right'}}>{formatCur(data.otherSources.fdInterest)}</td></tr>
                   )}
                   {dividendSum > 0 && (
-                    <tr><td className={`${cellStyle}`}>Dividend Income</td><td className={`${cellStyle} text-right`}>{formatCur(dividendSum)}</td><td className={`${cellStyle}`}></td></tr>
+                    <tr><td style={cellStyle}>Dividend Income</td><td style={{...cellStyle, textAlign: 'right'}}>{formatCur(dividendSum)}</td><td style={cellStyle}></td></tr>
                   )}
                   {Number(data.otherSources.familyPension) > 0 && (
-                    <tr><td className={`${cellStyle}`}>Family Pension</td><td className={`${cellStyle} text-right`}>{formatCur(data.otherSources.familyPension)}</td><td className={`${cellStyle}`}></td></tr>
+                    <tr><td style={cellStyle}>Family Pension</td><td style={{...cellStyle, textAlign: 'right'}}>{formatCur(data.otherSources.familyPension)}</td><td style={cellStyle}></td></tr>
                   )}
                   {familyPensionDeduction > 0 && (
-                    <tr><td className={`${cellStyle}`}>Less: Family Pension Standard Deduction</td><td className={`${cellStyle} text-right`}>{formatCur(familyPensionDeduction)}</td><td className={`${cellStyle}`}></td></tr>
+                    <tr><td style={cellStyle}>Less: Family Pension Standard Deduction</td><td style={{...cellStyle, textAlign: 'right'}}>{formatCur(familyPensionDeduction)}</td><td style={cellStyle}></td></tr>
                   )}
                   {Number(data.otherSources.anyOtherIncome) > 0 && (
-                    <tr><td className={`${cellStyle}`}>Other Taxable Income</td><td className={`${cellStyle}`}></td><td className={`${cellStyle} text-right`}>{formatCur(data.otherSources.anyOtherIncome)}</td></tr>
+                    <tr><td style={cellStyle}>Other Taxable Income</td><td style={cellStyle}></td><td style={{...cellStyle, textAlign: 'right'}}>{formatCur(data.otherSources.anyOtherIncome)}</td></tr>
                   )}
                   <tr>
-                    <td className={`${boldHeader}`}>Total Taxable Income</td>
-                    <td className={`${cellStyle}`}></td>
-                    <td className={`${boldHeader} text-right`}>{formatCur(grossOther)}</td>
+                    <td style={boldHeader}>Total Taxable Income</td>
+                    <td style={cellStyle}></td>
+                    <td style={{...boldHeader, textAlign: 'right'}}>{formatCur(grossOther)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -555,46 +555,46 @@ export default function TaxDocumentGenerator({ onClose }) {
               <h2 className="text-center text-[22px] font-normal mb-4">Exempt Income</h2>
               <h3 className="text-center text-lg mb-4">(Annexure #3)</h3>
               
-              <table className={`w-full ${tableBorder} mb-8`}>
+              <table style={tableStyle}>
                 <thead>
                   <tr>
-                    <th className={`${mainHeader} text-center`}>Particulars</th>
-                    <th className={`${mainHeader} text-center w-[30%]`}>Amount</th>
+                    <th style={{...mainHeader, textAlign: 'center'}}>Particulars</th>
+                    <th style={{...mainHeader, textAlign: 'center', width: '30%'}}>Amount</th>
                   </tr>
                 </thead>
                 <tbody>
                   
                   <tr>
-                    <td className={`${cellStyle}`}>Agricultural income(Less than or equal to 5000)</td>
-                    <td className={`${cellStyle} text-right`}>{formatCur(data.exemptIncome.agriculture)}</td>
+                    <td style={cellStyle}>Agricultural income(Less than or equal to 5000)</td>
+                    <td style={{...cellStyle, textAlign: 'right'}}>{formatCur(data.exemptIncome.agriculture)}</td>
                   </tr>
                   {Number(data.exemptIncome.ppfInterest) > 0 && (
-                    <tr><td className={`${cellStyle}`}>PPF Interest</td><td className={`${cellStyle} text-right`}>{formatCur(data.exemptIncome.ppfInterest)}</td></tr>
+                    <tr><td style={cellStyle}>PPF Interest</td><td style={{...cellStyle, textAlign: 'right'}}>{formatCur(data.exemptIncome.ppfInterest)}</td></tr>
                   )}
                   {Number(data.exemptIncome.insuranceMaturity) > 0 && (
-                    <tr><td className={`${cellStyle}`}>Insurance Maturity / Bonus</td><td className={`${cellStyle} text-right`}>{formatCur(data.exemptIncome.insuranceMaturity)}</td></tr>
+                    <tr><td style={cellStyle}>Insurance Maturity / Bonus</td><td style={{...cellStyle, textAlign: 'right'}}>{formatCur(data.exemptIncome.insuranceMaturity)}</td></tr>
                   )}
                   {Number(data.exemptIncome.npsWithdrawal) > 0 && (
-                    <tr><td className={`${cellStyle}`}>NPS / UPS Withdrawal</td><td className={`${cellStyle} text-right`}>{formatCur(data.exemptIncome.npsWithdrawal)}</td></tr>
+                    <tr><td style={cellStyle}>NPS / UPS Withdrawal</td><td style={{...cellStyle, textAlign: 'right'}}>{formatCur(data.exemptIncome.npsWithdrawal)}</td></tr>
                   )}
                   {Number(data.exemptIncome.pfMaturity) > 0 && (
-                    <tr><td className={`${cellStyle}`}>Provident Fund Maturity</td><td className={`${cellStyle} text-right`}>{formatCur(data.exemptIncome.pfMaturity)}</td></tr>
+                    <tr><td style={cellStyle}>Provident Fund Maturity</td><td style={{...cellStyle, textAlign: 'right'}}>{formatCur(data.exemptIncome.pfMaturity)}</td></tr>
                   )}
                   {Number(data.exemptIncome.hufShare) > 0 && (
-                    <tr><td className={`${cellStyle}`}>Share from HUF</td><td className={`${cellStyle} text-right`}>{formatCur(data.exemptIncome.hufShare)}</td></tr>
+                    <tr><td style={cellStyle}>Share from HUF</td><td style={{...cellStyle, textAlign: 'right'}}>{formatCur(data.exemptIncome.hufShare)}</td></tr>
                   )}
                   {Number(data.exemptIncome.ssyMaturity) > 0 && (
-                    <tr><td className={`${cellStyle}`}>Sukanya Samriddhi Yojana (SSY)</td><td className={`${cellStyle} text-right`}>{formatCur(data.exemptIncome.ssyMaturity)}</td></tr>
+                    <tr><td style={cellStyle}>Sukanya Samriddhi Yojana (SSY)</td><td style={{...cellStyle, textAlign: 'right'}}>{formatCur(data.exemptIncome.ssyMaturity)}</td></tr>
                   )}
                   {Number(exemptGifts) > 0 && (
-                    <tr><td className={`${cellStyle}`}>Exempt Gifts</td><td className={`${cellStyle} text-right`}>{formatCur(exemptGifts)}</td></tr>
+                    <tr><td style={cellStyle}>Exempt Gifts</td><td style={{...cellStyle, textAlign: 'right'}}>{formatCur(exemptGifts)}</td></tr>
                   )}
                   {Number(data.exemptIncome.otherExempt) > 0 && (
-                    <tr><td className={`${cellStyle}`}>Other Exempt Income</td><td className={`${cellStyle} text-right`}>{formatCur(data.exemptIncome.otherExempt)}</td></tr>
+                    <tr><td style={cellStyle}>Other Exempt Income</td><td style={{...cellStyle, textAlign: 'right'}}>{formatCur(data.exemptIncome.otherExempt)}</td></tr>
                   )}
 <tr>
-                    <td className={`${boldHeader}`}>Total Exempt Income</td>
-                    <td className={`${boldHeader} text-right`}>{formatCur(totalExemptIncome)}</td>
+                    <td style={boldHeader}>Total Exempt Income</td>
+                    <td style={{...boldHeader, textAlign: 'right'}}>{formatCur(totalExemptIncome)}</td>
                   </tr>
                 </tbody>
               </table>
