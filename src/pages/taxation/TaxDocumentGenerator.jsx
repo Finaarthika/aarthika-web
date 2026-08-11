@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import html2pdf from 'html2pdf.js';
+import { useReactToPrint } from 'react-to-print';
 import { useTaxation } from './TaxationContext';
 import aarthikaLogo from '../../assets/Aarthika (1).png';
 
@@ -77,34 +77,16 @@ export default function TaxDocumentGenerator({ onClose }) {
   const taxDue = Math.max(0, grossTaxLiability - totalPrepaid);
   const taxRefund = Math.max(0, totalPrepaid - grossTaxLiability);
 
-  const handleDownload = () => {
-    setIsGenerating(true);
-    const element = documentRef.current;
-    const opt = {
-      margin: [15, 15, 15, 15],
-      filename: `Detailed_Computation_${data.clientDetails.pan || 'Client'}.pdf`,
-      image: { type: 'jpeg', quality: 1 },
-      html2canvas: { scale: 4, useCORS: true, letterRendering: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['css', 'legacy'], avoid: 'tr, h2, .avoid-break' }
-    };
-    
-    html2pdf().set(opt).from(element).toPdf().get('pdf').then((pdf) => {
-      const totalPages = pdf.internal.getNumberOfPages();
-      const dateStr = new Date().toLocaleString();
-      for (let i = 1; i <= totalPages; i++) {
-        pdf.setPage(i);
-        pdf.setFontSize(9);
-        pdf.setTextColor(128, 128, 128);
-        pdf.text('Aarthika.in', 15, pdf.internal.pageSize.getHeight() - 8);
-        pdf.text('Page ' + i + ' of ' + totalPages, pdf.internal.pageSize.getWidth() / 2, pdf.internal.pageSize.getHeight() - 8, { align: 'center' });
-        pdf.text(dateStr, pdf.internal.pageSize.getWidth() - 15, pdf.internal.pageSize.getHeight() - 8, { align: 'right' });
-      }
-    }).save().then(() => {
+  const handleDownload = useReactToPrint({
+    content: () => documentRef.current,
+    documentTitle: `Detailed_Computation_${data.clientDetails.pan || 'Client'}`,
+    onBeforeGetContent: () => setIsGenerating(true),
+    onAfterPrint: () => {
       setIsGenerating(false);
       onClose();
-    });
-  };
+    },
+    removeAfterPrint: true,
+  });
 
   // Tax2Win Strict Styling
   const tableBorder = "border border-gray-300 border-collapse shadow-sm";
@@ -144,7 +126,30 @@ export default function TaxDocumentGenerator({ onClose }) {
 
         {/* PDF Container - Exact scaling 794x1123 */}
         <div className="overflow-x-auto bg-gray-900 flex justify-center py-8">
-          <div ref={documentRef} className="flex flex-col text-black bg-white mx-auto" style={{ width: '180mm', minHeight: '267mm', fontFamily: 'Arial, Helvetica, sans-serif' }}>
+          <div ref={documentRef} className="flex flex-col text-black bg-white mx-auto print:mx-0 print:bg-white" style={{ width: '180mm', minHeight: '267mm', fontFamily: 'Arial, Helvetica, sans-serif' }}>
+            <style type="text/css" media="print">
+              {`
+                @page {
+                  size: A4 portrait;
+                  margin: 15mm;
+                }
+                body {
+                  -webkit-print-color-adjust: exact;
+                  print-color-adjust: exact;
+                  background-color: white !important;
+                  margin: 0;
+                }
+                .html2pdf__page-break {
+                  page-break-before: always;
+                }
+                tr {
+                  page-break-inside: avoid;
+                }
+                h2, h3 {
+                  page-break-after: avoid;
+                }
+              `}
+            </style>
             <div className="p-0">
               <HeaderLogo />
               <TitleHeader title="Detailed Computation as per New Tax Regime (ITR-4)" />
