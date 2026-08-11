@@ -77,13 +77,33 @@ export default function TaxDocumentGenerator({ onClose }) {
   const taxDue = Math.max(0, grossTaxLiability - totalPrepaid);
   const taxRefund = Math.max(0, totalPrepaid - grossTaxLiability);
 
-  const handlePrint = useReactToPrint({
-    contentRef: documentRef,
-    documentTitle: `Detailed_Computation_${data.clientDetails.pan || 'Client'}`,
-  });
-
   const handleDownload = () => {
-    handlePrint();
+    const printContent = documentRef.current.cloneNode(true);
+    const printContainer = document.createElement('div');
+    printContainer.id = 'native-print-container';
+    
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @media print {
+        body > * { display: none !important; }
+        #native-print-container { display: block !important; position: absolute; left: 0; top: 0; width: 100%; background: white; color: black; }
+        @page { size: A4 portrait; margin: 10mm; }
+        tr { page-break-inside: avoid; }
+      }
+    `;
+    
+    document.head.appendChild(style);
+    printContainer.appendChild(printContent);
+    document.body.appendChild(printContainer);
+    
+    document.title = `Detailed_Computation_${data.clientDetails.pan || 'Client'}`;
+    window.print();
+    
+    setTimeout(() => {
+      document.body.removeChild(printContainer);
+      document.head.removeChild(style);
+      document.title = 'Aarthika Finance';
+    }, 1000);
   };
 
   // Tax2Win Strict Styling
@@ -124,25 +144,17 @@ export default function TaxDocumentGenerator({ onClose }) {
 
         {/* PDF Container - Exact scaling 794x1123 */}
         <div className="overflow-x-auto bg-gray-900 flex justify-center py-8">
-          <div ref={documentRef} className="block text-black bg-white mx-auto print:mx-0 print:w-full print:bg-white" style={{ width: '180mm', fontFamily: 'Arial, Helvetica, sans-serif' }}>
+          <div ref={documentRef} style={{ width: '100%', maxWidth: '190mm', margin: '0 auto', fontFamily: 'Arial, Helvetica, sans-serif', backgroundColor: '#fff', color: '#000' }}>
             <style type="text/css" media="print">
               {`
                 @page {
                   size: A4 portrait;
-                  margin: 15mm;
+                  margin: 10mm;
                 }
                 body {
                   -webkit-print-color-adjust: exact !important;
                   print-color-adjust: exact !important;
                   background-color: white !important;
-                  color: black !important;
-                  margin: 0;
-                  visibility: visible !important;
-                  opacity: 1 !important;
-                  display: block !important;
-                }
-                .html2pdf__page-break {
-                  page-break-before: always;
                 }
                 tr {
                   page-break-inside: avoid;
