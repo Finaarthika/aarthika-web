@@ -4,7 +4,7 @@ import { HashLink } from 'react-router-hash-link'; // For smooth scrolling back
 
 const GoldBackedLoans = () => {
   // WhatsApp link generation
-  const phoneNumber = '6205168541';
+  const phoneNumber = '7908236685';
   const internationalPhoneNumber = `91${phoneNumber}`;
   const whatsappLink = `https://wa.me/${internationalPhoneNumber}?text=Hello%20Aarthika,%20I%20would%20like%20to%20enquire%20about%20gold-backed%20loans.`;
 
